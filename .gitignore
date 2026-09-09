@@ -1,0 +1,43 @@
+# OS and editor files
+.DS_Store
+._*
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Local agent state
+.omx/
+
+# Credentials and local environment
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+
+# Python environments and generated files
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.egg-info/
+.ipynb_checkpoints/
+
+# Keep directory placeholders; store data and artifacts locally
+/data/**
+!/data/**/
+!/data/**/.gitkeep
+/outputs/**
+!/outputs/**/
+!/outputs/**/.gitkeep
+/submissions/**
+!/submissions/**/
+!/submissions/**/.gitkeep
