@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { callModel, decideLive, getLiveConfig } from "../src/lib/provider";
+import { newRun } from "../src/lib/run";
 import type { Run } from "../src/lib/types";
 
 function run(): Run {
@@ -166,7 +167,7 @@ describe("live model boundary", () => {
       100,
       persist,
     );
-    expect(snapshots).toHaveLength(1);
+    expect(snapshots).toHaveLength(2);
     pending.resolve(
       Response.json({
         stop_reason: "end_turn",
@@ -175,10 +176,10 @@ describe("live model boundary", () => {
       }),
     );
     await expect(result).resolves.toEqual({ answer: "ok" });
-    expect(snapshots).toHaveLength(2);
-    expect(snapshots[1].inputTokens).toBe(100);
-    expect(snapshots[1].outputTokens).toBe(10);
-    expect(snapshots[1].costUsd).toBeCloseTo(0.00045);
+    expect(snapshots).toHaveLength(4);
+    expect(snapshots.at(-1)!.inputTokens).toBe(100);
+    expect(snapshots.at(-1)!.outputTokens).toBe(10);
+    expect(snapshots.at(-1)!.costUsd).toBeCloseTo(0.00045);
   });
   it("persists reconciled usage before refusing invalid model output", async () => {
     configure();
@@ -205,8 +206,8 @@ describe("live model boundary", () => {
         () => snapshots.push(structuredClone(state.usage)),
       ),
     ).rejects.toThrow("refusal");
-    expect(snapshots).toHaveLength(2);
-    expect(snapshots[1].costUsd).toBeCloseTo(0.00045);
+    expect(snapshots).toHaveLength(4);
+    expect(snapshots.at(-1)!.costUsd).toBeCloseTo(0.00045);
   });
 
   it("maps unresolved historical claim targets to current cards in live context without resolving them", async () => {
@@ -249,6 +250,8 @@ describe("live model boundary", () => {
               type: "text",
               text: JSON.stringify({
                 action: "verify_content",
+                expectedVersion: 3,
+                search: null,
                 targetIds: ["card-1"],
                 evidenceIds: [],
                 reasonSummary: "수정 결과 검사",
@@ -270,4 +273,44 @@ describe("live model boundary", () => {
     expect(state.issues[0].targetId).toBe("manual-v2");
     expect(state.issues[0].resolved).toBe(false);
   });
+  it("persists a secret-free reserved call log before network and marks HTTP failure", async () => {
+    configure(); const state = run(); const saved: unknown[] = [];
+    vi.stubGlobal("fetch", vi.fn(async () => {
+      expect(state.modelCallLog?.[0].status).toBe("reserved");
+      expect(state.modelCallLog?.[0].reservedCostUsd).toBeGreaterThan(0);
+      return new Response("private provider body", { status: 503 });
+    }));
+    await expect(callModel(state, new AbortController().signal, z.object({ answer: z.string() }), "SENSITIVE SYSTEM", "SENSITIVE INPUT", 100, () => saved.push(structuredClone(state.modelCallLog)))).rejects.toThrow("503");
+    expect(state.execution?.apiCalls).toBe(1);
+    expect(state.modelCallLog?.[0].status).toBe("failed");
+    expect(state.modelCallLog?.[0].costUsd).toBe(state.modelCallLog?.[0].reservedCostUsd);
+    expect(JSON.stringify(saved)).not.toMatch(/test-secret|SENSITIVE|private provider body/);
+  });
+  it("records actual usage and successful schema validation per call", async () => {
+    configure(); const state = run();
+    vi.stubGlobal("fetch", vi.fn(async () => Response.json({ stop_reason: "end_turn", content: [{ type: "text", text: '{"answer":"ok"}' }], usage: { input_tokens: 100, output_tokens: 10 } })));
+    await callModel(state, new AbortController().signal, z.object({ answer: z.string() }), "S", "U", 100);
+    expect(state.modelCallLog?.[0]).toMatchObject({ status: "succeeded", inputTokens: 100, outputTokens: 10, costUsd: 0.00045 });
+    expect(state.modelCallLog?.[0].promptVersion).toBeTruthy();
+    expect(state.execution?.apiCalls).toBe(1);
+  });
+  it("does not report configured credentials as an actual API call", async () => {
+    configure(); const state = run(); state.limits.maxCostUsd = 0;
+    const fetchMock = vi.fn(); vi.stubGlobal("fetch", fetchMock);
+    await expect(callModel(state, new AbortController().signal, z.object({ answer: z.string() }), "S", "U", 100)).rejects.toThrow();
+    expect(state.execution?.apiCalls ?? 0).toBe(0);
+    expect(state.modelCallLog ?? []).toEqual([]);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { expectedVersion: 0, search: null, expectedError: "검색 행동" },
+    { expectedVersion: 1, search: { query: "판교박물관 개관", targetClaimIds: [], missingInformation: ["개관 시점"], reason: "공식 자료 확인" }, expectedError: "현재 콘텐츠 버전" },
+  ])("rejects incomplete or stale search intent", async ({ expectedVersion, search, expectedError }) => {
+    configure(); const state = newRun({ mode: "live" });
+    vi.stubGlobal("fetch", vi.fn(async () => Response.json({ stop_reason: "end_turn", content: [{ type: "text", text: JSON.stringify({ action: "search_sources", expectedVersion, search, targetIds: [], evidenceIds: [], reasonSummary: "공식 원문 확인", uncertainty: "근거 부족", blockedReason: "" }) }], usage: { input_tokens: 100, output_tokens: 10 } })));
+    await expect(decideLive(state, new AbortController().signal)).rejects.toThrow(expectedError);
+    expect(state.modelCallLog?.at(-1)?.status).toBe("failed");
+  });
+
 });

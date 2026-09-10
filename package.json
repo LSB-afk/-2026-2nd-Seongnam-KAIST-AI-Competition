@@ -13,7 +13,11 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "eval": "tsx scripts/evaluate.ts"
+    "eval": "tsx scripts/evaluate.ts",
+    "eval:claims": "node --env-file-if-exists=.env.local --import tsx scripts/evaluate-claims.ts",
+    "eval:live": "node --env-file-if-exists=.env.local --import tsx scripts/evaluate-live.ts",
+    "eval:smoke": "node --env-file-if-exists=.env.local --import tsx scripts/evaluate-live.ts --smoke",
+    "sources:probe": "tsx scripts/probe-sources.ts"
   },
   "dependencies": {
     "@fontsource/noto-sans-kr": "5.3.0",

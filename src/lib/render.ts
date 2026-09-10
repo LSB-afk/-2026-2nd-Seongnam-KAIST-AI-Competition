@@ -177,6 +177,8 @@ export async function renderCards(
       strategy: run.strategy,
       version: run.version,
       reviewVersion: run.reviewVersion,
+      auditStage: "render_snapshot",
+      execution: run.execution ?? null,
     };
     files["script.md"] = Buffer.from(
       `# 성남 타임스토리 — 카드뉴스 대본\n\n실행 모드: ${run.mode}${run.mode === "fixture" ? " (준비된 응답 시연; 실제 모델 성능 측정 아님)" : ""}\n콘텐츠/검수 버전: ${run.version}/${run.reviewVersion}\n\n${run.cards.map((card, index) => `## ${index + 1}. ${escapeHtml(card.title)}${card.imagination ? " [상상 장면]" : ""}\n\n${escapeHtml(card.body)}\n\n대본: ${escapeHtml(card.script)}\n`).join("\n")}\n문장별 근거: sources.json\n검수 및 수정 이력: review.json\n`,
@@ -188,6 +190,7 @@ export async function renderCards(
           sources: run.sources,
           evidence: run.evidence,
           claims: run.claims,
+          searches: run.searches ?? [],
         },
         null,
         2,
@@ -201,6 +204,10 @@ export async function renderCards(
           revisions: run.revisions,
           events: run.events,
           usage: run.usage,
+          limits: run.limits,
+          assessments: run.assessments ?? [],
+          reviews: run.reviews ?? [],
+          modelCallLog: run.modelCallLog ?? [],
           outputChecks: {
             cardCount: 4,
             width: 1080,

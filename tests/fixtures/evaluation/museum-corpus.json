@@ -1,0 +1,52 @@
+{
+  "sources": [
+    {
+      "id": "source-faq",
+      "url": "https://museum.seongnam.go.kr/pangyo/contents/content.do?cIdx=57&fboard=board_faq",
+      "title": "판교박물관 자주하는 질문",
+      "publisher": "성남시 판교박물관",
+      "retrievedAt": "2026-09-10T07:30:00.000Z",
+      "status": "ok",
+      "snapshot": "판교박물관은 2013년 4월 2일 개관하였습니다.\n백제 · 고구려 시대 석실분과 판교 전역에서 출토된 유물 중 일부를 전시하고 있습니다.",
+      "hash": "6e08fe3ad24e86ec4dc8f600f51aeb4956ad0d4a4cbf90cd473319cd23e23490",
+      "license": "기존 MVP 공식 원문 발췌 snapshot. 평가 재현용 고정 본문; 이미지 이용권 미포함."
+    },
+    {
+      "id": "source-history",
+      "url": "https://museum.seongnam.go.kr/pangyo/contents/content.do?cIdx=64",
+      "title": "판교박물관 건립배경 — 이전",
+      "publisher": "성남시 판교박물관",
+      "retrievedAt": "2026-09-10T07:30:00.000Z",
+      "status": "ok",
+      "snapshot": "2003년부터 2008년까지 발굴조사를 진행하였습니다.",
+      "hash": "1ca5131a837620da8a9895700ec02c058e3b9082116936bbae2d32d2cd9645a5",
+      "license": "기존 MVP 공식 원문 발췌 snapshot. 평가 재현용 고정 본문; 이미지 이용권 미포함."
+    }
+  ],
+  "evidence": [
+    {
+      "id": "evidence-opening",
+      "sourceId": "source-faq",
+      "quote": "판교박물관은 2013년 4월 2일 개관하였습니다.",
+      "locator": "고정 본문 문자 0–27",
+      "start": 0,
+      "end": 27
+    },
+    {
+      "id": "evidence-exhibit",
+      "sourceId": "source-faq",
+      "quote": "백제 · 고구려 시대 석실분과 판교 전역에서 출토된 유물 중 일부를 전시하고 있습니다.",
+      "locator": "고정 본문 문자 28–76",
+      "start": 28,
+      "end": 76
+    },
+    {
+      "id": "evidence-excavation",
+      "sourceId": "source-history",
+      "quote": "2003년부터 2008년까지 발굴조사를 진행하였습니다.",
+      "locator": "고정 본문 문자 0–30",
+      "start": 0,
+      "end": 30
+    }
+  ]
+}

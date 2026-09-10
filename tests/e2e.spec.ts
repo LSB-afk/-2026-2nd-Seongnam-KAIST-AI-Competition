@@ -12,9 +12,17 @@ test("causal error recovery, evidence, approval, download and edited-version re-
   await expect(
     page.getByRole("heading", { name: "도시의 이야기를, 근거 있는 콘텐츠로." }),
   ).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "실제 AI", exact: true }),
-  ).toBeDisabled();
+  const liveMode = page.getByRole("button", { name: "실제 AI", exact: true });
+  const demoMode = page.getByRole("button", { name: "데모", exact: true });
+  await expect(liveMode).toBeEnabled({ timeout: 3000 });
+  await liveMode.click();
+  await expect(liveMode).toHaveAttribute("aria-pressed", "true");
+  await expect(demoMode).toHaveAttribute("aria-pressed", "false");
+  await expect(page.getByText(/\.env\.local/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "AI 연결 설정 필요" })).toBeDisabled();
+  await demoMode.click();
+  await expect(demoMode).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: "카드뉴스 제작하기" })).toBeEnabled();
   const created = page.waitForResponse(
     (r) => r.url().endsWith("/api/runs") && r.request().method() === "POST",
   );
@@ -38,7 +46,12 @@ test("causal error recovery, evidence, approval, download and edited-version re-
   expect(
     run.issues.some((i) => i.resolved && i.type === "unsupported_relation"),
   ).toBe(true);
-  await expect(page.locator("blockquote")).toContainText("2013년 4월 2일");
+  await expect(page.locator(".evidence-detail blockquote")).toContainText("2013년 4월 2일");
+  expect(run.execution?.apiCalls).toBe(0);
+  expect(run.searches?.map((search) => search.newEvidenceCount)).toEqual([3, 0]);
+  expect(run.reviews?.map((review) => review.version)).toEqual([1, 2]);
+  expect(run.assessments?.length).toBeGreaterThan(0);
+  await expect(page.getByRole("region", { name: "문장별 세부 검수" })).toContainText("근거가 지지함");
   await page.getByRole("button", { name: /3장 .* 근거 보기/ }).click();
   await page.getByRole("tab", { name: "수정 내역" }).click();
   await expect(page.locator(".before")).toContainText("AI 산업으로 이어졌다");
@@ -155,4 +168,49 @@ test("mobile workspace has no horizontal overflow and usable form", async ({
     path: "outputs/e2e-studio-mobile.png",
     fullPage: true,
   });
+});
+
+test("protected human text yields a reviewable proposal, explicit edit and current-version package", async ({ page, request }) => {
+  const response = await request.post('/api/runs', { data: { mode:'fixture', scenario:'normal', requestId:crypto.randomUUID() } });
+  const initial: Run = await response.json();
+  await expect.poll(async()=> (await request.get(`/api/runs/${initial.id}`).then(r=>r.json())).status).toBe('ready_for_approval');
+  await page.goto('/');
+  await page.getByLabel('이전 작업 열기').selectOption(initial.id);
+  await expect(page.getByRole('status')).toHaveText('검수 통과 · 승인 대기');
+  await page.getByRole('button',{name:/1장 .* 근거 보기/}).click();
+  await page.getByRole('tab',{name:'직접 수정'}).click();
+  await page.getByRole('textbox',{name:'카드 본문',exact:true}).fill('판교박물관은 2015년에 개관했어요.');
+  await page.getByRole('button',{name:'수정 저장'}).click();
+  await page.getByRole('button',{name:'수정 내용 재검수'}).click();
+  await expect.poll(async()=>{
+    const run:Run=await request.get(`/api/runs/${initial.id}`).then(r=>r.json());
+    return run.proposedChanges?.length ?? 0;
+  }).toBe(1);
+  await expect(page.getByRole('status')).toHaveText('담당자 검토 필요');
+  const proposed:Run=await request.get(`/api/runs/${initial.id}`).then(r=>r.json());
+  expect(proposed.version).toBe(2);
+  expect(proposed.cards[0].body).toContain('2015');
+  expect(proposed.proposedChanges?.[0].after.body).toContain('2013');
+  expect(proposed.automaticRevisions).toBe(0);
+  expect((await request.post(`/api/runs/${initial.id}/edit`,{data:{version:1,cardId:'card-1',title:'오래된 요청',body:'오래된 버전 요청'}})).status()).toBe(409);
+  expect((await request.get(`/api/runs/${initial.id}/files/timestory.zip`)).status()).toBe(409);
+  await page.getByRole('tab',{name:'수정 내역'}).click();
+  const protection=page.getByRole('region',{name:'담당자 문구 보호와 수정 제안'});
+  await expect(protection).toContainText('아직 적용되지 않음');
+  await protection.getByRole('button',{name:'제안을 편집창에 불러오기'}).click();
+  await expect(page.getByRole('textbox',{name:'카드 본문',exact:true})).toHaveValue(/2013/);
+  await page.getByRole('button',{name:'수정 저장'}).click();
+  await page.getByRole('button',{name:'수정 내용 재검수'}).click();
+  await expect(page.getByRole('status')).toHaveText('검수 통과 · 승인 대기');
+  const final:Run=await request.get(`/api/runs/${initial.id}`).then(r=>r.json());
+  expect(final.version).toBe(3);
+  expect(final.cards[0].claimIds).toEqual(initial.cards[0]?.claimIds ?? ['claim-opening']);
+  expect(final.artifacts.every(a=>a.version===3&&a.reviewVersion===3)).toBe(true);
+  expect(final.reviews?.some(r=>r.version===2&&r.issues.length>0)).toBe(true);
+  await page.setViewportSize({width:390,height:844});
+  await page.locator('.trace-section > summary').filter({hasText:'검색과 근거 수집'}).click();
+  await page.locator('.trace-section > summary').filter({hasText:'실행 방식과 사용량'}).click();
+  await expect(page.locator('.run-trace')).toContainText('실제 모델 API 시도');
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)).toBe(false);
+  await page.screenshot({path:'outputs/e2e-studio-trace-mobile.png',fullPage:true});
 });

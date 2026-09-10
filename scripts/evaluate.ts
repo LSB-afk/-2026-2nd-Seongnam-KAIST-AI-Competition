@@ -6,6 +6,7 @@ import { searchSources } from "../src/lib/sources";
 import { renderCards } from "../src/lib/render";
 import { checkArtifacts } from "../src/lib/artifacts";
 import type { Scenario, Strategy } from "../src/lib/types";
+import { runMetrics } from './evaluation';
 
 const scenarios: Scenario[] = [
   "normal",
@@ -29,7 +30,9 @@ for (const scenario of scenarios)
     const verified =
       finished.status === "ready_for_approval" &&
       (await checkArtifacts(finished));
+    finished.usage.elapsedMs = Math.round(performance.now() - started);
     const row = {
+      ...runMetrics(finished),
       scenario,
       strategy,
       mode: "fixture",
@@ -38,6 +41,7 @@ for (const scenario of scenarios)
       readyForHumanApproval: verified,
       humanApproved: null,
       humanEdits: null,
+      humanReviewTimeMs: null,
       toolCalls: finished.usage.toolCalls,
       searchCalls: finished.events.filter((e) => e.action === "search_sources")
         .length,
@@ -46,7 +50,7 @@ for (const scenario of scenarios)
       resolvedReviewIssues: finished.issues.filter((i) => i.resolved).length,
       elapsedMs: Math.round(performance.now() - started),
       modelCalls: finished.usage.modelCalls,
-      apiCostUsd: 0,
+      apiCostUsd: finished.usage.costUsd,
       stopReason: finished.stopReason,
     };
     results.push(row);

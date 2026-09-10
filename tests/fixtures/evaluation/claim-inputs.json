@@ -1,0 +1,650 @@
+[
+  {
+    "id": "case-001",
+    "split": "dev",
+    "family": "opening",
+    "category": "date",
+    "asOf": "2026-09-10",
+    "field": "title",
+    "claim": "판교박물관의 개관 연도는 2013년이다.",
+    "evidence": [
+      {
+        "id": "doc-opening-1",
+        "text": "평가용 개관 기록: 판교박물관은 2013년 4월 2일 개관했다.",
+        "recordedAt": "2013-04-02",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-002",
+    "split": "dev",
+    "family": "opening",
+    "category": "date",
+    "asOf": "2026-09-10",
+    "field": "body",
+    "claim": "판교박물관은 2015년에 개관했다.",
+    "evidence": [
+      {
+        "id": "doc-opening-1",
+        "text": "평가용 개관 기록: 판교박물관은 2013년 4월 2일 개관했다.",
+        "recordedAt": "2013-04-02",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-003",
+    "split": "dev",
+    "family": "opening",
+    "category": "date",
+    "asOf": "2026-09-10",
+    "field": "script",
+    "claim": "판교박물관은 개관 당일 관람객이 만 명이었다.",
+    "evidence": [
+      {
+        "id": "doc-opening-1",
+        "text": "평가용 개관 기록: 판교박물관은 2013년 4월 2일 개관했다.",
+        "recordedAt": "2013-04-02",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-004",
+    "split": "dev",
+    "family": "excavation",
+    "category": "date",
+    "asOf": "2026-09-10",
+    "field": "body",
+    "claim": "판교 지역 발굴조사는 2008년에 종료했다.",
+    "evidence": [
+      {
+        "id": "doc-excavation-1",
+        "text": "평가용 조사 보고서: 판교 지역 발굴조사는 2003년에 시작해 2008년에 종료했다.",
+        "recordedAt": "2010-01-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-005",
+    "split": "dev",
+    "family": "excavation",
+    "category": "date",
+    "asOf": "2026-09-10",
+    "field": "script",
+    "claim": "판교 지역 발굴조사는 2010년에 종료했다.",
+    "evidence": [
+      {
+        "id": "doc-excavation-1",
+        "text": "평가용 조사 보고서: 판교 지역 발굴조사는 2003년에 시작해 2008년에 종료했다.",
+        "recordedAt": "2010-01-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-006",
+    "split": "dev",
+    "family": "excavation",
+    "category": "date",
+    "asOf": "2026-09-10",
+    "field": "title",
+    "claim": "판교 발굴조사에는 AI 판독 기술을 활용했다.",
+    "evidence": [
+      {
+        "id": "doc-excavation-1",
+        "text": "평가용 조사 보고서: 판교 지역 발굴조사는 2003년에 시작해 2008년에 종료했다.",
+        "recordedAt": "2010-01-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-007",
+    "split": "dev",
+    "family": "causality",
+    "category": "causality",
+    "asOf": "2026-09-10",
+    "field": "script",
+    "claim": "고대 기술과 현대 산업의 비교 활동은 비유로 소개된다.",
+    "evidence": [
+      {
+        "id": "doc-causality-1",
+        "text": "합성 문화 해설: 고대 유물의 기술과 현대 산업을 비교하는 활동을 한다. 이 비교는 역사적 기술 전승을 입증한 설명이 아니라 비유다.",
+        "recordedAt": "2025-01-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-008",
+    "split": "dev",
+    "family": "causality",
+    "category": "causality",
+    "asOf": "2026-09-10",
+    "field": "title",
+    "claim": "이 비교 활동은 역사적 기술 전승을 입증한 설명이다.",
+    "evidence": [
+      {
+        "id": "doc-causality-1",
+        "text": "합성 문화 해설: 고대 유물의 기술과 현대 산업을 비교하는 활동을 한다. 이 비교는 역사적 기술 전승을 입증한 설명이 아니라 비유다.",
+        "recordedAt": "2025-01-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-009",
+    "split": "dev",
+    "family": "causality",
+    "category": "causality",
+    "asOf": "2026-09-10",
+    "field": "body",
+    "claim": "고대 석실분의 기술이 오늘날 판교 AI 산업의 직접적인 기원이 됐다.",
+    "evidence": [
+      {
+        "id": "doc-causality-1",
+        "text": "합성 문화 해설: 고대 유물의 기술과 현대 산업을 비교하는 활동을 한다. 이 비교는 역사적 기술 전승을 입증한 설명이 아니라 비유다.",
+        "recordedAt": "2025-01-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-010",
+    "split": "dev",
+    "family": "exhibits",
+    "category": "source_mismatch",
+    "asOf": "2026-09-10",
+    "field": "title",
+    "claim": "판교박물관은 고구려 시대 석실분을 전시한다.",
+    "evidence": [
+      {
+        "id": "doc-exhibits-1",
+        "text": "합성 판교박물관 전시 안내: 백제와 고구려 시대의 석실분을 전시한다. 별도의 합성 다른박물관 안내: 신라 금관을 전시한다.",
+        "recordedAt": "2025-03-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-011",
+    "split": "dev",
+    "family": "exhibits",
+    "category": "source_mismatch",
+    "asOf": "2026-09-10",
+    "field": "body",
+    "claim": "판교박물관이 안내한 석실분은 모두 신라 시대의 것이다.",
+    "evidence": [
+      {
+        "id": "doc-exhibits-1",
+        "text": "합성 판교박물관 전시 안내: 백제와 고구려 시대의 석실분을 전시한다. 별도의 합성 다른박물관 안내: 신라 금관을 전시한다.",
+        "recordedAt": "2025-03-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-012",
+    "split": "dev",
+    "family": "exhibits",
+    "category": "source_mismatch",
+    "asOf": "2026-09-10",
+    "field": "script",
+    "claim": "판교박물관은 신라 금관을 전시한다.",
+    "evidence": [
+      {
+        "id": "doc-exhibits-1",
+        "text": "합성 판교박물관 전시 안내: 백제와 고구려 시대의 석실분을 전시한다. 별도의 합성 다른박물관 안내: 신라 금관을 전시한다.",
+        "recordedAt": "2025-03-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-013",
+    "split": "dev",
+    "family": "first",
+    "category": "partial_support",
+    "asOf": "2026-09-10",
+    "field": "body",
+    "claim": "판교박물관은 2024년에 AI 해설 시범 서비스를 도입했다.",
+    "evidence": [
+      {
+        "id": "doc-first-1",
+        "text": "합성 연혁: 판교박물관은 2024년에 AI 해설 시범 서비스를 도입했다. 시범 기간은 한 달이었다.",
+        "recordedAt": "2025-02-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-014",
+    "split": "dev",
+    "family": "first",
+    "category": "partial_support",
+    "asOf": "2026-09-10",
+    "field": "script",
+    "claim": "판교박물관의 AI 해설 시범 기간은 일 년이었다.",
+    "evidence": [
+      {
+        "id": "doc-first-1",
+        "text": "합성 연혁: 판교박물관은 2024년에 AI 해설 시범 서비스를 도입했다. 시범 기간은 한 달이었다.",
+        "recordedAt": "2025-02-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-015",
+    "split": "dev",
+    "family": "first",
+    "category": "partial_support",
+    "asOf": "2026-09-10",
+    "field": "title",
+    "claim": "판교박물관은 국내 최초로 AI 해설을 도입했다.",
+    "evidence": [
+      {
+        "id": "doc-first-1",
+        "text": "합성 연혁: 판교박물관은 2024년에 AI 해설 시범 서비스를 도입했다. 시범 기간은 한 달이었다.",
+        "recordedAt": "2025-02-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-016",
+    "split": "dev",
+    "family": "old_hours",
+    "category": "stale_operations",
+    "asOf": "2026-09-10",
+    "field": "script",
+    "claim": "2020년 1월 판교박물관의 관람 마감 시각은 18시였다.",
+    "evidence": [
+      {
+        "id": "doc-old_hours-1",
+        "text": "합성 보관 안내문: 이 운영시간은 2020년 1월에만 적용됩니다. 해당 기간 관람 마감은 18시입니다.",
+        "recordedAt": "2020-01-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-017",
+    "split": "dev",
+    "family": "old_hours",
+    "category": "stale_operations",
+    "asOf": "2026-09-10",
+    "field": "title",
+    "claim": "2020년 1월 판교박물관의 관람 마감 시각은 20시였다.",
+    "evidence": [
+      {
+        "id": "doc-old_hours-1",
+        "text": "합성 보관 안내문: 이 운영시간은 2020년 1월에만 적용됩니다. 해당 기간 관람 마감은 18시입니다.",
+        "recordedAt": "2020-01-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-018",
+    "split": "dev",
+    "family": "old_hours",
+    "category": "stale_operations",
+    "asOf": "2026-09-10",
+    "field": "body",
+    "claim": "현재 판교박물관은 18시에 관람을 마감한다.",
+    "evidence": [
+      {
+        "id": "doc-old_hours-1",
+        "text": "합성 보관 안내문: 이 운영시간은 2020년 1월에만 적용됩니다. 해당 기간 관람 마감은 18시입니다.",
+        "recordedAt": "2020-01-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-019",
+    "split": "holdout",
+    "family": "future",
+    "category": "imagination_fact",
+    "asOf": "2026-09-10",
+    "field": "title",
+    "claim": "미래 AI 문화공간 장면은 학생들의 상상 작품이다.",
+    "evidence": [
+      {
+        "id": "doc-future-1",
+        "text": "합성 창작 전시 설명: 미래 AI 문화공간은 학생들의 상상 작품이다. 현재 확정된 시의 건립 사업은 아니다.",
+        "recordedAt": "2026-08-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-020",
+    "split": "holdout",
+    "family": "future",
+    "category": "imagination_fact",
+    "asOf": "2026-09-10",
+    "field": "body",
+    "claim": "미래 AI 문화공간은 현재 확정된 성남시 건립 사업이다.",
+    "evidence": [
+      {
+        "id": "doc-future-1",
+        "text": "합성 창작 전시 설명: 미래 AI 문화공간은 학생들의 상상 작품이다. 현재 확정된 시의 건립 사업은 아니다.",
+        "recordedAt": "2026-08-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-021",
+    "split": "holdout",
+    "family": "future",
+    "category": "imagination_fact",
+    "asOf": "2026-09-10",
+    "field": "script",
+    "claim": "상상 장면: 판교박물관은 이미 로봇 안내원 열 대를 운영한다.",
+    "evidence": [
+      {
+        "id": "doc-future-1",
+        "text": "합성 창작 전시 설명: 미래 AI 문화공간은 학생들의 상상 작품이다. 현재 확정된 시의 건립 사업은 아니다.",
+        "recordedAt": "2026-08-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-022",
+    "split": "holdout",
+    "family": "conflict",
+    "category": "conflicting_sources",
+    "asOf": "2026-09-10",
+    "field": "body",
+    "claim": "두 안내문의 9월 관람 마감 시각은 서로 다르다.",
+    "evidence": [
+      {
+        "id": "doc-conflict-1",
+        "text": "합성 공식 안내 A (2026년 9월 1일): 9월 관람 마감 시각은 17시다.",
+        "recordedAt": "2026-09-01",
+        "origin": "synthetic_evaluation"
+      },
+      {
+        "id": "doc-conflict-2",
+        "text": "합성 공식 안내 B (2026년 9월 1일): 9월 관람 마감 시각은 18시다.",
+        "recordedAt": "2026-09-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-023",
+    "split": "holdout",
+    "family": "conflict",
+    "category": "conflicting_sources",
+    "asOf": "2026-09-10",
+    "field": "script",
+    "claim": "두 안내문은 9월 관람 마감 시각을 모두 17시로 적었다.",
+    "evidence": [
+      {
+        "id": "doc-conflict-1",
+        "text": "합성 공식 안내 A (2026년 9월 1일): 9월 관람 마감 시각은 17시다.",
+        "recordedAt": "2026-09-01",
+        "origin": "synthetic_evaluation"
+      },
+      {
+        "id": "doc-conflict-2",
+        "text": "합성 공식 안내 B (2026년 9월 1일): 9월 관람 마감 시각은 18시다.",
+        "recordedAt": "2026-09-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-024",
+    "split": "holdout",
+    "family": "conflict",
+    "category": "conflicting_sources",
+    "asOf": "2026-09-10",
+    "field": "title",
+    "claim": "현재 판교박물관의 관람 마감 시각은 17시다.",
+    "evidence": [
+      {
+        "id": "doc-conflict-1",
+        "text": "합성 공식 안내 A (2026년 9월 1일): 9월 관람 마감 시각은 17시다.",
+        "recordedAt": "2026-09-01",
+        "origin": "synthetic_evaluation"
+      },
+      {
+        "id": "doc-conflict-2",
+        "text": "합성 공식 안내 B (2026년 9월 1일): 9월 관람 마감 시각은 18시다.",
+        "recordedAt": "2026-09-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-025",
+    "split": "holdout",
+    "family": "counts",
+    "category": "quantity",
+    "asOf": "2026-09-10",
+    "field": "script",
+    "claim": "2026년 4월 특별전에는 토기 12점이 전시됐다.",
+    "evidence": [
+      {
+        "id": "doc-counts-1",
+        "text": "합성 전시 도록: 이 특별전에는 토기 12점이 전시됐다. 도록에 수록된 특별전 기간은 2026년 4월이다.",
+        "recordedAt": "2026-04-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-026",
+    "split": "holdout",
+    "family": "counts",
+    "category": "quantity",
+    "asOf": "2026-09-10",
+    "field": "title",
+    "claim": "2026년 4월 특별전에는 토기 120점이 전시됐다.",
+    "evidence": [
+      {
+        "id": "doc-counts-1",
+        "text": "합성 전시 도록: 이 특별전에는 토기 12점이 전시됐다. 도록에 수록된 특별전 기간은 2026년 4월이다.",
+        "recordedAt": "2026-04-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-027",
+    "split": "holdout",
+    "family": "counts",
+    "category": "quantity",
+    "asOf": "2026-09-10",
+    "field": "body",
+    "claim": "특별전 토기 12점은 모두 국보로 지정됐다.",
+    "evidence": [
+      {
+        "id": "doc-counts-1",
+        "text": "합성 전시 도록: 이 특별전에는 토기 12점이 전시됐다. 도록에 수록된 특별전 기간은 2026년 4월이다.",
+        "recordedAt": "2026-04-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-028",
+    "split": "holdout",
+    "family": "event",
+    "category": "partial_support",
+    "asOf": "2026-09-10",
+    "field": "title",
+    "claim": "청소년 역사 수업 시작일은 2026년 5월 15일이다.",
+    "evidence": [
+      {
+        "id": "doc-event-1",
+        "text": "합성 교육 공고: 청소년 역사 수업은 2026년 5월 15일에 시작한다. 참가 대상은 만 13세부터 18세까지다.",
+        "recordedAt": "2026-05-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-029",
+    "split": "holdout",
+    "family": "event",
+    "category": "partial_support",
+    "asOf": "2026-09-10",
+    "field": "body",
+    "claim": "이 청소년 역사 수업의 최소 참가 연령은 만 10세다.",
+    "evidence": [
+      {
+        "id": "doc-event-1",
+        "text": "합성 교육 공고: 청소년 역사 수업은 2026년 5월 15일에 시작한다. 참가 대상은 만 13세부터 18세까지다.",
+        "recordedAt": "2026-05-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-030",
+    "split": "holdout",
+    "family": "event",
+    "category": "partial_support",
+    "asOf": "2026-09-10",
+    "field": "script",
+    "claim": "이 청소년 역사 수업의 참가비는 무료다.",
+    "evidence": [
+      {
+        "id": "doc-event-1",
+        "text": "합성 교육 공고: 청소년 역사 수업은 2026년 5월 15일에 시작한다. 참가 대상은 만 13세부터 18세까지다.",
+        "recordedAt": "2026-05-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-031",
+    "split": "holdout",
+    "family": "access",
+    "category": "source_mismatch",
+    "asOf": "2026-09-10",
+    "field": "body",
+    "claim": "판교박물관 출입구에는 경사로가 있다.",
+    "evidence": [
+      {
+        "id": "doc-access-1",
+        "text": "합성 판교박물관 시설 안내: 출입구에는 경사로가 설치되어 있다.",
+        "recordedAt": "2026-06-01",
+        "origin": "synthetic_evaluation"
+      },
+      {
+        "id": "doc-access-2",
+        "text": "합성 다른박물관 안내: 매일 수어 해설을 제공한다.",
+        "recordedAt": "2026-06-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-032",
+    "split": "holdout",
+    "family": "access",
+    "category": "source_mismatch",
+    "asOf": "2026-09-10",
+    "field": "script",
+    "claim": "판교박물관 출입구에는 경사로가 없다.",
+    "evidence": [
+      {
+        "id": "doc-access-1",
+        "text": "합성 판교박물관 시설 안내: 출입구에는 경사로가 설치되어 있다.",
+        "recordedAt": "2026-06-01",
+        "origin": "synthetic_evaluation"
+      },
+      {
+        "id": "doc-access-2",
+        "text": "합성 다른박물관 안내: 매일 수어 해설을 제공한다.",
+        "recordedAt": "2026-06-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-033",
+    "split": "holdout",
+    "family": "access",
+    "category": "source_mismatch",
+    "asOf": "2026-09-10",
+    "field": "title",
+    "claim": "판교박물관은 매일 수어 해설을 제공한다.",
+    "evidence": [
+      {
+        "id": "doc-access-1",
+        "text": "합성 판교박물관 시설 안내: 출입구에는 경사로가 설치되어 있다.",
+        "recordedAt": "2026-06-01",
+        "origin": "synthetic_evaluation"
+      },
+      {
+        "id": "doc-access-2",
+        "text": "합성 다른박물관 안내: 매일 수어 해설을 제공한다.",
+        "recordedAt": "2026-06-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-034",
+    "split": "holdout",
+    "family": "reservation",
+    "category": "stale_operations",
+    "asOf": "2026-09-10",
+    "field": "script",
+    "claim": "2022년 7월 특별 프로그램의 정원은 회당 20명이었다.",
+    "evidence": [
+      {
+        "id": "doc-reservation-1",
+        "text": "합성 과거 운영 공지: 2022년 7월 특별 프로그램은 사전 예약제로 운영했다. 당시 정원은 회당 20명이었다. 이후 운영방식은 이 공지에 포함되지 않는다.",
+        "recordedAt": "2022-07-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-035",
+    "split": "holdout",
+    "family": "reservation",
+    "category": "stale_operations",
+    "asOf": "2026-09-10",
+    "field": "title",
+    "claim": "2022년 7월 특별 프로그램은 사전 예약을 받지 않았다.",
+    "evidence": [
+      {
+        "id": "doc-reservation-1",
+        "text": "합성 과거 운영 공지: 2022년 7월 특별 프로그램은 사전 예약제로 운영했다. 당시 정원은 회당 20명이었다. 이후 운영방식은 이 공지에 포함되지 않는다.",
+        "recordedAt": "2022-07-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  },
+  {
+    "id": "case-036",
+    "split": "holdout",
+    "family": "reservation",
+    "category": "stale_operations",
+    "asOf": "2026-09-10",
+    "field": "body",
+    "claim": "현재 판교박물관의 모든 관람은 사전 예약제다.",
+    "evidence": [
+      {
+        "id": "doc-reservation-1",
+        "text": "합성 과거 운영 공지: 2022년 7월 특별 프로그램은 사전 예약제로 운영했다. 당시 정원은 회당 20명이었다. 이후 운영방식은 이 공지에 포함되지 않는다.",
+        "recordedAt": "2022-07-01",
+        "origin": "synthetic_evaluation"
+      }
+    ]
+  }
+]

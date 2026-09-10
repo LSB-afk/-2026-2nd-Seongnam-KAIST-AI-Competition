@@ -161,6 +161,10 @@ describe("card export boundary", () => {
       reviewVersion: 2,
       mode: "fixture",
       issues: [],
+      auditStage: "render_snapshot",
+      assessments: [],
+      reviews: [],
+      modelCallLog: [],
     });
     expect(JSON.parse(strFromU8(zip["sources.json"]))).toMatchObject({
       mode: "fixture",

@@ -152,6 +152,8 @@ export class RunService {
         next.updatedAt = new Date().toISOString();
         if (current?.status === "cancelled") {
           current.usage = { ...next.usage };
+          current.modelCallLog = structuredClone(next.modelCallLog);
+          current.execution = structuredClone(next.execution);
           current.updatedAt = next.updatedAt;
           this.store.save(current);
           return;
@@ -245,7 +247,7 @@ export class RunService {
     card.body = parsed.body;
     card.script = parsed.body;
     const oldClaims = run.claims.filter((c) => c.cardId === card.id);
-    const idClaim = `${card.id}-manual-v${run.version}`;
+    const idClaim = oldClaims[0]?.id ?? `${card.id}-manual`;
     run.claims = run.claims.filter((c) => c.cardId !== card.id);
     run.claims.push({
       id: idClaim,
@@ -259,6 +261,9 @@ export class RunService {
     run.reviewVersion = null;
     run.approval = null;
     run.artifacts = [];
+    run.assessments = [];
+    run.proposedChanges = [];
+    run.protectedCardIds = [...new Set([...(run.protectedCardIds ?? []), card.id])];
     run.status = "needs_review";
     run.stopReason = "문구가 수정되었습니다. 새 버전을 다시 검수하세요.";
     run.updatedAt = new Date().toISOString();
@@ -268,6 +273,7 @@ export class RunService {
       cards: structuredClone(run.cards),
       claims: structuredClone(run.claims),
       reason: "담당자 문구 수정",
+      origin: "human",
     });
     run.events.push({
       id: randomUUID(),

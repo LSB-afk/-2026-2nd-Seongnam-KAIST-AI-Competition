@@ -361,6 +361,8 @@ describe("bounded agent execution", () => {
                 reasonSummary: "추가 자료 필요",
                 uncertainty: "자료 없음",
                 blockedReason: "추가 자료 필요",
+                expectedVersion: 0,
+                search: null,
               }),
             },
           ],

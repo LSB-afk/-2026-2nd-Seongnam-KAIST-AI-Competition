@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { PROMPT_VERSION, REVIEW_RULES_VERSION } from "./prompts";
 import type { Run, Mode, Scenario, Strategy, Brief } from "./types";
 export const DEFAULT_BRIEF: Brief = {
   place: "판교박물관",
@@ -50,5 +51,19 @@ export function newRun(options: {
     },
     approval: null,
     stopReason: null,
+    searches: [],
+    assessments: [],
+    reviews: [],
+    automaticRevisions: 0,
+    protectedCardIds: [],
+    proposedChanges: [],
+    modelCallLog: [],
+    execution: {
+      model: options.mode === "live" ? (process.env.ANTHROPIC_MODEL ?? null) : null,
+      promptVersion: PROMPT_VERSION,
+      reviewRulesVersion: REVIEW_RULES_VERSION,
+      sourceSnapshotIds: [],
+      apiCalls: 0,
+    },
   };
 }

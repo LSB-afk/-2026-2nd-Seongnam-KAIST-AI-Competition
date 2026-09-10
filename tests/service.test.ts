@@ -169,7 +169,7 @@ describe("review and run lifecycle", () => {
   });
 });
 
-it("editing a repaired card does not reopen historical issues against deleted claim IDs", () => {
+it("editing a repaired card preserves its claim ID without reopening historical issues", () => {
   const { store, service } = setup();
   const run = readyRun();
   run.issues = [
@@ -191,7 +191,7 @@ it("editing a repaired card does not reopen historical issues against deleted cl
     title: "수정된 제목",
     body: "새 설명",
   });
-  expect(edited.claims.some((c) => c.id === "claim1")).toBe(false);
+  expect(edited.claims.some((c) => c.id === "claim1")).toBe(true);
   expect(edited.issues[0].resolved).toBe(true);
   store.close();
 });
@@ -223,4 +223,29 @@ it("preserves reserved and reconciled usage even after cancellation", async () =
   expect(stored.usage.costUsd).toBe(0.02);
   expect(stored.usage.inputTokens).toBe(1500);
   store.close();
+});
+
+it('protects human-edited content without consuming automatic revisions or changing an existing claim ID', () => {
+  const {store,service}=setup(); const run=readyRun();run.automaticRevisions=1;
+  store.insert(run,'protected');
+  const edited=service.edit(run.id,{version:1,cardId:'c1',title:'직접 편집',body:'담당자가 확인할 문구'});
+  expect(edited.protectedCardIds).toEqual(['c1']);
+  expect(edited.automaticRevisions).toBe(1);
+  expect(edited.claims[0].id).toBe('claim1');
+  expect(edited.revisions.at(-1)?.origin).toBe('human');
+  store.close();
+});
+
+it('keeps late model-call audit settlement after cancellation', async () => {
+  let entered!:()=>void,finish!:()=>void;
+  const reached=new Promise<void>(r=>entered=r), wait=new Promise<void>(r=>finish=r);
+  const {store,service}=setup(async (run,deps)=>{
+    run.modelCallLog=[{id:'call-1',at:run.createdAt,model:'test',promptVersion:'v2',status:'reserved',reservedCostUsd:0.02,costUsd:0.02}];
+    deps.persist(run);entered();await wait;
+    run.modelCallLog[0].status='succeeded';run.modelCallLog[0].costUsd=0.01;
+    deps.persist(run);return run;
+  });
+  const run=service.create({...input,requestId:'late-audit'});await reached;service.cancel(run.id);finish();await service.idle(run.id);
+  expect(store.get(run.id)?.modelCallLog?.[0].status).toBe('succeeded');
+  expect(store.get(run.id)?.status).toBe('cancelled');store.close();
 });

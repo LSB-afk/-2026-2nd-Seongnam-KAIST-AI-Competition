@@ -8,6 +8,7 @@ import {
   verifyLive,
 } from "./provider";
 import { verifyContent } from "./verifier";
+import { applyStoryUpdate, mergeSearchResult, recordReview, searchIntent } from "./lifecycle";
 import type { Action, AgentDeps, Decision, Run } from "./types";
 
 function packageIsValid(run: Run) {
@@ -34,7 +35,8 @@ function contentIsVerified(run: Run) {
     !run.issues.some((issue) => !issue.resolved) &&
     run.claims
       .filter((claim) => claim.kind === "fact")
-      .every((claim) => claim.support === "supported")
+      .every((claim) => claim.support === "supported") &&
+    (run.mode !== "live" || (Boolean(run.assessments?.length) && run.assessments!.every(a => a.verdict === "supported")))
   );
 }
 function decision(action: Action, reasonSummary: string, run: Run): Decision {
@@ -56,6 +58,7 @@ function decision(action: Action, reasonSummary: string, run: Run): Decision {
     reasonSummary,
     uncertainty: issues.length ? "근거와 수정 결과를 재확인해야 합니다." : "",
     blockedReason: action === "escalate" ? reasonSummary : "",
+    expectedVersion: run.version,
   };
 }
 function chooseFixture(run: Run): Decision {
@@ -83,7 +86,7 @@ function chooseFixture(run: Run): Decision {
       run,
     );
   const pending = run.issues.filter((issue) => !issue.resolved);
-  const corrections = Math.max(0, run.revisions.length - 1);
+  const corrections = run.automaticRevisions ?? Math.max(0, run.revisions.filter(r=>r.origin !== "human" && !r.reason.includes("담당자")).length - 1);
   if (run.strategy === "baseline") {
     if (corrections < 1)
       return decision(
@@ -186,6 +189,14 @@ export async function runAgent(run: Run, deps: AgentDeps): Promise<Run> {
           ? await decideLive(run, signal, persist)
           : chooseFixture(run);
       check();
+      if (chosen.expectedVersion !== undefined && chosen.expectedVersion !== run.version)
+        throw new AgentLimitError("판단 대상 버전이 변경되었습니다. 최신 버전으로 다시 검토하세요.");
+      if (chosen.action === "search_sources") {
+        chosen.search = searchIntent(run, chosen);
+        const repeated = (run.searches ?? []).filter(s => s.query.trim() === chosen.search!.query.trim() && s.newEvidenceCount === 0);
+        if (repeated.length >= 2)
+          throw new AgentLimitError("같은 검색에서 새 근거를 확보하지 못했습니다. 다른 자료 또는 담당자 확인이 필요합니다.");
+      }
       const knownTargets = new Set([
         "run",
         ...run.cards.map((card) => card.id),
@@ -222,7 +233,7 @@ export async function runAgent(run: Run, deps: AgentDeps): Promise<Run> {
       if (
         chosen.action === "compose_story" &&
         run.cards.length &&
-        Math.max(0, run.revisions.length - 1) >= run.limits.maxRevisions
+        (run.automaticRevisions ?? Math.max(0, run.revisions.filter(r=>r.origin !== "human" && !r.reason.includes("담당자")).length - 1)) >= run.limits.maxRevisions
       )
         throw new AgentLimitError("콘텐츠 수정 횟수 상한에 도달했습니다.");
       if (chosen.action === "compose_story" && !run.evidence.length)
@@ -240,8 +251,8 @@ export async function runAgent(run: Run, deps: AgentDeps): Promise<Run> {
       if (chosen.action === "search_sources") {
         const result = await deps.search(run, chosen, signal);
         check();
-        run.sources = result.sources;
-        run.evidence = result.evidence;
+        const report = mergeSearchResult(run, result, chosen, stamp());
+        run.events[run.events.length - 1].message = `${chosen.reasonSummary} 방문 ${report.visitedPages}페이지 · 새 근거 ${report.newEvidenceCount}개`;
         // New evidence cannot retain an old review verdict, even if the wording is unchanged.
         if (run.cards.length && !run.issues.some((issue) => !issue.resolved))
           run.reviewVersion = null;
@@ -256,19 +267,7 @@ export async function runAgent(run: Run, deps: AgentDeps): Promise<Run> {
             ? await composeLive(run, signal, persist)
             : createFixtureStory(run);
         check();
-        run.version += 1;
-        run.cards = story.cards;
-        run.claims = story.claims;
-        run.reviewVersion = null;
-        run.approval = null;
-        run.artifacts = [];
-        run.revisions.push({
-          version: run.version,
-          createdAt: stamp(),
-          cards: structuredClone(run.cards),
-          claims: structuredClone(run.claims),
-          reason: chosen.reasonSummary,
-        });
+        applyStoryUpdate(run, story, chosen, stamp());
       } else if (chosen.action === "verify_content") {
         const rules = verifyContent(run);
         const modelIssues =
@@ -282,12 +281,14 @@ export async function runAgent(run: Run, deps: AgentDeps): Promise<Run> {
                 issue.targetId === claim.id || issue.targetId === claim.cardId,
             )
           )
+            if (claim.support !== "contradicted")
             claim.support = "insufficient";
         run.issues = [
           ...run.issues.map((issue) => ({ ...issue, resolved: true })),
           ...current,
         ];
         run.reviewVersion = run.version;
+        recordReview(run, stamp());
         // Replace the action's message rather than adding a second tool event.
         run.events[run.events.length - 1].message = current.length
           ? `문제 ${current.length}건 발견: ${current.map((issue) => issue.message).join(" ")}`

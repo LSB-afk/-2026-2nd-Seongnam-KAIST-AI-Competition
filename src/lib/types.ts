@@ -39,12 +39,85 @@ export interface Source {
   snapshot: string;
   hash: string;
   license: string;
+  publishedAt?: string;
+  modifiedAt?: string;
+  searchIds?: string[];
 }
 export interface Evidence {
   id: string;
   sourceId: string;
   quote: string;
   locator: string;
+  searchId?: string;
+  targetClaimIds?: string[];
+  start?: number;
+  end?: number;
+}
+export interface SearchIntent {
+  query: string;
+  targetClaimIds: string[];
+  missingInformation: string[];
+  reason: string;
+}
+export interface SearchRecord extends SearchIntent {
+  id: string;
+  at: string;
+  version: number;
+  visitedPages: number;
+  newEvidenceCount: number;
+  evidenceIds: string[];
+  resolvedClaimIds: string[];
+  remainingInformation: string[];
+  errors: string[];
+}
+export interface ClaimAssessment {
+  id: string;
+  claimId: string;
+  cardId: string;
+  field: "title" | "body" | "script";
+  text: string;
+  verdict: "supported" | "contradicted" | "insufficient";
+  evidenceIds: string[];
+  rationale: string;
+  action: "keep" | "search" | "revise" | "delete" | "human_review";
+  start?: number;
+  end?: number;
+  freshness?: "stable" | "current" | "unverified" | "outdated" | "conflicting";
+  citations?: {
+    evidenceId: string;
+    sourceId: string;
+    quote: string;
+    relation: "supports" | "contradicts" | "context";
+    explanation: string;
+  }[];
+}
+export interface ReviewSnapshot {
+  version: number;
+  at: string;
+  sourceSnapshotIds: string[];
+  assessments: ClaimAssessment[];
+  issues: ReviewIssue[];
+}
+export interface ModelCallRecord {
+  id: string;
+  at: string;
+  model: string;
+  promptVersion: string;
+  status: "reserved" | "succeeded" | "failed";
+  reservedCostUsd: number;
+  costUsd: number;
+  inputTokens?: number;
+  outputTokens?: number;
+  error?: string;
+}
+export interface ProposedChange {
+  cardId: string;
+  expectedVersion: number;
+  before: Card;
+  after: Card;
+  claims: Claim[];
+  reason: string;
+  evidenceIds: string[];
 }
 export interface Claim {
   id: string;
@@ -78,6 +151,8 @@ export interface Revision {
   cards: Card[];
   claims: Claim[];
   reason: string;
+  origin?: "model" | "human";
+  evidenceIds?: string[];
 }
 export interface Decision {
   action: Action;
@@ -86,6 +161,8 @@ export interface Decision {
   reasonSummary: string;
   uncertainty: string;
   blockedReason?: string;
+  search?: SearchIntent | null;
+  expectedVersion?: number;
 }
 export interface RunEvent {
   id: string;
@@ -144,10 +221,25 @@ export interface Run {
   limits: Limits;
   approval: { version: number; at: string; reviewer: string } | null;
   stopReason: string | null;
+  searches?: SearchRecord[];
+  assessments?: ClaimAssessment[];
+  reviews?: ReviewSnapshot[];
+  automaticRevisions?: number;
+  protectedCardIds?: string[];
+  proposedChanges?: ProposedChange[];
+  execution?: {
+    model: string | null;
+    promptVersion: string;
+    reviewRulesVersion: string;
+    sourceSnapshotIds: string[];
+    apiCalls: number;
+  };
+  modelCallLog?: ModelCallRecord[];
 }
 export interface SourceResult {
   sources: Source[];
   evidence: Evidence[];
+  search?: SearchRecord;
 }
 export interface AgentDeps {
   search: (

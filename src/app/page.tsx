@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Brief, Card, Mode, Run, Scenario, Strategy } from "@/lib/types";
+import { AtomicReview, EvidenceLinks, ProtectedChanges, RunTrace, safeSourceUrl } from "@/components/review-trace";
 
 type Config = {
   live: { configured: boolean; reason?: string; model?: string };
@@ -108,6 +109,7 @@ export default function Studio() {
   const [clock, setClock] = useState(() => Date.now());
   const [historyLoading, setHistoryLoading] = useState(false);
   const active = run?.status === "queued" || run?.status === "running";
+  const liveUnavailable = mode === "live" && !config?.live.configured;
   const card =
     run?.cards.find((item) => item.id === selectedCardId) || run?.cards[0];
   const cardClaims =
@@ -194,6 +196,10 @@ export default function Studio() {
   }
 
   async function start() {
+    if (liveUnavailable) {
+      setError("실제 AI 연결 설정이 필요합니다. 연결 설정 안내를 확인하거나 데모 모드를 선택해 주세요.");
+      return;
+    }
     setBusy(true);
     setError("");
     try {
@@ -405,10 +411,11 @@ export default function Studio() {
                 </p>
                 <div className="mode-field">
                   <span className="form-label">실행 모드</span>
-                  <div className="segmented">
+                  <div className="segmented" role="group" aria-label="실행 모드 선택">
                     <button
                       type="button"
                       className={mode === "fixture" ? "selected" : ""}
+                      aria-pressed={mode === "fixture"}
                       onClick={() => setMode("fixture")}
                     >
                       데모
@@ -416,29 +423,33 @@ export default function Studio() {
                     <button
                       type="button"
                       className={mode === "live" ? "selected" : ""}
-                      disabled={!config?.live.configured}
-                      title="실제 AI를 사용하려면 서버의 모델·비용 설정이 필요합니다."
+                      aria-pressed={mode === "live"}
                       onClick={() => setMode("live")}
                     >
                       실제 AI
                     </button>
                   </div>
-                  <p className="field-note">
+                  <p className="field-note" aria-live="polite">
                     {mode === "fixture"
                       ? "청소년 대상의 준비된 시나리오와 저장된 응답으로 체험합니다. 입력한 대상·목표를 반영한 제작은 실제 AI 모드에서 가능합니다. 실제 AI 성능을 의미하지 않습니다."
-                      : `실제 공식 자료와 AI를 사용합니다.${config?.live.model ? ` 모델: ${config.live.model}` : ""}`}
+                      : liveUnavailable
+                        ? "실제 AI 모드가 선택되었습니다. 아래 연결 설정을 완료하면 제작할 수 있습니다."
+                        : `실제 공식 자료와 AI를 사용합니다.${config?.live.model ? ` 모델: ${config.live.model}` : ""}`}
                   </p>
                   {!config?.live.configured && (
                     <>
-                      <p className="config-note">
-                        실제 AI를 사용하려면 서버의 모델·비용 설정이 필요합니다.
+                      <p className="config-note" id="live-config-note">
+                        실제 AI는 연결 설정이 필요합니다. 데모는 바로 사용할 수 있습니다.
                       </p>
-                      {config?.live.reason && (
-                        <details className="script-detail">
-                          <summary>연결 설정 안내</summary>
-                          <p className="field-note">{config.live.reason}</p>
-                        </details>
-                      )}
+                      <details className="script-detail" open={mode === "live"}>
+                        <summary>연결 설정 안내</summary>
+                        <p className="field-note">
+                          프로젝트의 .env.local에 Anthropic API 키, 모델, 토큰 단가와
+                          실행 비용 상한을 설정한 뒤 서버를 다시 시작해 주세요.
+                          필요한 항목은 .env.example과 README에 있습니다.
+                        </p>
+                        {config?.live.reason && <p className="field-note">{config.live.reason}</p>}
+                      </details>
                     </>
                   )}
                 </div>
@@ -477,12 +488,14 @@ export default function Studio() {
                     오류 상황은 복구 과정을 확인하기 위한 의도적인 테스트입니다.
                   </p>
                 </details>
-                <button className="primary-button create-button" type="submit">
+                <button className="primary-button create-button" type="submit" disabled={liveUnavailable} aria-describedby={liveUnavailable ? "live-config-note" : undefined}>
                   {active
                     ? "이야기를 제작하고 있어요"
                     : busy
                       ? "처리 중…"
-                      : "카드뉴스 제작하기"}
+                      : liveUnavailable
+                        ? "AI 연결 설정 필요"
+                        : "카드뉴스 제작하기"}
                   <span aria-hidden="true">＋</span>
                 </button>
               </fieldset>
@@ -556,16 +569,17 @@ export default function Studio() {
                     건
                   </span>
                   <span>
-                    경과 <b>{duration}</b>초
+                    경과 <b>{duration}</b>/{Math.round(run.limits.maxDurationMs / 1000)}초
                   </span>
                   <span>
                     도구 <b>{run.usage.toolCalls}</b>/{run.limits.maxToolCalls}
                     회
                   </span>
+                  <span>실제 모델 API 시도 <b>{run.execution?.apiCalls ?? "미기록"}</b>{run.execution?.apiCalls !== undefined ? "회" : ""}</span>
                   <span>
                     {run.mode === "fixture"
                       ? "모의 실행 · API 비용 없음"
-                      : `추정 비용 $${run.usage.costUsd.toFixed(4)}`}
+                      : `추정 비용 $${run.usage.costUsd.toFixed(4)} / 상한 $${run.limits.maxCostUsd.toFixed(4)}`}
                   </span>
                 </div>
                 {run.mode === "fixture" && run.scenario !== "normal" && (
@@ -700,6 +714,7 @@ export default function Studio() {
                 </ol>
               </details>
             )}
+            {run && <RunTrace run={run} duration={duration} />}
           </section>
           <aside className="review-panel" aria-label="근거와 담당자 검토">
             <div className="panel-heading">
@@ -770,6 +785,8 @@ export default function Studio() {
                     {run.cards.findIndex((item) => item.id === card?.id) + 1}장
                     · {card?.title}
                   </p>
+                  {card && run.protectedCardIds?.includes(card.id) && <p className="protected-card-label">담당자 문구 보호 중 · 자동 덮어쓰기 없음</p>}
+                  {card && (run.proposedChanges || []).some((proposal) => proposal.cardId === card.id) && tab !== "changes" && <button className="text-button proposal-link" type="button" onClick={() => setTab("changes")}>적용 전 수정 제안 확인</button>}
                   {tab === "evidence" && (
                     <>
                       <div className="claim-list">
@@ -811,7 +828,7 @@ export default function Studio() {
                                   {source && (
                                     <>
                                       <a
-                                        href={source.url}
+                                        href={safeSourceUrl(source.url)}
                                         target="_blank"
                                         rel="noreferrer"
                                       >
@@ -829,6 +846,7 @@ export default function Studio() {
                                           source.retrievedAt,
                                         ).toLocaleString("ko-KR")}
                                       </small>
+                                      <details className="trace-snapshot"><summary>검수 당시 원문 스냅샷</summary><p>자료 ID: {source.id}</p><p>스냅샷 해시: {source.hash || "미기록"}</p><pre>{source.snapshot || "저장된 원문이 없습니다."}</pre></details>
                                     </>
                                   )}
                                 </article>
@@ -846,6 +864,7 @@ export default function Studio() {
                           문장별 근거를 준비하고 있습니다.
                         </p>
                       )}
+                      {card && <AtomicReview run={run} cardId={card.id} />}
                       {card?.script && (
                         <details className="script-detail">
                           <summary>이 장의 대본</summary>
@@ -856,6 +875,7 @@ export default function Studio() {
                   )}
                   {tab === "changes" && (
                     <div className="revision-list">
+                      {card && <ProtectedChanges run={run} cardId={card.id} disabled={active || busy} onLoad={(proposal) => { setEditTitle(proposal.title); setEditBody(proposal.body); setTab("edit"); }} />}
                       {run.revisions.length < 2 ? (
                         <p className="field-note">
                           아직 수정 전후 내역이 없습니다.
@@ -876,6 +896,8 @@ export default function Studio() {
                               <h3>
                                 v{revision.version} · {revision.reason}
                               </h3>
+                              {revision.origin && <p className="field-note">{revision.origin === "human" ? "담당자가 직접 수정" : "모델이 수정"}</p>}
+                              {!!revision.evidenceIds?.length && <EvidenceLinks run={run} ids={revision.evidenceIds} />}
                               {previous && (
                                 <div className="before">
                                   <span>수정 전</span>
@@ -884,6 +906,7 @@ export default function Studio() {
                                     <br />
                                     {previous.body}
                                   </p>
+                                  {previous.script !== next?.script && <details className="revision-script"><summary>수정 전 대본</summary><p>{previous.script}</p></details>}
                                 </div>
                               )}
                               {next && (
@@ -894,6 +917,7 @@ export default function Studio() {
                                     <br />
                                     {next.body}
                                   </p>
+                                  {previous?.script !== next.script && <details className="revision-script"><summary>수정 후 대본</summary><p>{next.script}</p></details>}
                                 </div>
                               )}
                             </article>
@@ -990,6 +1014,7 @@ export default function Studio() {
                   >
                     <h3>파일 검수가 끝났습니다.</h3>
                     <p>근거와 카드뉴스를 확인한 뒤 승인해 주세요.</p>
+                    <p className="approval-version">승인 대상 v{run.version} · 검수 v{run.reviewVersion}</p>
                     <label>
                       확인 담당자
                       <input
