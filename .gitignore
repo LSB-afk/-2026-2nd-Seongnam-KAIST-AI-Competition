@@ -17,6 +17,14 @@ Thumbs.db
 *.pem
 *.key
 
+# Web app dependencies and generated runtime files
+node_modules/
+.next/
+.next-e2e/
+*.tsbuildinfo
+playwright-report/
+test-results/
+
 # Python environments and generated files
 .venv/
 venv/
