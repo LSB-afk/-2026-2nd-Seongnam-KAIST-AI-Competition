@@ -5,11 +5,16 @@ import Image from "next/image";
 import type { Card, ImageAsset, Run } from "@/lib/types";
 
 type ImageConfig = { configured: boolean; reason?: string; model?: string };
-export function CardPhoto({ card }: { card: Card }) {
+export function CardPhoto({ card, retryable = false }: { card: Card; retryable?: boolean }) {
   const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const image = card.image;
-  if (!image || failed) return <div className="card-photo-empty">사진을 선택해 주세요.</div>;
-  return <div className="card-photo-frame"><Image src={image.src} alt={`${image.kind === "ai" ? "AI 생성 이미지" : "실제 사진"}: ${card.title}`} fill unoptimized sizes="500px" onError={() => setFailed(true)} style={{ objectFit: "cover", objectPosition: `${image.crop.x * 100}% ${image.crop.y * 100}%`, transform: `scale(${image.crop.zoom})`, transformOrigin: `${image.crop.x * 100}% ${image.crop.y * 100}%` }} /><span className="image-kind">{image.kind === "ai" ? (card.imagination || image.prompt?.imagination) ? "AI 생성 이미지 · 상상 이미지" : "AI 생성 이미지 · 실제 사진 아님" : card.imagination ? "상상 장면 · 사진은 실제 모습" : "실제 장소 사진"}</span></div>;
+  if (!image) return <div className="card-photo-empty">사진을 선택해 주세요.</div>;
+  if (failed) return <div className="card-photo-empty" role={retryable ? "status" : undefined}>
+    <p>사진을 불러오지 못했습니다.</p>
+    {retryable && <button type="button" className="secondary-button" onClick={() => { setAttempt(value => value + 1); setFailed(false); }}>사진 다시 불러오기</button>}
+  </div>;
+  return <div className="card-photo-frame"><Image key={attempt} src={image.src} alt={`${image.kind === "ai" ? "AI 생성 이미지" : "실제 사진"}: ${card.title}`} fill unoptimized sizes="500px" onError={() => setFailed(true)} style={{ objectFit: "cover", objectPosition: `${image.crop.x * 100}% ${image.crop.y * 100}%`, transform: `scale(${image.crop.zoom})`, transformOrigin: `${image.crop.x * 100}% ${image.crop.y * 100}%` }} /><span className="image-kind">{image.kind === "ai" ? (card.imagination || image.prompt?.imagination) ? "AI 생성 이미지 · 상상 이미지" : "AI 생성 이미지 · 실제 사진 아님" : card.imagination ? "상상 장면 · 사진은 실제 모습" : "실제 장소 사진"}</span></div>;
 }
 
 async function request<T>(url: string, body: object): Promise<T> {
@@ -52,7 +57,7 @@ export default function ImageEditor({ run, card, config, locked, onRun, onBusy }
     {imageRunning && <div className="image-job" role="status"><strong>AI 이미지 제작 중</strong><p>장소와 카드의 내용을 바탕으로 이미지를 만들고 있습니다.</p><button type="button" className="secondary-button" disabled={pending} onClick={() => void edit({}, true)}>이미지 생성 취소</button></div>}
     {run.imageJob?.status === "failed" && <div className="image-error" role="status">이미지 생성에 실패했습니다. {run.imageJob.error} 아래에서 다시 생성할 수 있습니다.</div>}
     {run.imageJob?.status === "cancelled" && <p className="field-note">이미지 생성이 취소되었습니다. 기존 사진은 유지됩니다.</p>}
-    <div className="crop-preview"><CardPhoto key={preview.image?.src} card={preview} /></div>
+    <div className="crop-preview"><CardPhoto key={preview.image?.src} card={preview} retryable /></div>
     <fieldset disabled={locked || pending || imageRunning}>
       <h3>사진 구도 조정</h3>
       <label>가로 초점 <output>{Math.round(crop.x * 100)}%</output><input aria-label="사진 가로 초점" type="range" min={0} max={1} step={0.01} value={crop.x} onChange={(event) => setCrop({ ...crop, x: Number(event.target.value) })} /></label>

@@ -10,6 +10,7 @@ export function createFixtureStory(run: Run): {
   const place = getPlace(run.brief.placeId ?? run.brief.place);
   if (!place) throw new Error("등록되지 않은 관광지입니다.");
   const museum = place.id === "pangyo-museum";
+  const purpose = run.brief.purpose;
   const claims: Claim[] = [
     {
       id: "claim-opening",
@@ -53,6 +54,17 @@ export function createFixtureStory(run: Run): {
     })));
     claims[3].text = `상상 장면: ${place.name}에서 내가 고른 이야기를 빛과 소리로 만난다면 어떨까요?`;
   }
+  const order = purpose === "visit_guide" ? (museum ? [1, 2, 0] : [2, 0, 1])
+    : purpose === "youth_story" ? (museum ? [2, 0, 1] : [1, 0, 2]) : [0, 1, 2];
+  if (purpose) {
+    const facts = order.map((index, position) => ({ ...claims[index], cardId: `card-${position + 1}` }));
+    claims.splice(0, 3, ...facts);
+    claims[3].text = purpose === "place_intro"
+      ? `상상 장면: ${place.name}의 이야기를 이웃과 함께 나누는 미래 문화공간은 어떤 모습일까요?`
+      : purpose === "visit_guide"
+        ? `상상 장면: 다음에는 ${place.name}의 이야기를 가족이 함께 빛과 소리로 탐험한다면 어떨까요?`
+        : `상상 장면: ${place.name}에서 내가 고른 이야기를 따라 나만의 시간 탐험을 떠난다면 어떨까요?`;
+  }
   const firstDraft = run.version === 0;
   if (
     (firstDraft && run.scenario === "causal") ||
@@ -78,7 +90,13 @@ export function createFixtureStory(run: Run): {
       evidenceIds: claims[1].evidenceIds,
     };
   }
-  const titles = museum ? [
+  const titles = purpose === "place_intro"
+    ? [`${place.name}을 소개합니다`, "눈여겨볼 이야기", "공식 자료에서 한 걸음", "함께 그리는 다음 모습"]
+    : purpose === "visit_guide"
+      ? (museum ? ["방문 전에 살펴볼 전시", "알고 가면 좋은 발굴 기록", "개관 이야기", "다음 방문을 상상하며"] : ["찾아갈 장소", "가기 전에 읽는 소개", "현장에서 만나볼 이야기", "다음 방문을 상상하며"])
+      : purpose === "youth_story"
+        ? [`${place.name}, 탐험을 시작해 볼까?`, "시간을 따라 만나는 이야기", "내가 발견할 장면", "내가 상상하는 다음 장"]
+        : museum ? [
     "판교의 시간을 만나볼까?",
     "돌방에 남은 이야기",
     "땅속에서 찾은 시간",
@@ -87,19 +105,20 @@ export function createFixtureStory(run: Run): {
   const layoutTargets = run.issues
     .filter((issue) => !issue.resolved && issue.type === "layout_overflow")
     .map((issue) => issue.targetId);
-  const shorter = museum ? [
+  const museumShorter = [
     "판교박물관은 2013년 4월 2일 개관했어요.",
     "백제·고구려 석실분과 판교 출토 유물 일부를 전시해요.",
     "2003~2008년 판교에서 발굴조사가 진행됐어요.",
     "상상 장면: 유물 이야기를 빛과 소리로 탐험한다면?",
-  ] : claims.map(claim => claim.text);
+  ];
+  const shorter = museum ? [...order.map(index => museumShorter[index]), purpose ? claims[3].text : museumShorter[3]] : claims.map(claim => claim.text);
   for (let i = 0; i < claims.length; i++)
     if (
       layoutTargets.includes("run") ||
       layoutTargets.includes(claims[i].cardId)
     ) {
       claims[i].text = shorter[i];
-      titles[i] = (museum ? ["판교의 시간", "돌방의 이야기", "발굴의 기록", "미래 상상"] : [place.name, "공식 안내", "방문 장소", "미래 상상"])[
+      titles[i] = (purpose ? [place.name, "공식 이야기", "장소의 기록", "미래 상상"] : museum ? ["판교의 시간", "돌방의 이야기", "발굴의 기록", "미래 상상"] : [place.name, "공식 안내", "방문 장소", "미래 상상"])[
         i
       ];
     }

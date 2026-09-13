@@ -1,4 +1,5 @@
 export type Mode = "fixture" | "live";
+export type CreationPurpose = "place_intro" | "visit_guide" | "youth_story";
 export type Strategy = "agent" | "baseline";
 export type Status =
   | "queued"
@@ -25,6 +26,7 @@ export type Action =
 export interface Brief {
   place: string;
   placeId?: string;
+  purpose?: CreationPurpose;
   audience: string;
   goal: string;
   cardCount: 4;

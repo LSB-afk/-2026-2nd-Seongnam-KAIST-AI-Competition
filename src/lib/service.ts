@@ -17,6 +17,7 @@ const briefSchema = z
   .object({
     place: z.string().trim().min(1).max(100),
     placeId: z.string().max(100).optional(),
+    purpose: z.enum(["place_intro", "visit_guide", "youth_story"]).optional(),
     audience: z.string().trim().min(1).max(40),
     goal: z.string().trim().min(5).max(1000),
     cardCount: z.literal(4),
@@ -229,6 +230,7 @@ export class RunService {
       if (
         existing.brief.place !== parsed.brief.place ||
         (existing.brief.placeId ?? getPlace(existing.brief.place)?.id) !== parsed.brief.placeId ||
+        existing.brief.purpose !== parsed.brief.purpose ||
         existing.brief.audience !== parsed.brief.audience ||
         existing.brief.goal !== parsed.brief.goal ||
         existing.brief.cardCount !== parsed.brief.cardCount ||

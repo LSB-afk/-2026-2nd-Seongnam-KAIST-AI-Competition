@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { getPlace } from "./places";
+import { PURPOSES } from "./purposes";
 import { PROMPT_VERSION, REVIEW_RULES_VERSION } from "./prompts";
 import type { Run, Mode, Scenario, Strategy, Brief } from "./types";
 export const DEFAULT_BRIEF: Brief = {
@@ -18,6 +19,7 @@ export function newRun(options: {
 }): Run {
   const at = new Date().toISOString();
   const brief = { ...(options.brief ?? DEFAULT_BRIEF) };
+  if (brief.purpose !== undefined && !PURPOSES.some(purpose => purpose.id === brief.purpose)) throw new Error("등록되지 않은 제작 목적입니다.");
   const place = getPlace(brief.placeId ?? brief.place);
   if (!place || (brief.place && getPlace(brief.place)?.id !== place.id)) throw new Error("등록된 관광지 ID와 장소명이 일치해야 합니다.");
   brief.placeId = place.id;

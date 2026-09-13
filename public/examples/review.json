@@ -1,0 +1,504 @@
+{
+  "runId": "public-example-pangyo-youth-story",
+  "mode": "fixture",
+  "strategy": "agent",
+  "version": 1,
+  "reviewVersion": 1,
+  "auditStage": "render_snapshot",
+  "execution": {
+    "model": null,
+    "promptVersion": "2026-09-13.2",
+    "reviewRulesVersion": "atomic-evidence-2026-09-13.1",
+    "sourceSnapshotIds": [
+      "source-faq",
+      "source-history"
+    ],
+    "apiCalls": 0
+  },
+  "issues": [],
+  "revisions": [
+    {
+      "version": 1,
+      "createdAt": "2026-09-13T08:18:11.909Z",
+      "cards": [
+        {
+          "id": "card-1",
+          "title": "판교박물관, 탐험을 시작해 볼까?",
+          "body": "판교 지역에서는 2003년부터 2008년까지 발굴조사가 진행됐어요.",
+          "script": "판교 지역에서는 2003년부터 2008년까지 발굴조사가 진행됐어요.",
+          "claimIds": [
+            "claim-excavation"
+          ],
+          "imagination": false,
+          "image": {
+            "id": "photo-pangyo-museum",
+            "placeId": "pangyo-museum",
+            "kind": "photo",
+            "src": "/places/pangyo-museum.jpg",
+            "sha256": "c47e4dccfd60e7aef979493b83b003fd96202fcc51635630c81e9eaeadfe3f8d",
+            "mime": "image/jpeg",
+            "width": 1920,
+            "height": 1281,
+            "sourceUrl": "https://archive.much.go.kr/data/01/folderView.do?idnbr=2016013905&jobdirSeq=314",
+            "author": "대한민국역사박물관",
+            "license": "KOGL Type 1",
+            "licenseUrl": "https://www.kogl.or.kr/info/licenseType1.do",
+            "createdAt": "2026-09-13T00:00:00.000Z",
+            "crop": {
+              "x": 0.5,
+              "y": 0.5,
+              "zoom": 1
+            }
+          }
+        },
+        {
+          "id": "card-2",
+          "title": "시간을 따라 만나는 이야기",
+          "body": "판교박물관은 2013년 4월 2일에 문을 열었어요.",
+          "script": "판교박물관은 2013년 4월 2일에 문을 열었어요.",
+          "claimIds": [
+            "claim-opening"
+          ],
+          "imagination": false,
+          "image": {
+            "id": "photo-pangyo-museum",
+            "placeId": "pangyo-museum",
+            "kind": "photo",
+            "src": "/places/pangyo-museum.jpg",
+            "sha256": "c47e4dccfd60e7aef979493b83b003fd96202fcc51635630c81e9eaeadfe3f8d",
+            "mime": "image/jpeg",
+            "width": 1920,
+            "height": 1281,
+            "sourceUrl": "https://archive.much.go.kr/data/01/folderView.do?idnbr=2016013905&jobdirSeq=314",
+            "author": "대한민국역사박물관",
+            "license": "KOGL Type 1",
+            "licenseUrl": "https://www.kogl.or.kr/info/licenseType1.do",
+            "createdAt": "2026-09-13T00:00:00.000Z",
+            "crop": {
+              "x": 0.5,
+              "y": 0.5,
+              "zoom": 1
+            }
+          }
+        },
+        {
+          "id": "card-3",
+          "title": "내가 발견할 장면",
+          "body": "백제·고구려 시대 석실분과 판교 전역에서 출토된 유물 일부를 만날 수 있어요.",
+          "script": "백제·고구려 시대 석실분과 판교 전역에서 출토된 유물 일부를 만날 수 있어요.",
+          "claimIds": [
+            "claim-exhibit"
+          ],
+          "imagination": false,
+          "image": {
+            "id": "photo-pangyo-museum",
+            "placeId": "pangyo-museum",
+            "kind": "photo",
+            "src": "/places/pangyo-museum.jpg",
+            "sha256": "c47e4dccfd60e7aef979493b83b003fd96202fcc51635630c81e9eaeadfe3f8d",
+            "mime": "image/jpeg",
+            "width": 1920,
+            "height": 1281,
+            "sourceUrl": "https://archive.much.go.kr/data/01/folderView.do?idnbr=2016013905&jobdirSeq=314",
+            "author": "대한민국역사박물관",
+            "license": "KOGL Type 1",
+            "licenseUrl": "https://www.kogl.or.kr/info/licenseType1.do",
+            "createdAt": "2026-09-13T00:00:00.000Z",
+            "crop": {
+              "x": 0.5,
+              "y": 0.5,
+              "zoom": 1
+            }
+          }
+        },
+        {
+          "id": "card-4",
+          "title": "내가 상상하는 다음 장",
+          "body": "상상 장면: 판교박물관에서 내가 고른 이야기를 따라 나만의 시간 탐험을 떠난다면 어떨까요?",
+          "script": "상상 장면: 판교박물관에서 내가 고른 이야기를 따라 나만의 시간 탐험을 떠난다면 어떨까요?",
+          "claimIds": [
+            "claim-future"
+          ],
+          "imagination": true,
+          "image": {
+            "id": "photo-pangyo-museum",
+            "placeId": "pangyo-museum",
+            "kind": "photo",
+            "src": "/places/pangyo-museum.jpg",
+            "sha256": "c47e4dccfd60e7aef979493b83b003fd96202fcc51635630c81e9eaeadfe3f8d",
+            "mime": "image/jpeg",
+            "width": 1920,
+            "height": 1281,
+            "sourceUrl": "https://archive.much.go.kr/data/01/folderView.do?idnbr=2016013905&jobdirSeq=314",
+            "author": "대한민국역사박물관",
+            "license": "KOGL Type 1",
+            "licenseUrl": "https://www.kogl.or.kr/info/licenseType1.do",
+            "createdAt": "2026-09-13T00:00:00.000Z",
+            "crop": {
+              "x": 0.5,
+              "y": 0.5,
+              "zoom": 1
+            }
+          }
+        }
+      ],
+      "claims": [
+        {
+          "id": "claim-excavation",
+          "cardId": "card-1",
+          "text": "판교 지역에서는 2003년부터 2008년까지 발굴조사가 진행됐어요.",
+          "kind": "fact",
+          "evidenceIds": [
+            "evidence-excavation"
+          ],
+          "support": "insufficient"
+        },
+        {
+          "id": "claim-opening",
+          "cardId": "card-2",
+          "text": "판교박물관은 2013년 4월 2일에 문을 열었어요.",
+          "kind": "fact",
+          "evidenceIds": [
+            "evidence-opening"
+          ],
+          "support": "insufficient"
+        },
+        {
+          "id": "claim-exhibit",
+          "cardId": "card-3",
+          "text": "백제·고구려 시대 석실분과 판교 전역에서 출토된 유물 일부를 만날 수 있어요.",
+          "kind": "fact",
+          "evidenceIds": [
+            "evidence-exhibit"
+          ],
+          "support": "insufficient"
+        },
+        {
+          "id": "claim-future",
+          "cardId": "card-4",
+          "text": "상상 장면: 판교박물관에서 내가 고른 이야기를 따라 나만의 시간 탐험을 떠난다면 어떨까요?",
+          "kind": "imagination",
+          "evidenceIds": [],
+          "support": "not_applicable"
+        }
+      ],
+      "reason": "확인한 근거로 청소년용 카드뉴스 초안을 작성합니다.",
+      "origin": "model",
+      "evidenceIds": [
+        "evidence-excavation",
+        "evidence-opening",
+        "evidence-exhibit"
+      ]
+    }
+  ],
+  "events": [
+    {
+      "id": "bcb71962-da96-46fe-80ff-c0695d80d148",
+      "at": "2026-09-13T08:18:11.908Z",
+      "action": "started",
+      "message": "준비된 응답 모드: 실제 모델 성능을 측정하지 않는 시나리오 실행입니다.",
+      "version": 0
+    },
+    {
+      "id": "a96fba77-b3bb-467e-ab91-68568b057e9f",
+      "at": "2026-09-13T08:18:11.908Z",
+      "action": "search_sources",
+      "message": "공식 자료의 원문과 근거를 확인합니다. 방문 0페이지 · 새 근거 3개",
+      "version": 0,
+      "decision": {
+        "action": "search_sources",
+        "targetIds": [],
+        "evidenceIds": [],
+        "reasonSummary": "공식 자료의 원문과 근거를 확인합니다.",
+        "uncertainty": "",
+        "blockedReason": "",
+        "expectedVersion": 0,
+        "search": {
+          "query": "청소년이 판교박물관을 호기심을 가지고 탐험할 카드뉴스 4장을 만들어줘. 궁금증을 여는 이야기, 장소의 배경, 현장에서 발견할 특징 순으로 쉬운 문구와 질문을 사용해줘. 역사나 시설을 지어내지 마. 사실은 선택한 장소의 공식 근거로 확인하고 마지막 장에는 상상 장면임을 표시한 미래 문화공간의 가능성을 넣어줘.",
+          "targetClaimIds": [],
+          "missingInformation": [],
+          "reason": "공식 자료의 원문과 근거를 확인합니다."
+        }
+      }
+    },
+    {
+      "id": "17e62756-af98-4d65-8310-0b259f883ae4",
+      "at": "2026-09-13T08:18:11.909Z",
+      "action": "compose_story",
+      "message": "확인한 근거로 청소년용 카드뉴스 초안을 작성합니다.",
+      "version": 0,
+      "decision": {
+        "action": "compose_story",
+        "targetIds": [],
+        "evidenceIds": [],
+        "reasonSummary": "확인한 근거로 청소년용 카드뉴스 초안을 작성합니다.",
+        "uncertainty": "",
+        "blockedReason": "",
+        "expectedVersion": 0
+      }
+    },
+    {
+      "id": "563e1707-51d6-46b8-acfa-2ab3bd4513ca",
+      "at": "2026-09-13T08:18:11.909Z",
+      "action": "verify_content",
+      "message": "사실·근거·상상 표시 검수를 통과했습니다.",
+      "version": 1,
+      "decision": {
+        "action": "verify_content",
+        "targetIds": [],
+        "evidenceIds": [],
+        "reasonSummary": "새 콘텐츠 버전의 사실·연결·상상 표시를 검사합니다.",
+        "uncertainty": "",
+        "blockedReason": "",
+        "expectedVersion": 1
+      }
+    },
+    {
+      "id": "cbccc3e6-9421-4610-b318-a74f61ebce37",
+      "at": "2026-09-13T08:18:11.910Z",
+      "action": "render_cards",
+      "message": "검수를 통과한 버전으로 카드뉴스 파일을 제작합니다.",
+      "version": 1,
+      "decision": {
+        "action": "render_cards",
+        "targetIds": [],
+        "evidenceIds": [],
+        "reasonSummary": "검수를 통과한 버전으로 카드뉴스 파일을 제작합니다.",
+        "uncertainty": "",
+        "blockedReason": "",
+        "expectedVersion": 1
+      }
+    }
+  ],
+  "usage": {
+    "toolCalls": 4,
+    "modelCalls": 0,
+    "inputTokens": 0,
+    "outputTokens": 0,
+    "costUsd": 0,
+    "costKind": "fixture"
+  },
+  "limits": {
+    "maxToolCalls": 12,
+    "maxRevisions": 3,
+    "maxDurationMs": 180000,
+    "maxModelCalls": 30,
+    "maxCostUsd": 0.5
+  },
+  "assessments": [
+    {
+      "id": "fixture:1:claim-excavation:body",
+      "claimId": "claim-excavation",
+      "cardId": "card-1",
+      "field": "body",
+      "text": "판교 지역에서는 2003년부터 2008년까지 발굴조사가 진행됐어요.",
+      "start": 0,
+      "end": 37,
+      "freshness": "stable",
+      "verdict": "supported",
+      "evidenceIds": [
+        "evidence-excavation"
+      ],
+      "rationale": "fixture 규칙 atomic-evidence-2026-09-13.1: 저장한 공식 문구 또는 허용한 동일 의미 문구와 일치합니다. 실제 모델 판정이 아닙니다.",
+      "action": "keep"
+    },
+    {
+      "id": "fixture:1:claim-excavation:script",
+      "claimId": "claim-excavation",
+      "cardId": "card-1",
+      "field": "script",
+      "text": "판교 지역에서는 2003년부터 2008년까지 발굴조사가 진행됐어요.",
+      "start": 0,
+      "end": 37,
+      "freshness": "stable",
+      "verdict": "supported",
+      "evidenceIds": [
+        "evidence-excavation"
+      ],
+      "rationale": "fixture 규칙 atomic-evidence-2026-09-13.1: 저장한 공식 문구 또는 허용한 동일 의미 문구와 일치합니다. 실제 모델 판정이 아닙니다.",
+      "action": "keep"
+    },
+    {
+      "id": "fixture:1:claim-opening:body",
+      "claimId": "claim-opening",
+      "cardId": "card-2",
+      "field": "body",
+      "text": "판교박물관은 2013년 4월 2일에 문을 열었어요.",
+      "start": 0,
+      "end": 28,
+      "freshness": "stable",
+      "verdict": "supported",
+      "evidenceIds": [
+        "evidence-opening"
+      ],
+      "rationale": "fixture 규칙 atomic-evidence-2026-09-13.1: 저장한 공식 문구 또는 허용한 동일 의미 문구와 일치합니다. 실제 모델 판정이 아닙니다.",
+      "action": "keep"
+    },
+    {
+      "id": "fixture:1:claim-opening:script",
+      "claimId": "claim-opening",
+      "cardId": "card-2",
+      "field": "script",
+      "text": "판교박물관은 2013년 4월 2일에 문을 열었어요.",
+      "start": 0,
+      "end": 28,
+      "freshness": "stable",
+      "verdict": "supported",
+      "evidenceIds": [
+        "evidence-opening"
+      ],
+      "rationale": "fixture 규칙 atomic-evidence-2026-09-13.1: 저장한 공식 문구 또는 허용한 동일 의미 문구와 일치합니다. 실제 모델 판정이 아닙니다.",
+      "action": "keep"
+    },
+    {
+      "id": "fixture:1:claim-exhibit:body",
+      "claimId": "claim-exhibit",
+      "cardId": "card-3",
+      "field": "body",
+      "text": "백제·고구려 시대 석실분과 판교 전역에서 출토된 유물 일부를 만날 수 있어요.",
+      "start": 0,
+      "end": 43,
+      "freshness": "stable",
+      "verdict": "supported",
+      "evidenceIds": [
+        "evidence-exhibit"
+      ],
+      "rationale": "fixture 규칙 atomic-evidence-2026-09-13.1: 저장한 공식 문구 또는 허용한 동일 의미 문구와 일치합니다. 실제 모델 판정이 아닙니다.",
+      "action": "keep"
+    },
+    {
+      "id": "fixture:1:claim-exhibit:script",
+      "claimId": "claim-exhibit",
+      "cardId": "card-3",
+      "field": "script",
+      "text": "백제·고구려 시대 석실분과 판교 전역에서 출토된 유물 일부를 만날 수 있어요.",
+      "start": 0,
+      "end": 43,
+      "freshness": "stable",
+      "verdict": "supported",
+      "evidenceIds": [
+        "evidence-exhibit"
+      ],
+      "rationale": "fixture 규칙 atomic-evidence-2026-09-13.1: 저장한 공식 문구 또는 허용한 동일 의미 문구와 일치합니다. 실제 모델 판정이 아닙니다.",
+      "action": "keep"
+    }
+  ],
+  "reviews": [
+    {
+      "version": 1,
+      "at": "2026-09-13T08:18:11.910Z",
+      "sourceSnapshotIds": [
+        "source-faq",
+        "source-history"
+      ],
+      "assessments": [
+        {
+          "id": "fixture:1:claim-excavation:body",
+          "claimId": "claim-excavation",
+          "cardId": "card-1",
+          "field": "body",
+          "text": "판교 지역에서는 2003년부터 2008년까지 발굴조사가 진행됐어요.",
+          "start": 0,
+          "end": 37,
+          "freshness": "stable",
+          "verdict": "supported",
+          "evidenceIds": [
+            "evidence-excavation"
+          ],
+          "rationale": "fixture 규칙 atomic-evidence-2026-09-13.1: 저장한 공식 문구 또는 허용한 동일 의미 문구와 일치합니다. 실제 모델 판정이 아닙니다.",
+          "action": "keep"
+        },
+        {
+          "id": "fixture:1:claim-excavation:script",
+          "claimId": "claim-excavation",
+          "cardId": "card-1",
+          "field": "script",
+          "text": "판교 지역에서는 2003년부터 2008년까지 발굴조사가 진행됐어요.",
+          "start": 0,
+          "end": 37,
+          "freshness": "stable",
+          "verdict": "supported",
+          "evidenceIds": [
+            "evidence-excavation"
+          ],
+          "rationale": "fixture 규칙 atomic-evidence-2026-09-13.1: 저장한 공식 문구 또는 허용한 동일 의미 문구와 일치합니다. 실제 모델 판정이 아닙니다.",
+          "action": "keep"
+        },
+        {
+          "id": "fixture:1:claim-opening:body",
+          "claimId": "claim-opening",
+          "cardId": "card-2",
+          "field": "body",
+          "text": "판교박물관은 2013년 4월 2일에 문을 열었어요.",
+          "start": 0,
+          "end": 28,
+          "freshness": "stable",
+          "verdict": "supported",
+          "evidenceIds": [
+            "evidence-opening"
+          ],
+          "rationale": "fixture 규칙 atomic-evidence-2026-09-13.1: 저장한 공식 문구 또는 허용한 동일 의미 문구와 일치합니다. 실제 모델 판정이 아닙니다.",
+          "action": "keep"
+        },
+        {
+          "id": "fixture:1:claim-opening:script",
+          "claimId": "claim-opening",
+          "cardId": "card-2",
+          "field": "script",
+          "text": "판교박물관은 2013년 4월 2일에 문을 열었어요.",
+          "start": 0,
+          "end": 28,
+          "freshness": "stable",
+          "verdict": "supported",
+          "evidenceIds": [
+            "evidence-opening"
+          ],
+          "rationale": "fixture 규칙 atomic-evidence-2026-09-13.1: 저장한 공식 문구 또는 허용한 동일 의미 문구와 일치합니다. 실제 모델 판정이 아닙니다.",
+          "action": "keep"
+        },
+        {
+          "id": "fixture:1:claim-exhibit:body",
+          "claimId": "claim-exhibit",
+          "cardId": "card-3",
+          "field": "body",
+          "text": "백제·고구려 시대 석실분과 판교 전역에서 출토된 유물 일부를 만날 수 있어요.",
+          "start": 0,
+          "end": 43,
+          "freshness": "stable",
+          "verdict": "supported",
+          "evidenceIds": [
+            "evidence-exhibit"
+          ],
+          "rationale": "fixture 규칙 atomic-evidence-2026-09-13.1: 저장한 공식 문구 또는 허용한 동일 의미 문구와 일치합니다. 실제 모델 판정이 아닙니다.",
+          "action": "keep"
+        },
+        {
+          "id": "fixture:1:claim-exhibit:script",
+          "claimId": "claim-exhibit",
+          "cardId": "card-3",
+          "field": "script",
+          "text": "백제·고구려 시대 석실분과 판교 전역에서 출토된 유물 일부를 만날 수 있어요.",
+          "start": 0,
+          "end": 43,
+          "freshness": "stable",
+          "verdict": "supported",
+          "evidenceIds": [
+            "evidence-exhibit"
+          ],
+          "rationale": "fixture 규칙 atomic-evidence-2026-09-13.1: 저장한 공식 문구 또는 허용한 동일 의미 문구와 일치합니다. 실제 모델 판정이 아닙니다.",
+          "action": "keep"
+        }
+      ],
+      "issues": []
+    }
+  ],
+  "modelCallLog": [],
+  "outputChecks": {
+    "cardCount": 4,
+    "width": 1080,
+    "height": 1080,
+    "fontsLoaded": true,
+    "imagesLoaded": true,
+    "overflow": false
+  }
+}

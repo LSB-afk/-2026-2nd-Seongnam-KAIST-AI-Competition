@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Brief, Card, Mode, Run, Scenario, Strategy } from "@/lib/types";
@@ -10,6 +10,10 @@ import { PLACES, getPlace, type Place } from "@/lib/places";
 import PlaceExplorer, { PlacePhoto } from "@/components/place-explorer";
 import ImageEditor, { CardPhoto } from "@/components/image-editor";
 import PlatformHome, { RunHistory } from "@/components/platform-home";
+import TamiGuide from "@/components/tami-guide";
+import { useWorkspace } from "@/hooks/use-workspace";
+import { defaultExplore, matchingEditDraft, normaliseExplore, shouldAcceptRun, toggleSavedPlace, upsertEditDraft, type DraftState, type WorkspaceView, type ExploreState, type ReviewTab } from "@/lib/workspace-state";
+import { PURPOSES, goalForPurpose, type CreationPurpose } from "@/lib/purposes";
 
 type Config = {
   image?: { configured: boolean; reason?: string; model?: string };
@@ -22,6 +26,7 @@ const example: Brief = {
   goal: "청소년에게 판교박물관을 소개할 카드뉴스 4장을 만들어줘. 마지막 장에는 성남의 미래 문화공간을 상상하는 내용을 넣어줘.",
   cardCount: 4,
   includeFuture: true,
+  purpose: "youth_story",
 };
 const statuses: Record<Run["status"], string> = {
   queued: "제작 대기",
@@ -97,35 +102,56 @@ function Mark({ small = false }: { small?: boolean }) {
   );
 }
 
+const initialDraft: DraftState = { brief: example, mode: "fixture", strategy: "agent", scenario: "normal", imageChoice: "photo" };
+
 export default function Studio() {
-  const [view, setView] = useState<"dashboard" | "explore" | "studio" | "history">("dashboard");
+  const { state: workspace, ready: workspaceReady, update: updateWorkspace, storageError, getSnapshot } = useWorkspace(initialDraft);
+  const view = workspace.view;
+  const setView = (next: WorkspaceView) => updateWorkspace({ view: next }, "push");
+  const explore = workspace.explore;
+  const savedIds = workspace.savedIds;
   const [recordsLoaded, setRecordsLoaded] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
-  const [imageChoice, setImageChoice] = useState<"photo" | "ai">("photo");
-  const [brief, setBrief] = useState<Brief>(example);
-  const [mode, setMode] = useState<Mode>("fixture");
-  const [strategy, setStrategy] = useState<Strategy>("agent");
-  const [scenario, setScenario] = useState<Scenario>("causal");
+  const { imageChoice, brief, mode, strategy, scenario } = workspace.draft;
+  const setBrief = (value: Brief | ((previous: Brief) => Brief)) => updateWorkspace(previous => ({...previous,draft:{...previous.draft,brief:typeof value === "function" ? value(previous.draft.brief) : value}}));
+  const setImageChoice = (value: "photo" | "ai") => updateWorkspace(previous=>({...previous,draft:{...previous.draft,imageChoice:value}}));
+  const setMode = (value: Mode) => updateWorkspace(previous=>({...previous,draft:{...previous.draft,mode:value}}));
+  const setStrategy = (value: Strategy) => updateWorkspace(previous=>({...previous,draft:{...previous.draft,strategy:value}}));
+  const setScenario = (value: Scenario) => updateWorkspace(previous=>({...previous,draft:{...previous.draft,scenario:value}}));
   const [config, setConfig] = useState<Config | null>(null);
   const [run, setRun] = useState<Run | null>(null);
+  const runRef = useRef<Run | null>(null);
+  const mutationPending = useRef(false);
   const [history, setHistory] = useState<Run[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [selectedCardId, setSelectedCardId] = useState("");
+  const selectedCardId = workspace.selectedCardId;
+  const setSelectedCardId = (selectedCardId: string) => updateWorkspace({selectedCardId});
   const [selectedClaimId, setSelectedClaimId] = useState("");
-  const [tab, setTab] = useState<"evidence" | "changes" | "edit" | "image">("evidence");
-  const [editTitle, setEditTitle] = useState("");
-  const [editBody, setEditBody] = useState("");
+  const tab = workspace.tab;
+  const setTab = (tab: ReviewTab) => updateWorkspace({tab});
   const [reviewer, setReviewer] = useState("");
   const [clock, setClock] = useState(() => Date.now());
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [loadEpoch,setLoadEpoch]=useState(0);
+  useEffect(()=>{window.scrollTo({top:0,behavior:"instant"});},[view]);
   const textActive = run?.status === "queued" || run?.status === "running";
   const active = textActive || run?.imageJob?.status === "running";
   const draftPlace = getPlace(brief.placeId || brief.place) || PLACES[0];
   const liveUnavailable = mode === "live" && !config?.live.configured;
   const card =
     run?.cards.find((item) => item.id === selectedCardId) || run?.cards[0];
+  const editDraft = run && card ? matchingEditDraft(workspace.editDrafts,run.id,run.version,card.id) : null;
+  const staleEdit = run && card ? workspace.editDrafts.find(d=>d.runId===run.id&&d.cardId===card.id&&d.version!==run.version) : null;
+  const editTitle = editDraft?.title ?? card?.title ?? "";
+  const editBody = editDraft?.body ?? card?.body ?? "";
+  function setEditContent(title:string,body:string) {
+    if(!run||!card)return;
+    updateWorkspace(previous=>({...previous,editDrafts:upsertEditDraft(previous.editDrafts,{runId:run.id,version:run.version,cardId:card.id,title,body})}));
+  }
+  const setEditTitle=(title:string)=>setEditContent(title,editBody);
+  const setEditBody=(body:string)=>setEditContent(editTitle,body);
   const cardClaims =
     run?.claims.filter((claim) => claim.cardId === card?.id) || [];
   const claim =
@@ -177,6 +203,28 @@ export default function Studio() {
     return () => { mounted = false; };
   }, [refreshInitial]);
 
+  const receiveRun = useCallback((next: Run) => {
+    if(getSnapshot().runId!==next.id || !shouldAcceptRun(runRef.current?.id===next.id?runRef.current:null,next))return;
+    runRef.current=next;setRun(next);
+    setHistory(previous=>[next,...previous.filter(item=>item.id!==next.id)]);
+  },[getSnapshot]);
+
+  useEffect(()=>{
+    if(!workspaceReady)return;
+    const id=workspace.runId;
+    const controller=new AbortController();
+    void Promise.resolve().then(async()=>{
+      if(controller.signal.aborted)return;
+      if(!id){runRef.current=null;setRun(null);setHistoryLoading(false);return;}
+      if(runRef.current?.id===id)return;
+      runRef.current=null;setRun(null);setHistoryLoading(true);
+      try {receiveRun(await readJson<Run>(`/api/runs/${id}`,{signal:controller.signal}));}
+      catch(cause){if(!controller.signal.aborted)setError(cause instanceof Error?cause.message:"작업을 복원하지 못했습니다.");}
+      finally{if(!controller.signal.aborted)setHistoryLoading(false);}
+    });
+    return()=>controller.abort();
+  },[workspaceReady,workspace.runId,receiveRun,loadEpoch]);
+
   useEffect(() => {
     if (!active || !run?.id) return;
     let mounted = true;
@@ -189,11 +237,7 @@ export default function Studio() {
       readJson<Run>(`/api/runs/${id}`)
         .then((next) => {
           if (!mounted) return;
-          setRun(next);
-          setHistory((previous) => [
-            next,
-            ...previous.filter((item) => item.id !== next.id),
-          ]);
+          receiveRun(next);
         })
         .catch((cause: Error) => {
           if (mounted)
@@ -207,20 +251,22 @@ export default function Studio() {
       mounted = false;
       clearInterval(timer);
     };
-  }, [active, run?.id]);
+  }, [active, run?.id, receiveRun]);
 
   function chooseCard(next: Card) {
     setSelectedCardId(next.id);
     setSelectedClaimId("");
-    setEditTitle(next.title);
-    setEditBody(next.body);
+
   }
 
   async function start() {
+    if(mutationPending.current || active || busy || !workspaceReady)return;
     if (liveUnavailable) {
       setError("실제 AI 연결 설정이 필요합니다. 연결 설정 안내를 확인하거나 데모 모드를 선택해 주세요.");
       return;
     }
+    const requestedRunId=getSnapshot().runId;
+    mutationPending.current=true;
     setBusy(true);
     setError("");
     try {
@@ -234,11 +280,10 @@ export default function Studio() {
           requestId: crypto.randomUUID(),
         }),
       });
-      setRun(next);
-      setView("studio");
-      setSelectedCardId("");
+      if(getSnapshot().runId!==requestedRunId){setHistory(previous=>[next,...previous.filter(item=>item.id!==next.id)]);return;}
+      updateWorkspace({runId:next.id,selectedCardId:"",tab:imageChoice === "ai" ? "image" : "evidence"},"push");
+      runRef.current=null;receiveRun(next);
       setSelectedClaimId("");
-      setTab(imageChoice === "ai" ? "image" : "evidence");
       setReviewer("");
       setClock(Date.now());
       setHistory((previous) => [
@@ -250,6 +295,7 @@ export default function Studio() {
         cause instanceof Error ? cause.message : "제작을 시작하지 못했습니다.",
       );
     } finally {
+      mutationPending.current=false;
       setBusy(false);
     }
   }
@@ -258,7 +304,11 @@ export default function Studio() {
     action: "cancel" | "approve" | "edit" | "retry",
     body: object,
   ) {
-    if (!run) return;
+    if (!run || mutationPending.current || busy) return;
+    mutationPending.current=true;
+    const requestedId=run.id;
+    const requestedCard=card?.id;
+    const requestedVersion=run.version;
     setBusy(true);
     setError("");
     try {
@@ -266,49 +316,43 @@ export default function Studio() {
         method: "POST",
         body: JSON.stringify(body),
       });
-      setRun(next);
-      setHistory((previous) => [
-        next,
-        ...previous.filter((item) => item.id !== next.id),
-      ]);
-      if (action === "edit") setTab("evidence");
+      receiveRun(next);
+      if (action === "edit" && getSnapshot().runId===requestedId) updateWorkspace(previous=>({...previous,tab:"evidence",editDrafts:previous.editDrafts.filter(d=>!(d.runId===requestedId&&d.cardId===requestedCard&&d.version===requestedVersion))}));
     } catch (cause) {
-      setError(
+      if(getSnapshot().runId===requestedId)setError(
         cause instanceof Error ? cause.message : "변경을 저장하지 못했습니다.",
       );
     } finally {
+      mutationPending.current=false;
       setBusy(false);
     }
   }
 
-  async function loadRun(id: string) {
-    if (!id) return;
-    setHistoryLoading(true);
-    setError("");
-    try {
-      const next = await readJson<Run>(`/api/runs/${id}`);
-      setRun(next);
-      setView("studio");
-      setSelectedCardId("");
-      setSelectedClaimId("");
-      setTab("evidence");
-      setReviewer("");
-    } catch (cause) {
-      setError(
-        cause instanceof Error ? cause.message : "이전 작업을 열지 못했습니다.",
-      );
-    } finally {
-      setHistoryLoading(false);
-    }
+  function loadRun(id: string) {
+    if(!id||active||busy)return;
+    if(!runRef.current || runRef.current.id!==id)setLoadEpoch(value=>value+1);
+    updateWorkspace({runId:id,view:"studio",selectedCardId:"",tab:"evidence"},"push");
+    setSelectedClaimId("");setReviewer("");setError("");
   }
 
-  function choosePlace(place: Place) {
-    if (active) { setError("진행 중인 제작이 끝나면 새 장소로 시작할 수 있습니다."); setView("studio"); return; }
-    setBrief((previous) => ({ ...previous, place: place.name, placeId: place.id, goal: previous.goal.replaceAll(previous.place, place.name) }));
-    setRun(null); setSelectedCardId(""); setSelectedClaimId(""); setView("studio"); setTab("evidence");
+  function choosePlace(place: Place, purpose?: CreationPurpose) {
+    if (active || busy) { setError("진행 중인 제작이 끝나면 새 장소로 시작할 수 있습니다."); setView("studio"); return; }
+    const selectedPurpose=purpose ?? brief.purpose ?? "youth_story";
+    updateWorkspace(previous=>({...previous,view:"studio",runId:null,selectedCardId:"",tab:"evidence",draft:{...previous.draft,brief:{...previous.draft.brief,place:place.name,placeId:place.id,purpose:selectedPurpose,...(purpose?{audience:PURPOSES.find(p=>p.id===purpose)!.audience}:{}),goal:goalForPurpose(place,selectedPurpose)}}}),"push");
+    runRef.current=null;setRun(null);setSelectedClaimId("");
   }
-  function receiveRun(next: Run) { setRun(next); setHistory((previous) => [next, ...previous.filter((item) => item.id !== next.id)]); }
-  const menu = [{ id: "dashboard", label: "대시보드", icon: "◫" }, { id: "explore", label: "성남 관광지 탐색", icon: "◎" }, { id: "studio", label: "카드뉴스 제작", icon: "▧" }, { id: "history", label: "제작 기록", icon: "◷" }] as const;
+  function openExplore(filters?: Partial<ExploreState>) {
+    updateWorkspace({view:"explore",explore:normaliseExplore({...defaultExplore(),...filters})},"push");
+  }
+  function focusTour(target:string) {
+    setView("studio");
+    requestAnimationFrame(()=>{
+      const element=document.querySelector<HTMLElement>(`[data-tour="${target}"]`);
+      element?.scrollIntoView({block:"center",behavior:"auto"});
+      if(element){if(!element.matches("button,a,input,select,textarea"))element.tabIndex=-1;element.focus({preventScroll:true});}
+    });
+  }
+  const menu = [{ id: "dashboard", label: "홈·대시보드", icon: "◫" }, { id: "explore", label: "성남 둘러보기", icon: "◎" }, { id: "saved", label: "저장한 장소", icon: "♡" }, { id: "studio", label: "카드뉴스 작업실", icon: "▧" }, { id: "history", label: "제작 기록", icon: "◷" }] as const;
 
   function fileUrl(name: string) {
     return `/api/runs/${run?.id}/files/${encodeURIComponent(name)}`;
@@ -316,7 +360,7 @@ export default function Studio() {
 
   return (
     <div className="platform-shell">
-      <aside className="platform-sidebar"><Link href="/" className="brand" onClick={(event) => { event.preventDefault(); setView("dashboard"); }}><Mark /><span>성남 타임스토리<small>도시를 발견하는 새로운 방법</small></span></Link><span className="sidebar-caption">나의 콘텐츠 공간</span><nav aria-label="주 메뉴">{menu.map((item) => <button type="button" key={item.id} className={view === item.id ? "selected" : ""} aria-current={view === item.id ? "page" : undefined} onClick={() => setView(item.id)}><span aria-hidden="true">{item.icon}</span>{item.label}{item.id === "history" && recordsLoaded && <small>{history.length}</small>}</button>)}</nav><div className="sidebar-foot"><Mark small /><strong>도시의 이야기를 함께.</strong><p>공식 자료로 사실을 확인하고<br />상상으로 내일을 연결합니다.</p></div></aside>
+      <aside className="platform-sidebar"><Link href="/" className="brand" onClick={(event) => { event.preventDefault(); setView("dashboard"); }}><Mark /><span>성남 타임스토리<small>도시를 발견하는 새로운 방법</small></span></Link><span className="sidebar-caption">나의 콘텐츠 공간</span><nav aria-label="주 메뉴">{menu.map((item) => <button type="button" data-tour={item.id === "explore" ? "nav-explore" : undefined} key={item.id} className={view === item.id ? "selected" : ""} aria-current={view === item.id ? "page" : undefined} onClick={() => setView(item.id)}><span aria-hidden="true">{item.icon}</span>{item.label}{item.id === "history" && recordsLoaded && <small>{history.length}</small>}</button>)}</nav><div className="sidebar-foot"><Mark small /><strong>도시의 이야기를 함께.</strong><p>공식 자료로 사실을 확인하고<br />상상으로 내일을 연결합니다.</p></div></aside>
       <div className="platform-main">
       <header className="topbar">
         <div className="topbar-location"><span>성남 타임스토리</span><span aria-hidden="true">/</span><strong>{menu.find((item) => item.id === view)?.label}</strong></div>
@@ -341,11 +385,14 @@ export default function Studio() {
           </label>
         </div>
       </header>
-      <main className="workspace">
+      <main className="workspace" aria-busy={!workspaceReady || historyLoading}>
+        {storageError && <p role="status" className="error-banner">{storageError}</p>}
+        {historyLoading && <p role="status" className="field-note">저장된 작업을 불러오는 중입니다.</p>}
         {loadError && <div className="error-banner initial-load-error" role="alert"><span>{loadError} 입력한 내용은 유지됩니다.</span><button type="button" className="text-button" disabled={initialLoading} onClick={() => void refreshInitial()}>설정과 기록 다시 불러오기</button></div>}
         {error && (
           <div className="error-banner" role="alert">
             <span>{error}</span>
+            {workspace.runId && !run && <button type="button" className="text-button" disabled={historyLoading} onClick={()=>loadRun(workspace.runId!)}>작업 다시 불러오기</button>}
             <button
               type="button"
               onClick={() => setError("")}
@@ -356,9 +403,9 @@ export default function Studio() {
           </div>
         )}
 
-        {view === "dashboard" && <PlatformHome runs={history} loaded={recordsLoaded} failed={!recordsLoaded && Boolean(loadError)} busy={active || busy} onExplore={() => setView("explore")} onCreate={choosePlace} onOpen={(id) => void loadRun(id)} />}
-        <PlaceExplorer visible={view === "explore"} onCreate={choosePlace} />
-        {view === "history" && <RunHistory runs={history} loaded={recordsLoaded} failed={!recordsLoaded && Boolean(loadError)} busy={active || busy} onOpen={(id) => void loadRun(id)} full />}
+        {view === "dashboard" && <PlatformHome runs={history} loaded={recordsLoaded} failed={!recordsLoaded && Boolean(loadError)} busy={active || busy} onExplore={openExplore} savedIds={savedIds} onSaved={() => setView("saved")} onHelp={() => window.dispatchEvent(new Event("tami:open-guide"))} onCreate={choosePlace} onOpen={(id) => void loadRun(id)} />}
+        <PlaceExplorer visible={view === "explore" || view === "saved"} savedOnly={view === "saved"} state={explore} onStateChange={(next,push)=>updateWorkspace({explore:next},push?"push":"replace")} savedIds={savedIds} onToggleSaved={id=>updateWorkspace(previous=>({...previous,savedIds:toggleSavedPlace(previous.savedIds,id)}))} onCreate={choosePlace} />
+        {view === "history" && <RunHistory runs={history} loaded={recordsLoaded} failed={!recordsLoaded && Boolean(loadError)} busy={active || busy} onOpen={(id) => void loadRun(id)} query={workspace.historyQuery} statusFilter={workspace.historyStatus} onFiltersChange={({query,status})=>updateWorkspace({historyQuery:query,historyStatus:status})} full />}
         <div hidden={view !== "studio"}>
         <section className="intro">
           <div>
@@ -396,7 +443,8 @@ export default function Studio() {
                 void start();
               }}
             >
-              <fieldset disabled={active || busy} className="brief-fields">
+              <fieldset disabled={active || busy || !workspaceReady} className="brief-fields" data-tour="brief-fields">
+                {run && <p className="field-note">이 입력은 다음 제작 요청으로 보관됩니다. 아래 결과는 선택한 작업의 내용입니다.</p>}
                 <label>
                   소개할 장소
                   <input
@@ -406,6 +454,7 @@ export default function Studio() {
                   />
                 </label>
                 <p id="place-note" className="field-note">{draftPlace.district} · {draftPlace.type} <button type="button" className="text-button" onClick={() => setView("explore")}>장소 변경</button></p>
+                <label>제작 목적<select value={brief.purpose || "youth_story"} onChange={event=>{const purpose=event.target.value as CreationPurpose;setBrief({...brief,purpose,audience:PURPOSES.find(p=>p.id===purpose)!.audience,goal:goalForPurpose(draftPlace,purpose)});}}>{PURPOSES.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}</select></label>
                 <label>
                   누구에게 전할까요?
                   <select
@@ -522,7 +571,7 @@ export default function Studio() {
                     오류 상황은 복구 과정을 확인하기 위한 의도적인 테스트입니다.
                   </p>
                 </details>
-                <button className="primary-button create-button" type="submit" disabled={liveUnavailable} aria-describedby={liveUnavailable ? "live-config-note" : undefined}>
+                <button className="primary-button create-button" data-tour="create-run" type="submit" disabled={liveUnavailable} aria-describedby={liveUnavailable ? "live-config-note" : undefined}>
                   {active
                     ? "이야기를 제작하고 있어요"
                     : busy
@@ -627,7 +676,7 @@ export default function Studio() {
                 )}
               </div>
             )}
-            <div className="card-grid">
+            <div className="card-grid" data-tour="cards">
               {run?.cards.length
                 ? run.cards.map((item, index) => {
                     const artifact = run.artifacts.filter(
@@ -736,7 +785,7 @@ export default function Studio() {
             )}
             {run && <RunTrace run={run} duration={duration} />}
           </section>
-          <aside className="review-panel" aria-label="근거와 담당자 검토">
+          <aside data-tour="review-panel" className="review-panel" aria-label="근거와 담당자 검토">
             <div className="panel-heading">
               <h2>근거와 검토</h2>
               {run && <span className="version-label">v{run.version}</span>}
@@ -759,10 +808,7 @@ export default function Studio() {
                   aria-selected={tab === item.key}
                   onClick={() => {
                     setTab(item.key);
-                    if (item.key === "edit" && card) {
-                      setEditTitle(card.title);
-                      setEditBody(card.body);
-                    }
+
                   }}
                 >
                   {item.label}
@@ -896,7 +942,7 @@ export default function Studio() {
                   )}
                   {tab === "changes" && (
                     <div className="revision-list">
-                      {card && <ProtectedChanges run={run} cardId={card.id} disabled={active || busy} onLoad={(proposal) => { setEditTitle(proposal.title); setEditBody(proposal.body); setTab("edit"); }} />}
+                      {card && <ProtectedChanges run={run} cardId={card.id} disabled={active || busy} onLoad={(proposal) => { setEditContent(proposal.title,proposal.body); setTab("edit"); }} />}
                       {run.revisions.length < 2 ? (
                         <p className="field-note">
                           아직 수정 전후 내역이 없습니다.
@@ -966,6 +1012,7 @@ export default function Studio() {
                         수정하면 새 버전이 생성되고 기존 검수와 승인이
                         해제됩니다.
                       </p>
+                      {staleEdit && !editDraft && <p className="field-note">이전 버전에서 저장하지 않은 문구가 있습니다. <button type="button" className="text-button" disabled={active || busy} onClick={()=>setEditContent(staleEdit.title,staleEdit.body)}>이전 문구를 편집기에 불러오기</button></p>}
                       <label>
                         카드 제목
                         <input
@@ -1000,7 +1047,7 @@ export default function Studio() {
               )}
             </div>
             {run && (
-              <div className="approval-panel">
+              <div className="approval-panel" data-tour="approve-panel">
                 {unresolved.length > 0 && (
                   <div className="issues">
                     <h3>확인이 필요한 항목 {unresolved.length}건</h3>
@@ -1074,6 +1121,7 @@ export default function Studio() {
                         ? "download-button"
                         : "secondary-button download-link"
                     }
+                    data-tour="download"
                     href={fileUrl(zip.name)}
                     download
                   >
@@ -1109,6 +1157,7 @@ export default function Studio() {
         </footer>
       </main>
       </div>
+      {workspaceReady && (!workspace.runId || run?.id===workspace.runId || !!error) && <TamiGuide context={{view,selectedPlace:getPlace(explore.selectedId || "") || null,draftPlace,run,busy:busy || !!active || historyLoading,error,tab,selectedCardId:card?.id || ""}} actions={{navigate:setView,openStudio:()=>{const selected=getPlace(explore.selectedId || "");if(selected && selected.id!==draftPlace.id)choosePlace(selected);else setView("studio");},openReview:(id)=>{if(id)setSelectedCardId(id);setTab("evidence");focusTour("review-panel");},openEditor:()=>{setTab("edit");focusTour("review-panel");},resumeRun:()=>{if(run)setView("studio");else if(history[0])loadRun(history[0].id);else setView("history");},showApprove:()=>focusTour("approve-panel"),showDownload:()=>focusTour("download")}} />}
     </div>
   );
 }

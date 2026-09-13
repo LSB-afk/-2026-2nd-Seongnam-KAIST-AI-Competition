@@ -1,0 +1,91 @@
+.tami-guide {
+  --tami-ink: #1d1d1f;
+  --tami-muted: #61656c;
+  --tami-blue: #244cc5;
+  --tami-green: #176a59;
+  color: var(--tami-ink);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.55;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.tami-guide *, .tami-guide *::before, .tami-guide *::after { box-sizing: border-box; }
+html:has(.tami-guide--open) [data-tour] { scroll-margin-block-start: 96px; scroll-margin-block-end: calc(var(--tami-reserved-space, 104px) + 24px); }
+.tami-guide button, .tami-guide input, .tami-guide summary { font: inherit; }
+.tami-guide button { cursor: pointer; min-height: 44px; border-radius: 10px; border: 0; padding: 10px 14px; font-weight: 600; line-height: 1.4; }
+.tami-guide button:disabled { cursor: not-allowed; opacity: .48; }
+.tami-guide :is(button, input, summary):focus-visible { outline: 3px solid #244cc5; outline-offset: 3px; }
+.tami-guide p, .tami-guide h2, .tami-guide h3 { margin: 0; }
+.tami-guide button:hover:not(:disabled) { filter: brightness(.96); }
+.tami-guide .tami-primary { background: var(--tami-blue); color: #fff; }
+.tami-guide .tami-secondary { background: #eef1f8; color: #203573; }
+.tami-guide .tami-text-button { min-height: 40px; padding: 8px 6px; background: transparent; color: var(--tami-muted); font-size: 13px; font-weight: 500; }
+.tami-guide .tami-icon-button { flex: 0 0 40px; width: 40px; min-height: 40px; padding: 0; color: var(--tami-muted); background: #f5f5f7; font-size: 26px; line-height: 1; }
+.tami-wide { width: 100%; }
+.tami-dock { position: fixed; z-index: 85; right: 20px; bottom: var(--tami-guide-bottom, 16px); display: flex; align-items: center; gap: 4px; filter: drop-shadow(0 3px 7px #18223612); }
+.tami-character { display: block; width: 72px; height: 72px; flex: 0 0 72px; background-size: 300% 200%; background-repeat: no-repeat; animation: tami-hello 420ms ease-out 1; transform-origin: center bottom; }
+.tami-character--idle { background-position: 0 0; }
+.tami-character--greeting { background-position: 50% 0; }
+.tami-character--guiding { background-position: 100% 0; }
+.tami-character--working { background-position: 0 100%; }
+.tami-character--success { background-position: 50% 100%; }
+.tami-character--error { background-position: 100% 100%; }
+.tami-character--fallback { display: grid; place-items: center; border: 1px solid #c5d2e9; background: #eef3f8; color: #244cc5; border-radius: 24px; font-weight: 700; }
+.tami-guide .tami-character-button { display: block; flex: 0 0 72px; width: 72px; height: 72px; min-height: 72px; padding: 0; border: 0; border-radius: 24px; background: transparent; }
+.tami-guide .tami-help-button { background: #fff; color: #203573; box-shadow: 0 2px 12px #1822360d; border: 1px solid #dce2ed; border-radius: 24px; padding: 10px 15px; white-space: nowrap; }
+.tami-dock--minimized { gap: 0; }
+.tami-panel { position: fixed; z-index: 90; right: 20px; bottom: calc(var(--tami-guide-bottom, 16px) + 88px); width: 344px; max-width: calc(100vw - 32px); max-height: calc(100dvh - 40px); overflow-y: auto; overscroll-behavior: contain; background: #fff; border: 1px solid #d9dfe9; border-radius: 18px; padding: 20px; box-shadow: 0 12px 40px #1822361c, 0 2px 5px #18223605; scrollbar-gutter: stable; }
+.tami-panel:focus { outline: none; }
+.tami-panel--tour { right: auto; bottom: auto; }
+.tami-panel-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.tami-panel-name { display: block; color: var(--tami-green); font-size: 12px; font-weight: 600; margin-bottom: 3px; }
+.tami-panel h2 { font-size: 19px; font-weight: 700; line-height: 1.45; letter-spacing: -.025em; }
+.tami-panel h3 { font-size: 16px; line-height: 1.5; font-weight: 600; }
+.tami-description, .tami-advice p { color: #434850; font-size: 14px; line-height: 1.75; margin-bottom: 16px !important; }
+.tami-advice h3 { margin-bottom: 8px; }
+.tami-step-count { display: flex; align-items: center; color: var(--tami-muted); font-size: 12px; margin-bottom: 14px; gap: 4px; }
+.tami-step-count strong { color: var(--tami-blue); font-size: 17px; }
+.tami-step-dots { display: flex; gap: 5px; margin-left: auto; }
+.tami-step-dots i { display: block; width: 7px; height: 7px; border-radius: 50%; background: #e1e5eb; }
+.tami-step-dots i.is-done { background: var(--tami-blue); }
+.tami-target-note, .tami-prerequisite { color: #5a5f69; font-size: 12px; line-height: 1.7; margin: 10px 0 14px !important; }
+.tami-target-note { padding-left: 10px; border-left: 2px solid #cbd6f2; }
+.tami-step-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+.tami-tour-footer { display: flex; justify-content: space-between; gap: 8px; margin-top: 6px; }
+.tami-guide .tami-tour-footer button { font-size: 12px; text-align: left; }
+.tami-settings { margin-top: 12px; padding-top: 12px; border-top: 1px solid #e9ebef; color: var(--tami-muted); font-size: 12px; }
+.tami-settings summary { cursor: pointer; min-height: 32px; display: list-item; list-style-position: inside; }
+.tami-settings label { display: flex; align-items: center; gap: 10px; min-height: 40px; cursor: pointer; color: var(--tami-ink); font-size: 13px; }
+.tami-settings input { width: 18px; height: 18px; accent-color: var(--tami-blue); flex: 0 0 18px; }
+.tami-settings p { margin-top: 6px; font-size: 11px; }
+.tami-tutorial-entry { display: grid; gap: 8px; margin-top: 20px; padding-top: 16px; border-top: 1px solid #e9ebef; }
+.tami-tutorial-entry > span { font-size: 12px; font-weight: 600; color: var(--tami-muted); }
+.tami-shortcuts { display: grid; gap: 6px; margin-top: 16px; }
+.tami-guide .tami-shortcuts button { text-align: left; font-size: 13px; background: #f5f5f7; color: #434850; }
+.tami-invitation { position: fixed; z-index: 84; width: 278px; max-width: calc(100vw - 32px); right: 20px; bottom: calc(var(--tami-guide-bottom, 16px) + 86px); padding: 18px; border: 1px solid #dbe3ee; border-radius: 16px; background: #fff; box-shadow: 0 6px 24px #18223610; }
+.tami-invitation strong { display: block; font-size: 14px; margin-bottom: 8px; font-weight: 600; }
+.tami-invitation p { font-size: 13px; line-height: 1.7; color: var(--tami-muted); }
+.tami-inline-actions { display: flex; gap: 12px; align-items: center; margin-top: 14px; }
+.tami-target-outline { position: fixed; z-index: 82; border: 2px solid #244cc5; border-radius: 10px; box-shadow: 0 0 0 3px #fff, 0 0 0 5px #244cc529; pointer-events: none; }
+.tami-guide--in-modal .tami-dock { z-index: 185; }
+.tami-guide--in-modal .tami-panel { z-index: 190; }
+.tami-guide--in-modal .tami-target-outline { z-index: 182; }
+@keyframes tami-hello { from { transform: translateY(4px) rotate(-3deg); } to { transform: translateY(0) rotate(0); } }
+.tami-character--still, .tami-guide--no-motion * { animation: none !important; transition: none !important; }
+@media (max-width: 600px) {
+  .tami-dock { right: 12px; bottom: var(--tami-guide-bottom, calc(12px + env(safe-area-inset-bottom))); gap: 0; }
+  .tami-character { width: 56px; height: 56px; flex-basis: 56px; }
+  .tami-guide .tami-character-button { width: 56px; height: 56px; min-height: 56px; flex-basis: 56px; }
+  .tami-guide .tami-help-button { font-size: 12px; padding: 10px 12px; }
+  .tami-panel, .tami-panel--tour { left: 8px !important; top: auto !important; right: 8px; bottom: var(--tami-guide-bottom, calc(8px + env(safe-area-inset-bottom))); width: auto; max-width: none; max-height: min(52dvh, 430px); padding: 16px 18px; border-radius: 18px; box-shadow: 0 -4px 32px #1822361a; }
+  .tami-panel-header { margin-bottom: 10px; }
+  .tami-panel h2 { font-size: 18px; }
+  .tami-description, .tami-advice p { font-size: 13px; }
+  .tami-guide--open .tami-dock { visibility: hidden; }
+  .tami-invitation { right: 12px; bottom: calc(var(--tami-guide-bottom, 12px) + 68px); width: 278px; }
+  .tami-tour-footer { flex-wrap: wrap; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tami-guide *, .tami-guide *::before, .tami-guide *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

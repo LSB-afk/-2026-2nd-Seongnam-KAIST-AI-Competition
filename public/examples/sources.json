@@ -1,0 +1,229 @@
+{
+  "runId": "public-example-pangyo-youth-story",
+  "mode": "fixture",
+  "strategy": "agent",
+  "version": 1,
+  "reviewVersion": 1,
+  "auditStage": "render_snapshot",
+  "execution": {
+    "model": null,
+    "promptVersion": "2026-09-13.2",
+    "reviewRulesVersion": "atomic-evidence-2026-09-13.1",
+    "sourceSnapshotIds": [
+      "source-faq",
+      "source-history"
+    ],
+    "apiCalls": 0
+  },
+  "sources": [
+    {
+      "id": "source-faq",
+      "url": "https://museum.seongnam.go.kr/pangyo/contents/content.do?cIdx=57&fboard=board_faq",
+      "title": "판교박물관 자주하는 질문",
+      "publisher": "판교박물관 공식 안내",
+      "retrievedAt": "2026-09-10T07:30:00.000Z",
+      "status": "ok",
+      "snapshot": "판교박물관은 2013년 4월 2일 개관하였습니다.\n백제 · 고구려 시대 석실분과 판교 전역에서 출토된 유물 중 일부를 전시하고 있습니다.",
+      "hash": "6e08fe3ad24e86ec4dc8f600f51aeb4956ad0d4a4cbf90cd473319cd23e23490",
+      "license": "공식 원문 발췌를 검증용 fixture로 보관. 사진 이용 조건은 별도로 확인합니다.",
+      "searchIds": [
+        "search-c375dbf8-0eda-49b1-a8bc-a59fe4af18fe"
+      ]
+    },
+    {
+      "id": "source-history",
+      "url": "https://museum.seongnam.go.kr/pangyo/contents/content.do?cIdx=64",
+      "title": "판교박물관 건립배경 — 이전",
+      "publisher": "판교박물관 공식 안내",
+      "retrievedAt": "2026-09-10T07:30:00.000Z",
+      "status": "ok",
+      "snapshot": "2003년부터 2008년까지 발굴조사를 진행하였습니다.",
+      "hash": "1ca5131a837620da8a9895700ec02c058e3b9082116936bbae2d32d2cd9645a5",
+      "license": "공식 원문 발췌를 검증용 fixture로 보관. 사진 이용 조건은 별도로 확인합니다.",
+      "searchIds": [
+        "search-c375dbf8-0eda-49b1-a8bc-a59fe4af18fe"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "evidence-opening",
+      "quote": "판교박물관은 2013년 4월 2일 개관하였습니다.",
+      "sourceId": "source-faq",
+      "start": 0,
+      "end": 27,
+      "locator": "공식 페이지 본문 발췌 (2026-09-10 확인)",
+      "searchId": "search-c375dbf8-0eda-49b1-a8bc-a59fe4af18fe",
+      "targetClaimIds": []
+    },
+    {
+      "id": "evidence-exhibit",
+      "quote": "백제 · 고구려 시대 석실분과 판교 전역에서 출토된 유물 중 일부를 전시하고 있습니다.",
+      "sourceId": "source-faq",
+      "start": 28,
+      "end": 76,
+      "locator": "공식 페이지 본문 발췌 (2026-09-10 확인)",
+      "searchId": "search-c375dbf8-0eda-49b1-a8bc-a59fe4af18fe",
+      "targetClaimIds": []
+    },
+    {
+      "id": "evidence-excavation",
+      "quote": "2003년부터 2008년까지 발굴조사를 진행하였습니다.",
+      "sourceId": "source-history",
+      "start": 0,
+      "end": 30,
+      "locator": "공식 페이지 본문 발췌 (2026-09-10 확인)",
+      "searchId": "search-c375dbf8-0eda-49b1-a8bc-a59fe4af18fe",
+      "targetClaimIds": []
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-excavation",
+      "cardId": "card-1",
+      "text": "판교 지역에서는 2003년부터 2008년까지 발굴조사가 진행됐어요.",
+      "kind": "fact",
+      "evidenceIds": [
+        "evidence-excavation"
+      ],
+      "support": "supported"
+    },
+    {
+      "id": "claim-opening",
+      "cardId": "card-2",
+      "text": "판교박물관은 2013년 4월 2일에 문을 열었어요.",
+      "kind": "fact",
+      "evidenceIds": [
+        "evidence-opening"
+      ],
+      "support": "supported"
+    },
+    {
+      "id": "claim-exhibit",
+      "cardId": "card-3",
+      "text": "백제·고구려 시대 석실분과 판교 전역에서 출토된 유물 일부를 만날 수 있어요.",
+      "kind": "fact",
+      "evidenceIds": [
+        "evidence-exhibit"
+      ],
+      "support": "supported"
+    },
+    {
+      "id": "claim-future",
+      "cardId": "card-4",
+      "text": "상상 장면: 판교박물관에서 내가 고른 이야기를 따라 나만의 시간 탐험을 떠난다면 어떨까요?",
+      "kind": "imagination",
+      "evidenceIds": [],
+      "support": "not_applicable"
+    }
+  ],
+  "searches": [
+    {
+      "query": "청소년이 판교박물관을 호기심을 가지고 탐험할 카드뉴스 4장을 만들어줘. 궁금증을 여는 이야기, 장소의 배경, 현장에서 발견할 특징 순으로 쉬운 문구와 질문을 사용해줘. 역사나 시설을 지어내지 마. 사실은 선택한 장소의 공식 근거로 확인하고 마지막 장에는 상상 장면임을 표시한 미래 문화공간의 가능성을 넣어줘.",
+      "targetClaimIds": [],
+      "missingInformation": [],
+      "reason": "공식 자료의 원문과 근거를 확인합니다.",
+      "id": "search-c375dbf8-0eda-49b1-a8bc-a59fe4af18fe",
+      "at": "2026-09-13T08:18:11.908Z",
+      "version": 0,
+      "visitedPages": 0,
+      "newEvidenceCount": 3,
+      "evidenceIds": [
+        "evidence-opening",
+        "evidence-exhibit",
+        "evidence-excavation"
+      ],
+      "resolvedClaimIds": [],
+      "remainingInformation": [
+        "수집 자료가 요청을 뒷받침하는지 검수 필요"
+      ],
+      "errors": []
+    }
+  ],
+  "images": [
+    {
+      "cardId": "card-1",
+      "id": "photo-pangyo-museum",
+      "placeId": "pangyo-museum",
+      "kind": "photo",
+      "src": "/places/pangyo-museum.jpg",
+      "sha256": "c47e4dccfd60e7aef979493b83b003fd96202fcc51635630c81e9eaeadfe3f8d",
+      "mime": "image/jpeg",
+      "width": 1920,
+      "height": 1281,
+      "sourceUrl": "https://archive.much.go.kr/data/01/folderView.do?idnbr=2016013905&jobdirSeq=314",
+      "author": "대한민국역사박물관",
+      "license": "KOGL Type 1",
+      "licenseUrl": "https://www.kogl.or.kr/info/licenseType1.do",
+      "createdAt": "2026-09-13T00:00:00.000Z",
+      "crop": {
+        "x": 0.5,
+        "y": 0.5,
+        "zoom": 1
+      }
+    },
+    {
+      "cardId": "card-2",
+      "id": "photo-pangyo-museum",
+      "placeId": "pangyo-museum",
+      "kind": "photo",
+      "src": "/places/pangyo-museum.jpg",
+      "sha256": "c47e4dccfd60e7aef979493b83b003fd96202fcc51635630c81e9eaeadfe3f8d",
+      "mime": "image/jpeg",
+      "width": 1920,
+      "height": 1281,
+      "sourceUrl": "https://archive.much.go.kr/data/01/folderView.do?idnbr=2016013905&jobdirSeq=314",
+      "author": "대한민국역사박물관",
+      "license": "KOGL Type 1",
+      "licenseUrl": "https://www.kogl.or.kr/info/licenseType1.do",
+      "createdAt": "2026-09-13T00:00:00.000Z",
+      "crop": {
+        "x": 0.5,
+        "y": 0.5,
+        "zoom": 1
+      }
+    },
+    {
+      "cardId": "card-3",
+      "id": "photo-pangyo-museum",
+      "placeId": "pangyo-museum",
+      "kind": "photo",
+      "src": "/places/pangyo-museum.jpg",
+      "sha256": "c47e4dccfd60e7aef979493b83b003fd96202fcc51635630c81e9eaeadfe3f8d",
+      "mime": "image/jpeg",
+      "width": 1920,
+      "height": 1281,
+      "sourceUrl": "https://archive.much.go.kr/data/01/folderView.do?idnbr=2016013905&jobdirSeq=314",
+      "author": "대한민국역사박물관",
+      "license": "KOGL Type 1",
+      "licenseUrl": "https://www.kogl.or.kr/info/licenseType1.do",
+      "createdAt": "2026-09-13T00:00:00.000Z",
+      "crop": {
+        "x": 0.5,
+        "y": 0.5,
+        "zoom": 1
+      }
+    },
+    {
+      "cardId": "card-4",
+      "id": "photo-pangyo-museum",
+      "placeId": "pangyo-museum",
+      "kind": "photo",
+      "src": "/places/pangyo-museum.jpg",
+      "sha256": "c47e4dccfd60e7aef979493b83b003fd96202fcc51635630c81e9eaeadfe3f8d",
+      "mime": "image/jpeg",
+      "width": 1920,
+      "height": 1281,
+      "sourceUrl": "https://archive.much.go.kr/data/01/folderView.do?idnbr=2016013905&jobdirSeq=314",
+      "author": "대한민국역사박물관",
+      "license": "KOGL Type 1",
+      "licenseUrl": "https://www.kogl.or.kr/info/licenseType1.do",
+      "createdAt": "2026-09-13T00:00:00.000Z",
+      "crop": {
+        "x": 0.5,
+        "y": 0.5,
+        "zoom": 1
+      }
+    }
+  ]
+}

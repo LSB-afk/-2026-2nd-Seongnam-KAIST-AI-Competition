@@ -130,3 +130,74 @@ node --env-file-if-exists=.env.local --import tsx scripts/evaluate-live.ts
 - `outputs/tourism-final-browser.json`, `outputs/evaluation/place-probe.json`: 화면 확인과 8개 장소·32 PNG 검증 기록.
 
 주요 구현 파일은 `src/app/page.tsx`·`globals.css`(화면·글자), `src/components/{platform-home,place-explorer,tourism-map,image-editor}.tsx`(탐색·지도·편집), `src/lib/places.ts`·`public/places`(공식 장소·사진), `src/lib/{sources,fixture,prompts,verifier}.ts`(장소별 생성·근거), `src/lib/{images,image-provider,service,render}.ts`와 `src/app/api/images`(이미지 보관·생성·버전·출력)다. 새 패키지 의존성은 추가하지 않았다.
+
+## 2026-09-13 안내 플랫폼·NAVER SDK 검증
+
+이 절은 위 관광 플랫폼 검증 이후의 변경이다. OSM 직접 타일 배치를 NAVER 공식 JavaScript SDK로 교체하고, 홈의 여섯 콘텐츠 영역·저장한 장소·목적별 제작·작업 복원·타미 안내를 통합했다. 설계와 검증 항목은 `docs/superpowers/specs/2026-09-13-guided-platform-design.md`에 있다.
+
+### 변경 전 진단과 수정 근거
+
+기존 지도에서 최초 전국 화면의 실제 OSM 타일 20개가 HTTP 200으로 응답했고 페이지 예외는 없었다. 따라서 타일 서비스 장애로 원인을 확정하지 않았다. 이후 상호작용은 모의 타일로 전환했다. 데스크톱 지도는 850×708px, 모바일은 360×538px였다. 성남 확대(zoom 12) 후 다른 메뉴를 다녀오면 전국(zoom 7)으로 돌아갔고, CDP의 두 손가락 입력은 이동만 일으키며 확대되지 않았다. 새로고침하면 대시보드로 복귀했다. 원본 기록 `outputs/guided-map-before-diagnostics.json`은 실제 최초 응답과 후속 모의 응답을 분리한다.
+
+SDK 선택 근거·공식 문서·공개 키 계약은 `docs/map-sdk-reference.md`에 있다. NAVER Cloud `NCP_MAPS_CLIENT_ID`와 허용 도메인 등록은 이 환경에 없다. 공식 SDK 로딩·콜백·이벤트·수명주기·마커 코드는 구현했지만 **실제 NAVER 인증, 지리 타일, 네이티브 모바일 제스처와 SDK 내부 HTML 버튼의 실서비스 포커스는 미검증**이다. 모의 SDK 지도에는 모의 화면이라는 표시를 붙인다. 지도 설정이 없어도 목록·사진·상세·저장·제작은 가능하다.
+
+### 기능 검증과 발견한 회귀
+
+- 브라우저 저장소와 URL을 함께 사용해 화면·장소·필터·지도 위치를 복원한다. 저장 장소와 미완성 제작 입력, 기록 검색·상태 필터를 새로고침 뒤 유지한다. 공유 URL에는 자유 입력을 넣지 않는다.
+- 카드별 미저장 문구를 서버 실행·버전·카드에 연결한다. 다른 카드나 탭으로 이동해도 내용이 유지되며, 서버 버전이 바뀌면 이전 문구를 자동 적용하지 않고 명시적으로 불러온다.
+- 지연된 작업 조회가 현재 선택을 덮어쓰지 않는다. 빠른 중복 제출은 POST 한 번만 만들고, 생성 응답이 늦어도 사용자가 이동한 화면을 유지한다.
+- 독립 검토에서 같은 작업의 조회 실패 뒤 재시도되지 않는 문제를 발견해 재조회 버튼과 요청 회차를 추가했다. SDK 모의 검증에서 필터 복원 시 자동 맞춤이 지정 카메라를 덮는 문제를 재현(요청 zoom 7, 실제 15)하고 복원 카메라가 우선하도록 수정했다.
+- 타미의 ‘제작 입력 보기’는 작성 중 입력과 현재 작업을 보존한다. 실제 선택 장소가 달라질 때만 새 장소 입력을 준비한다.
+- 장소 사진과 편집 미리보기의 로딩 실패 후 재시도를 브라우저에서 확인했다. 카드 선택 버튼 안에 재시도 버튼을 중첩하지 않는다.
+- 목적 세 가지는 실제 Brief, fixture 문구 순서와 모델 지시에 반영된다. 홈 예시는 fixture로 실제 생성·검수·렌더링한 1080 PNG 네 장이며, 원본·검수·출처 JSON을 `public/examples/`에 보관한다.
+
+### 타미와 화면 확인
+
+Apple의 요청 URL을 실제 데스크톱·모바일에서 열고 사진·큰 메시지·짧은 설명·상세 펼침을 관찰했다. 관찰 수치와 우리 화면 적용 판단은 `docs/apple-design-reference.md`에서 구분했다. Apple 로고·제품 이미지·문구를 제품 자산으로 사용하지 않았다.
+
+타미는 설명을 바탕으로 독자 제작한 여섯 표정의 로봇이다. 첨부 이미지 자체는 제공되지 않았다. 모델 API 없이 현재 화면·선택·검수·승인 상태로 안내한다. 제작·재검수·승인은 사용자가 직접 수행한다. 스크롤 위치가 잘못 잡히던 긴 목록은 시작 정렬로 수정했고, 첫 초대는 홈에서만 표시해 장소 상세의 제작 버튼을 가리지 않게 했다.
+
+390px 브라우저에서 공식 링크 확인, 제작, 검수 확인, 담당자 승인, ZIP 다운로드까지 8단계를 수행했다. 제작 클릭 전 POST 0회, 승인 클릭 전 1회, 최종 POST는 fixture 생성과 명시적 승인 2회였고 모델 API 호출은 0회였다. 상세 모달 안의 타미 포털, Escape로 안내만 닫기, 포커스 복귀, 이전 단계 유지, 1024px의 종료·재개·새로고침·최소화·동작 감소·이미지 실패 시 도움말 유지도 검증했다. 실물 iOS/Android 기기와 스크린리더 음성 청취 검사는 별도로 수행하지 않았다.
+
+원본 타미 PNG는 유지하고 화면에서는 Next 이미지 최적화로 640px WebP를 사용한다. 측정 응답은 55,766바이트로 원본 약 1.7MB보다 작다. 홈 카드 예시도 화면 크기에 맞춰 최적화하며, 원본 링크와 다운로드의 1080 PNG는 유지한다. 이는 해당 로컬 브라우저에서 측정한 자산 크기이며, 느린 네트워크 전체 성능이나 실서비스 지도의 속도를 보장하는 수치가 아니다.
+
+주요 증거:
+
+- `outputs/guided-before-home-1440.png`, `guided-before-map-1440.png`, `guided-map-before-diagnostics.json`: 변경 전 화면·지도 진단.
+- `outputs/guided-home-interactions.json`, `guided-home-*.png`, `guided-saved-*.png`: 1440/1024/390 홈, 주제 4개·지역 3개·목적 3개 연결, 저장 개수·목록, 기록 필터.
+- `outputs/tami-journey.json`, `tami-accessibility.json`, `tami-mobile-source.png`, `tami-mobile-approved.png`, `tami-package.zip`: 실제 fixture 백엔드로 수행한 안내와 다운로드.
+- `public/examples/timestory-card-1.png`부터 `-4.png`: 검수한 실제 예시 결과. 사진·한글·출처·마지막 상상 표시를 직접 확인했다.
+
+### 최종 통합 결과
+
+2026-09-13 최종 변경에서 다음 명령을 모두 실행했다.
+
+| 검증 | 결과 |
+| --- | --- |
+| `npm test` | 21개 파일, 290개 통과 |
+| `npm run typecheck` | 통과 |
+| `npm run lint` | 통과 |
+| `npm run build` | 프로덕션 빌드 통과 |
+| `npm run test:e2e` | 19개 모두 통과, 41.5초 |
+| `git diff --check` | 오류 없음 |
+
+강조선 캡처가 폰트·스크롤 배치보다 앞서던 테스트는 폰트 준비와 연속 프레임 정렬을 확인하도록 보완했고, 타미 E2E 4개와 타입 검사·해당 파일 린트를 다시 통과했다. 최종 승인 화면에서 다운로드 문구와 강조선이 겹치지 않는 것을 직접 확인했다.
+
+브라우저 테스트는 기존 8개 흐름과 작업 복원·응답 경합·모바일 전환 7개, 타미 4개를 포함한다. 지도는 모의 SDK이고 제작·편집·재검수·승인·다운로드는 실제 fixture 백엔드를 사용한다. 실제 텍스트 모델·카드용 이미지 모델의 설정도 없으므로 유료 API 생성 품질은 포함하지 않는다.
+
+최신 프로덕션 빌드에서 1440/1024/390px 홈·탐색·지도·상세·작업실을 다시 열었다. 가로 넘침과 페이지 예외는 없었다. 홈 제목은 각각 64/56/40px, 작업실 제목은 36/36/32px이고 지도 영역은 850×708, 482×668, 360×538px였다. 모바일 목록/지도 전환 뒤 도구 모음과 지도가 고정 메뉴 아래에 보이는지 회귀 검증했다. 한글 제목이 단어 중간에서 끊기던 문제도 수정했다.
+
+로컬 초기 홈 측정에서 LCP는 88/64/52ms, CLS는 약 0.002/0.005/0.012였고 수집된 long task는 없었다. 이는 캐시가 있는 로컬 환경의 관찰값이며 느린 네트워크·실제 지도 로드·실물 모바일 성능 평가가 아니다. 상세 값은 `outputs/guided-final-browser.json`에 있다.
+
+직접 확인한 최신 화면은 `outputs/guided-final-home-{1440,1024,390}.png`, `guided-final-explore-390.png`, `guided-final-map-mock-390.png`와 `tami-mobile-approved.png`다. 실제 NAVER 설정 응답은 `configured:false, reason:missing-client-id`였다. 실제 서비스 연결을 마치려면 `.env.example`의 공개용 `NCP_MAPS_CLIENT_ID`와 NAVER Cloud Web Dynamic Map 서비스·허용 Web URL 설정이 필요하다. 서버 비밀키를 브라우저에 넣지 않는다.
+
+주요 변경 파일:
+
+- `src/components/tourism-map.tsx`, `src/lib/naver-maps.ts`, `src/lib/map-config.ts`, `src/app/api/map-config/route.ts`: 공식 SDK 연결과 실패 복구.
+- `src/components/platform-home.tsx`, `src/components/place-explorer.tsx`, `src/app/globals.css`: 홈 콘텐츠·저장 목록·탐색·반응형 구성.
+- `src/app/page.tsx`, `src/hooks/use-workspace.ts`, `src/lib/workspace-state.ts`: URL·로컬 초안·기록 복원과 응답 경합 방지.
+- `src/components/tami-guide.tsx`, `src/components/tami-guide.css`, `src/lib/guide.ts`, `public/tami/`: 캐릭터·실제 상태 기반 안내·접근성.
+- `src/lib/purposes.ts`, `src/lib/fixture.ts`, `src/lib/prompts.ts`, `public/examples/`: 목적별 제작과 검수한 예시.
+- `tests/{naver-maps,workspace-state,guide,purpose}.test.ts`, `tests/{guided,tami}.e2e.spec.ts`: 추가 회귀 검증.
+
+새 npm 의존성은 추가하지 않았다. 기존 직접 타일 계산과 드래그 처리는 공식 SDK 경계로 대체했다. 실제 SDK·모델 연결, 실물 모바일 터치, 스크린리더 음성 청취는 남은 외부 검증 범위다.
