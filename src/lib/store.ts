@@ -52,6 +52,13 @@ export class RunStore {
     const rows = this.db.prepare("SELECT payload FROM runs").all();
     for (const row of rows) {
       const run = this.decode(row)!;
+      if (run.imageJob?.status === "running") {
+        run.usage.elapsedMs = Math.min(run.limits.maxDurationMs,Math.max(run.usage.elapsedMs ?? 0,(run.imageJob.baseElapsedMs ?? 0)+Math.max(0,Date.now()-Date.parse(run.imageJob.startedAt))));
+        run.imageJob.status = "failed";
+        run.imageJob.error = "서버 재시작으로 이미지 생성이 중단되었습니다. 기존 사진과 예약 비용을 보존했습니다.";
+        run.updatedAt = new Date().toISOString();
+        this.save(run);
+      }
       if (run.status === "running" || run.status === "queued") {
         const activeElapsed = run.startedAt
           ? Math.max(0, Date.now() - Date.parse(run.startedAt))

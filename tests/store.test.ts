@@ -67,3 +67,10 @@ it("conservatively recovers active duration so restart cannot reset the executio
   );
   store.close();
 });
+
+it("recovers interrupted image jobs without replacing approved text or resetting reserved cost",()=>{
+  const store=setup();const run=newRun({mode:"fixture"});run.status="approved";run.version=2;run.reviewVersion=2;run.usage.costUsd=.12;
+  run.imageJob={id:"job",cardId:"card-1",expectedVersion:2,status:"running",startedAt:new Date(Date.now()-2000).toISOString(),prompt:{place:"판교박물관",subject:"전시",composition:"wide",lighting:"day",palette:"blue",materials:"stone",referenceImage:null,textSpace:"top",imagination:false}};
+  store.insert(run,"image-restart");store.recoverInterrupted();const next=store.get(run.id)!;
+  expect(next.imageJob?.status).toBe("failed");expect(next.imageJob?.error).toContain("재시작");expect(next.version).toBe(2);expect(next.status).toBe("approved");expect(next.usage.costUsd).toBe(.12);expect(next.usage.elapsedMs).toBeGreaterThanOrEqual(2000);store.close();
+});

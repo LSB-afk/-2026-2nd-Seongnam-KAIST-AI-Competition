@@ -184,6 +184,9 @@ export function applyStoryUpdate(
       const prior = run.claims.filter((claim) => claim.cardId === old.id);
       const stable = preserveClaimIds(prior, claims.filter((claim) => claim.cardId === old.id), candidate);
       const next = stable.card;
+      // Text generation has no authority to replace a selected image or its crop.
+      if (old.image) next.image = structuredClone(old.image);
+      else delete next.image;
       const incoming = stable.claims;
       if (!baselineWholeCard && !targetIds.has("run") && !targetIds.has(old.id)) {
         assertClaimUpdateScope(old, next, prior, incoming, targetIds);

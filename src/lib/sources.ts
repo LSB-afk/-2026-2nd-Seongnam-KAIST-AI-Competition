@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
+import { getPlace, PLACES } from "./places";
 import type { Run, Decision, SourceResult, Source, SearchIntent, SearchRecord, Evidence } from "./types";
 
 const CATALOG = [
@@ -31,44 +32,54 @@ const CATALOG = [
   },
 ];
 const sha = (s: string) => createHash("sha256").update(s).digest("hex");
-export function assertOfficialUrl(value: string): void {
+function normalizedUrl(value: string): string {
+  const url = new URL(value);
+  url.hash = "";
+  url.searchParams.sort();
+  return url.href;
+}
+function registeredUrls(placeId: string): string[] {
+  const place = getPlace(placeId);
+  if (!place) throw new Error("등록되지 않은 관광지입니다.");
+  return [...new Set([place.sourceUrl, ...(place.officialQuotes ?? []).map(quote => quote.sourceUrl)].map(normalizedUrl))];
+}
+export function assertOfficialUrl(value: string, placeId?: string): void {
   const u = new URL(value);
   const allowedPath = /^\/pangyo(?:\/|\/index\.do|\/contents\/content\.do)?$/.test(u.pathname);
   const allowedQuery: Record<string, RegExp> = {
     cIdx: /^\d+$/, fboard: /^board_[a-zA-Z0-9_]+$/, actionMode: /^view$/, b_num: /^\d+$/, page: /^\d+$/,
   };
-  if (u.protocol !== "https:" || u.hostname !== "museum.seongnam.go.kr" || u.username || u.password ||
-      (u.port && u.port !== "443") || !allowedPath || [...u.searchParams].some(([key, val]) => !allowedQuery[key]?.test(val)))
-    throw new Error("허용된 공식 박물관 HTTPS 읽기 전용 주소만 수집할 수 있습니다.");
+  const museum = (!placeId || getPlace(placeId)?.id === "pangyo-museum") && u.hostname === "museum.seongnam.go.kr" && allowedPath
+    && [...u.searchParams].every(([key, val]) => allowedQuery[key]?.test(val));
+  const selected = placeId ? [getPlace(placeId)].filter(place => !!place) : PLACES;
+  const registered = selected.some(place => registeredUrls(place.id).includes(normalizedUrl(value)));
+  if (u.protocol !== "https:" || u.username || u.password || (u.port && u.port !== "443") || (!museum && !registered))
+    throw new Error("선택한 관광지의 등록된 공식 HTTPS 읽기 전용 주소만 수집할 수 있습니다.");
 }
-function canonicalUrl(value: string, base?: string): string {
-  const url = new URL(decodeEntities(value), base);
-  url.hash = "";
-  url.searchParams.sort();
-  assertOfficialUrl(url.href);
-  return url.href;
+function canonicalUrl(value: string, base?: string, placeId?: string): string {
+  const url = normalizedUrl(new URL(decodeEntities(value), base).href);
+  assertOfficialUrl(url, placeId);
+  return url;
 }
-export function fixtureSources(): SourceResult {
-  const sources: Source[] = CATALOG.map((c) => ({
-    id: c.id,
-    url: c.url,
-    title: c.title,
-    publisher: "성남시 판교박물관",
-    retrievedAt: "2026-09-10T07:30:00.000Z",
-    status: "ok",
-    snapshot: c.quotes.map((q) => q.quote).join("\n"),
-    hash: sha(c.quotes.map((q) => q.quote).join("\n")),
-    license:
-      "공식 원문 발췌를 검증용 fixture로 보관. 소장 이미지 사용 권한은 포함하지 않습니다.",
+export function fixtureSources(placeId = "pangyo-museum"): SourceResult {
+  const place = getPlace(placeId);
+  if (!place) throw new Error("등록되지 않은 관광지입니다.");
+  const catalog = place.id === "pangyo-museum" ? CATALOG : registeredUrls(place.id).map((url, index) => ({
+    id: `source-${place.id}-${index + 1}`, url, title: `${place.name} 공식 관광 안내`,
+    quotes: (place.officialQuotes ?? []).map((quote, quoteIndex) => ({ id: `evidence-${place.id}-${quoteIndex + 1}`, quote: quote.text, url: normalizedUrl(quote.sourceUrl) })).filter(quote => quote.url === url),
+  })).filter(entry => entry.quotes.length > 0);
+  const retrievedAt = place.id === "pangyo-museum" ? "2026-09-10T07:30:00.000Z" : `${place.verifiedAt.slice(0, 10)}T00:00:00.000Z`;
+  const sources: Source[] = catalog.map((c) => ({
+    id: c.id, url: c.url, title: c.title, publisher: `${place.name} 공식 안내`, retrievedAt,
+    status: "ok", snapshot: c.quotes.map(q => q.quote).join("\n"), hash: sha(c.quotes.map(q => q.quote).join("\n")),
+    license: "공식 원문 발췌를 검증용 fixture로 보관. 사진 이용 조건은 별도로 확인합니다.",
   }));
   return {
     sources,
-    evidence: CATALOG.flatMap((c) =>
-      c.quotes.map((q) => {
-        const start = sources.find(source => source.id === c.id)!.snapshot.indexOf(q.quote);
-        return { ...q, sourceId: c.id, start, end: start + q.quote.length, locator: "공식 페이지 본문 발췌 (2026-09-10 확인)" };
-      }),
-    ),
+    evidence: catalog.flatMap(c => c.quotes.map(q => {
+      const start = sources.find(source => source.id === c.id)!.snapshot.indexOf(q.quote);
+      return { id: q.id, quote: q.quote, sourceId: c.id, start, end: start + q.quote.length, locator: `공식 페이지 본문 발췌 (${retrievedAt.slice(0, 10)} 확인)` };
+    })),
   };
 }
 function decodeEntities(value: string): string {
@@ -100,8 +111,12 @@ function innerRegion(html: string, opening: RegExp): string | undefined {
   return undefined;
 }
 function contentSnapshot(html: string): string {
-  const safe = html.replace(/<(script|style|nav|header|footer|form|noscript)\b[^>]*>[\s\S]*?<\/\1>/gi, " ");
+  const safe = html.replace(/<(script|style|nav|header|footer|noscript)\b[^>]*>[\s\S]*?<\/\1>/gi, " ");
+  const touristDescription = innerRegion(safe, /<[a-z0-9]+\b[^>]*class=["'][^"']*\btourist_con\b[^"']*["'][^>]*>/i);
+  const touristDetails = innerRegion(safe, /<[a-z0-9]+\b[^>]*class=["'][^"']*\btouristInfo\b[^"']*["'][^>]*>/i);
   const region = innerRegion(safe, /<[a-z0-9]+\b[^>]*class=["'][^"']*\bcon_body\b[^"']*["'][^>]*>/i)
+    ?? innerRegion(safe, /<[a-z0-9]+\b[^>]*class=["'][^"']*\bgrid-info\b[^"']*["'][^>]*>/i)
+    ?? (touristDescription ? `${touristDetails ?? ""}\n${touristDescription}` : undefined)
     ?? innerRegion(safe, /<main\b[^>]*>/i)
     ?? innerRegion(safe, /<article\b[^>]*>/i)
     ?? innerRegion(safe, /<[a-z0-9]+\b[^>]*role=["']main["'][^>]*>/i);
@@ -111,17 +126,17 @@ function contentSnapshot(html: string): string {
   return snapshot;
 }
 
-async function fetchDocument(url: string, signal: AbortSignal): Promise<{ html: string; url: string }> {
-  let current = canonicalUrl(url);
+async function fetchDocument(url: string, signal: AbortSignal, placeId?: string): Promise<{ html: string; url: string }> {
+  let current = canonicalUrl(url, undefined, placeId);
   for (let hop = 0; hop < 4; hop++) {
     signal.throwIfAborted();
-    assertOfficialUrl(current);
+    assertOfficialUrl(current, placeId);
     const response = await fetch(current, { redirect: "manual", signal, headers: { "user-agent": "SeongnamTimeStory/0.2 (official cultural content research)" } });
     if (response.status >= 300 && response.status < 400) {
       const next = response.headers.get("location");
       await response.body?.cancel();
       if (!next) throw new Error("주소 이동 정보 없음");
-      current = canonicalUrl(next, current);
+      current = canonicalUrl(next, current, placeId);
       continue;
     }
     if (!response.ok) { await response.body?.cancel(); throw new Error(`공식 자료 응답 오류 (${response.status})`); }
@@ -160,7 +175,8 @@ function intentFor(run: Run, decision: Decision): SearchIntent {
 }
 function searchTerms(intent: SearchIntent, run: Run): string[] {
   const claims = run.claims.filter(claim => intent.targetClaimIds.includes(claim.id)).map(claim => claim.text);
-  const raw = [intent.query, ...intent.missingInformation, ...claims].join(" ").toLowerCase()
+  const place = getPlace(run.brief.placeId ?? run.brief.place);
+  const raw = [intent.query, ...intent.missingInformation, ...claims].join(" ").toLowerCase().replaceAll(place?.name.toLowerCase() ?? "", " ")
     .replace(/소개(?:할|하는|해줘|해주세요)?|상상(?:하는|할|해줘)?|넣어줘|\d+장/g, " ");
   const generic = /^(?:판교박물관|판교|박물관|성남|청소년|문화|문화유산|카드뉴스|카드|소개|홍보|자료|정보|근거|확인|검색|요청|부족|내용|실제|공식|만들어줘|만들어|포함|마지막|상상|미래|문화공간|이야기|장면|목표|설명|수정|기본|종합|전반|대해|관한|위한|장|장에는|있는|있습니다|합니다|주세요)$/;
   const terms = [...new Set((raw.match(/[가-힣a-z0-9]+/g) ?? []).map(term => term.replace(/(?:에게|에서|으로|까지|부터|에는|은|는|이|가|을|를|의|에)$/, "")).filter(term => term.length >= 2 && !generic.test(term)))];
@@ -208,12 +224,12 @@ function matchingEvidence(source: Source, terms: string[], broad: boolean, searc
   }
   return result;
 }
-function linksFrom(html: string, base: string, terms: string[]): { url: string; score: number }[] {
+function linksFrom(html: string, base: string, terms: string[], placeId: string): { url: string; score: number }[] {
   const links: { url: string; score: number }[] = [];
   for (const link of html.matchAll(/<a\b[^>]*href\s*=\s*(["'])(.*?)\1[^>]*>([\s\S]*?)<\/a>/gi)) {
     try {
-      const url = canonicalUrl(link[2], base);
-      if (url === base || !url.includes("/contents/content.do")) continue;
+      const url = canonicalUrl(link[2], base, placeId);
+      if (url === base) continue;
       const label = plainText(link[3]).toLowerCase();
       const score = terms.filter(term => label.includes(term)).length;
       links.push({ url, score });
@@ -246,10 +262,12 @@ function additions(run: Run, result: SourceResult, search: SearchRecord): Source
 }
 export async function searchSources(run: Run, decision: Decision, signal: AbortSignal): Promise<SourceResult> {
   signal.throwIfAborted();
+  const place = getPlace(run.brief.placeId ?? run.brief.place);
+  if (!place) throw new Error("등록되지 않은 관광지입니다.");
   const intent = intentFor(run, decision);
   const search: SearchRecord = { ...intent, id: `search-${randomUUID()}`, at: new Date().toISOString(), version: run.version, visitedPages: 0, newEvidenceCount: 0, evidenceIds: [], resolvedClaimIds: [], remainingInformation: intent.missingInformation.length ? [...intent.missingInformation] : ["수집 자료가 요청을 뒷받침하는지 검수 필요"], errors: [] };
   if (run.mode === "fixture") {
-    const captured = fixtureSources();
+    const captured = fixtureSources(place.id);
     const result = run.scenario === "unavailable" ? { sources: captured.sources.map(source => ({ ...source, status: "unavailable" as const, snapshot: "", hash: sha("") })), evidence: [] } : captured;
     if (run.scenario === "unavailable") search.errors.push("fixture: 공식 자료 접근 실패 시나리오");
     return additions(run, { sources: result.sources.map(source => ({ ...source, searchIds: [search.id] })), evidence: result.evidence.map(item => {
@@ -263,7 +281,8 @@ export async function searchSources(run: Run, decision: Decision, signal: AbortS
   const bounded = AbortSignal.any([signal, AbortSignal.timeout(remainingMs)]);
   const terms = searchTerms(intent, run);
   const broad = !intent.targetClaimIds.length && !intent.missingInformation.length && terms.length === 0;
-  const queue = CATALOG.map(entry => ({ url: canonicalUrl(entry.url), depth: 0, score: 0 }));
+  const seeds = place.id === "pangyo-museum" ? CATALOG.map(entry => entry.url) : registeredUrls(place.id);
+  const queue = seeds.map(url => ({ url: canonicalUrl(url, undefined, place.id), depth: 0, score: 0 }));
   const visited = new Set<string>();
   const queued = new Set(queue.map(entry => entry.url));
   const result: SourceResult = { sources: [], evidence: [] };
@@ -273,17 +292,17 @@ export async function searchSources(run: Run, decision: Decision, signal: AbortS
     if (visited.has(entry.url)) continue;
     visited.add(entry.url); search.visitedPages++;
     try {
-      const page = await fetchDocument(entry.url, bounded);
+      const page = await fetchDocument(entry.url, bounded, place.id);
       visited.add(page.url);
       const snapshot = contentSnapshot(page.html);
       const hash = sha(snapshot);
-      const title = plainText(/<title[^>]*>([\s\S]*?)<\/title>/i.exec(page.html)?.[1] ?? "판교박물관 공식 자료");
+      const title = plainText(/<title[^>]*>([\s\S]*?)<\/title>/i.exec(page.html)?.[1] ?? `${place.name} 공식 자료`);
       const previous = [...run.sources, ...result.sources].find(source => source.url === page.url && source.hash === hash && source.status === "ok");
-      const source: Source = { id: previous?.id ?? `source-${sha(`${page.url}:${hash}`)}`, url: page.url, title, publisher: "성남시 판교박물관", retrievedAt: new Date().toISOString(), status: "ok", snapshot, hash, license: "공식 원문 확인용. 이미지 재사용 권한 미확인.", searchIds: [search.id], ...explicitDates(page.html) };
+      const source: Source = { id: previous?.id ?? `source-${sha(`${page.url}:${hash}`)}`, url: page.url, title, publisher: `${place.name} 공식 안내`, retrievedAt: new Date().toISOString(), status: "ok", snapshot, hash, license: "공식 원문 확인용. 이미지 재사용 권한 미확인.", searchIds: [search.id], ...explicitDates(page.html) };
       result.sources.push(source);
       result.evidence.push(...matchingEvidence(source, terms, broad, search));
       if (entry.depth < 2) {
-        for (const link of linksFrom(page.html, page.url, terms)) {
+        for (const link of linksFrom(page.html, page.url, terms, place.id)) {
           if (!queued.has(link.url) && !visited.has(link.url)) { queued.add(link.url); queue.push({ ...link, depth: entry.depth + 1 }); }
         }
         queue.sort((a, b) => b.score - a.score || a.depth - b.depth);
@@ -291,7 +310,7 @@ export async function searchSources(run: Run, decision: Decision, signal: AbortS
     } catch (error) {
       signal.throwIfAborted();
       search.errors.push(`${entry.url}: ${error instanceof Error ? error.message : "공식 자료 수집 실패"}`);
-      result.sources.push({ id: `source-${sha(`${entry.url}:unavailable`)}`, url: entry.url, title: "공식 자료 수집 실패", publisher: "성남시 판교박물관", retrievedAt: new Date().toISOString(), status: "unavailable", snapshot: "", hash: sha(""), license: "수집 실패", searchIds: [search.id] });
+      result.sources.push({ id: `source-${sha(`${entry.url}:unavailable`)}`, url: entry.url, title: "공식 자료 수집 실패", publisher: `${place.name} 공식 안내`, retrievedAt: new Date().toISOString(), status: "unavailable", snapshot: "", hash: sha(""), license: "수집 실패", searchIds: [search.id] });
     }
   }
   signal.throwIfAborted();

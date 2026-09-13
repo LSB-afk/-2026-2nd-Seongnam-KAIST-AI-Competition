@@ -24,6 +24,7 @@ export type Action =
   | "escalate";
 export interface Brief {
   place: string;
+  placeId?: string;
   audience: string;
   goal: string;
   cardCount: 4;
@@ -134,6 +135,48 @@ export interface Card {
   script: string;
   claimIds: string[];
   imagination: boolean;
+  image?: CardImage;
+}
+export interface ImageAsset {
+  id: string;
+  placeId: string;
+  kind: "photo" | "upload" | "ai";
+  src: string;
+  sha256: string;
+  width: number;
+  height: number;
+  mime: "image/jpeg" | "image/png" | "image/webp";
+  sourceUrl: string;
+  author: string;
+  license: string;
+  licenseUrl: string;
+  createdAt: string;
+  prompt?: ImagePrompt;
+  reference?: Pick<ImageAsset, "id" | "placeId" | "sha256" | "sourceUrl" | "author" | "license" | "licenseUrl">;
+}
+export interface CardImage extends ImageAsset {
+  crop: { x: number; y: number; zoom: number };
+}
+export interface ImagePrompt {
+  place: string;
+  subject: string;
+  composition: string;
+  lighting: string;
+  palette: string;
+  materials: string;
+  referenceImage: string | null;
+  textSpace: string;
+  imagination: boolean;
+}
+export interface ImageJob {
+  id: string;
+  cardId: string;
+  expectedVersion: number;
+  status: "running" | "succeeded" | "failed" | "cancelled";
+  prompt: ImagePrompt;
+  startedAt: string;
+  baseElapsedMs?: number;
+  error?: string;
 }
 export interface ReviewIssue {
   id: string;
@@ -235,6 +278,7 @@ export interface Run {
     apiCalls: number;
   };
   modelCallLog?: ModelCallRecord[];
+  imageJob?: ImageJob;
 }
 export interface SourceResult {
   sources: Source[];

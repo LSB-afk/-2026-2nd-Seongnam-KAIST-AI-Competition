@@ -107,3 +107,26 @@ node --env-file-if-exists=.env.local --import tsx scripts/evaluate-live.ts
 2026-09-10 평가 전용 회귀 9개와 해당 파일 ESLint를 통과했다. 36개 데이터 검사는 실행했고 holdout 18개·초안 라벨·API 호출 0회를 확인했다. 실제 smoke 명령은 API 키, 모델, 단가, 비용 설정 부재를 명시하고 종료 코드 2로 끝났다. 실제 주장 분류 정확도, 실제 모델 간 작업 성과, 사람 검토 성과는 **미측정**이다. 이후 실행 결과는 출력 JSON의 시각·지문·실행 상태와 함께 해석한다.
 
 같은 날 공식 사이트 probe는 개관일 검색으로 인용 2개를 확보한 뒤 관람료를 재검색했다. 후속 검색에서 8페이지를 방문해 새로운 후보 인용 2개를 추가했고 기존 스냅샷을 유지했다. 그중 하나는 무료 주차 안내이므로 관람료의 지지 근거로 단정하지 않는다. 페이지/깊이 상한 도달도 결과에 기록했다. `outputs/evaluation/source-probe.json`의 `mode: source_probe`, `apiCalls: 0`, `modelJudgement: not_run`은 실제 웹 수집만 확인했다는 뜻이다. 모델 판단·현재 운영 정보의 사실성을 검증한 결과는 아니다.
+
+## 2026-09-13 관광 플랫폼 검증
+
+이번 확장은 8개 장소의 고정 카탈로그와 재사용 조건을 확인한 실제 사진을 사용한다. `node --import tsx scripts/probe-places.ts`는 외부 fetch를 금지한 상태에서 장소별 fixture 생성·검수·실제 렌더링을 순차 실행한다. 8곳 모두 승인 대기에 도달했고 1080×1080 PNG 32장의 출력 해시, 장소별 사진 연결, 이미지·폰트 로딩, 글자 넘침 검사, 마지막 상상 표시를 확인했다. 보고서는 `outputs/evaluation/place-probe.json`이다. 이는 fixture 통합 검증이며 실제 모델 생성 품질의 평가가 아니다.
+
+`npm run eval`의 기존 12개 시나리오를 사진 렌더러로 다시 실행했다. 두 방식 모두 6개 중 4개가 승인 대기이고 자료 실패·지속 오류는 검토 필요로 남았다. 이 결과로 실제 에이전트의 품질 우위를 주장하지 않는다. `npm run eval:claims -- --validate`는 36개 입력·분리된 초안 라벨의 스키마를 확인했으며 실제 모델은 호출하지 않았다. `npm run eval:smoke`는 API·모델·단가·예산 미설정으로 종료 코드 2, API 호출 0회를 기록했다.
+
+이미지 제공자는 요청 전 예약 비용 저장, 참조 사진 전달, 잘못된 응답·파일 거부, 취소·실패·재시도와 원사진 이용 조건 보존을 모의 응답으로 검증한다. 이미지 API가 설정되어 있지 않아 실제 AI 이미지 생성 품질·장소 일치도·공급자 청구액은 미검증이다. 고정 예약액은 설정에 따른 추정치이며 실제 청구 상한을 보장하는 값이 아니다.
+
+최종 단위·통합 검증은 **17개 파일·213개 테스트 통과**다. `npm run typecheck`, `npm run lint`, `npm run build`도 통과했다. Production E2E 8개는 주요 흐름 7개 통과 후 새 초기조회 테스트의 Next.js 알림 영역 선택자를 수정하여 해당 1개를 재실행·통과했다. 마지막 썸네일 해상도·최근 50개 집계 설명 보정 후 production build, 담당 ESLint와 브라우저를 다시 확인했다.
+
+1440/1024/390 화면에서 가로 넘침이 없고, 제목은 데스크톱 40px·모바일 32px, 본문은 16px·15px이다. 실제 저장 기록 7건과 상태 집계, 실제 OSM 전국 지도 타일 20개 로드 및 성남 확대, 모바일 상세 버튼으로 제작 이동을 확인했다. 브라우저 예외는 0건이다. 파노라마 사진은 세로 크롭 시 흐려지지 않도록 더 큰 최적화 이미지를 요청한다.
+
+직접 열어 확인한 로컬 결과물(출력 폴더는 Git 제외):
+
+- `outputs/tourism-final-dashboard-1440.png`: 실제 기록·상태와 최종 타이포그래피.
+- `outputs/tourism-final-korea-1440.png`, `tourism-final-seongnam-1440.png`: 실제 지리 타일·마커·클러스터.
+- `outputs/tourism-final-detail-1024.png`, `tourism-final-detail-action-390.png`, `tourism-final-studio-390.png`: 상세 패널·모바일 제작 버튼과 입력 화면.
+- `outputs/tourism-final-panorama-thumbnail.png`: 파노라마 썸네일 해상도 보정 후 확인.
+- `outputs/e2e-tourism-card-1.png`, `e2e-tourism-card-4.png`: 브라우저로 승인 후 내려받은 ZIP의 실제 1080 PNG. 사진·문구·출처·마지막 상상 표시를 직접 확인했다.
+- `outputs/tourism-final-browser.json`, `outputs/evaluation/place-probe.json`: 화면 확인과 8개 장소·32 PNG 검증 기록.
+
+주요 구현 파일은 `src/app/page.tsx`·`globals.css`(화면·글자), `src/components/{platform-home,place-explorer,tourism-map,image-editor}.tsx`(탐색·지도·편집), `src/lib/places.ts`·`public/places`(공식 장소·사진), `src/lib/{sources,fixture,prompts,verifier}.ts`(장소별 생성·근거), `src/lib/{images,image-provider,service,render}.ts`와 `src/app/api/images`(이미지 보관·생성·버전·출력)다. 새 패키지 의존성은 추가하지 않았다.

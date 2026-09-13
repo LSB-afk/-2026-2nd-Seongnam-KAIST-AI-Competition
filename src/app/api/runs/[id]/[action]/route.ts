@@ -15,6 +15,8 @@ export async function POST(
     if (action === "approve") return service.approve(id, input);
     if (action === "edit") return service.edit(id, input);
     if (action === "retry") return service.retry(id, input);
+    if (action === "image") return service.image(id, input);
+    if (action === "image-cancel") return service.cancelImage(id, input);
     throw new AppError("지원하지 않는 작업입니다.", 404);
   });
 }

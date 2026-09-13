@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import type { Run, AgentDeps } from "./types";
+import type { Run, AgentDeps, Card, CardImage, ImageAsset, ImagePrompt } from "./types";
 import type { RunStore } from "./store";
 import { DEFAULT_BRIEF, newRun } from "./run";
+import { getPlace } from "./places";
 
 export class AppError extends Error {
   constructor(
@@ -14,16 +15,22 @@ export class AppError extends Error {
 }
 const briefSchema = z
   .object({
-    place: z.literal("판교박물관"),
+    place: z.string().trim().min(1).max(100),
+    placeId: z.string().max(100).optional(),
     audience: z.string().trim().min(1).max(40),
     goal: z.string().trim().min(5).max(1000),
     cardCount: z.literal(4),
     includeFuture: z.literal(true),
   })
-  .strict();
+  .strict()
+  .refine(value => {
+    const place = getPlace(value.placeId ?? value.place);
+    return !!place && place.name === value.place;
+  }, "등록된 관광지의 이름과 식별자가 일치해야 합니다.")
+  .transform(value => ({...value,placeId:getPlace(value.placeId ?? value.place)!.id}));
 const createSchema = z
   .object({
-    brief: briefSchema.default({ ...DEFAULT_BRIEF, place: "판교박물관" }),
+    brief: briefSchema.prefault({ ...DEFAULT_BRIEF }),
     mode: z.enum(["fixture", "live"]),
     strategy: z.enum(["agent", "baseline"]).default("agent"),
     scenario: z
@@ -56,12 +63,28 @@ const approveSchema = z
     reviewer: z.string().trim().min(1).max(60),
   })
   .strict();
+const imageSchema = z.object({
+  version: z.number().int().nonnegative(),
+  cardId: z.string().min(1).max(100),
+  operation: z.enum(["crop", "replace", "generate"]),
+  crop: z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1), zoom: z.number().min(1).max(3) }).strict().optional(),
+  assetId: z.string().regex(/^[a-zA-Z0-9_-]+$/).max(100).optional(),
+  usePlacePhoto: z.boolean().optional(),
+  subject: z.string().trim().min(1).max(500).optional(),
+}).strict();
 interface Dependencies {
   runner: (run: Run, deps: AgentDeps) => Promise<Run>;
   search: AgentDeps["search"];
   render: AgentDeps["render"];
   checkArtifacts: (run: Run) => Promise<boolean>;
   liveAvailable?: () => boolean;
+  image?: {
+    configured: () => boolean;
+    defaultImage: (place: string) => Promise<CardImage | undefined>;
+    getAsset: (id: string) => Promise<ImageAsset>;
+    buildPrompt: (run: Run, card: Card, subject?: string) => ImagePrompt;
+    generate: (run: Run, prompt: ImagePrompt, reference: ImageAsset | undefined, signal: AbortSignal, persist: (run: Run) => void) => Promise<ImageAsset>;
+  };
 }
 interface Job {
   controller: AbortController;
@@ -89,16 +112,127 @@ export class RunService {
     if (
       this.jobs.has(run.id) ||
       run.status === "running" ||
-      run.status === "queued"
+      run.status === "queued" || run.imageJob?.status === "running"
     )
       throw new AppError("실행이 끝난 뒤 다시 시도하세요.", 409);
+  }
+  private applyImage(run: Run, cardId: string, image: CardImage, reason: string): Run {
+    const card = run.cards.find(item => item.id === cardId);
+    if (!card) throw new AppError("이미지를 수정할 카드를 찾을 수 없습니다.", 404);
+    if (!run.revisions.some(item => item.version === run.version))
+      run.revisions.push({version:run.version,createdAt:run.updatedAt,cards:structuredClone(run.cards),claims:structuredClone(run.claims),reason:"이미지 변경 전 저장"});
+    card.image = structuredClone(image);
+    run.version += 1;
+    run.reviewVersion = null;
+    run.approval = null;
+    run.artifacts = [];
+    run.assessments = [];
+    run.proposedChanges = [];
+    run.status = "needs_review";
+    run.stopReason = "이미지가 변경되었습니다. 사진과 문구를 확인하고 다시 검수하세요.";
+    run.updatedAt = new Date().toISOString();
+    run.revisions.push({version:run.version,createdAt:run.updatedAt,cards:structuredClone(run.cards),claims:structuredClone(run.claims),reason,origin:"human"});
+    run.events.push({id:randomUUID(),at:run.updatedAt,action:"edited",message:reason,version:run.version});
+    this.store.save(run);
+    return run;
+  }
+  async image(id: string, input: unknown): Promise<Run> {
+    const parsed = imageSchema.parse(input);
+    const run = this.require(id);
+    this.idleOnly(run);
+    this.version(run, parsed.version);
+    const card = run.cards.find(item => item.id === parsed.cardId);
+    if (!card) throw new AppError("이미지를 수정할 카드를 찾을 수 없습니다.", 404);
+    if (parsed.operation === "crop") {
+      if (!card.image || !parsed.crop) throw new AppError("편집할 사진과 크롭 값이 필요합니다.");
+      return this.applyImage(run, card.id, {...card.image,crop:parsed.crop}, "담당자 사진 크롭·초점 수정");
+    }
+    const image = this.deps.image;
+    if (!image) throw new AppError("이미지 서비스를 사용할 수 없습니다.", 503);
+    if (parsed.operation === "replace") {
+      if (!!parsed.assetId === !!parsed.usePlacePhoto) throw new AppError("교체할 사진 하나를 선택하세요.");
+      const asset = parsed.usePlacePhoto
+        ? await image.defaultImage(run.brief.placeId ?? run.brief.place)
+        : await image.getAsset(parsed.assetId!);
+      if (!asset) throw new AppError("이 장소의 사진을 찾을 수 없습니다.", 404);
+      const expected = getPlace(run.brief.placeId ?? run.brief.place)?.id;
+      if (expected && asset.placeId !== expected) throw new AppError("선택한 장소와 사진의 장소가 다릅니다.");
+      const latest = this.require(id);
+      this.idleOnly(latest);
+      this.version(latest, parsed.version);
+      return this.applyImage(latest, card.id, {...asset,crop:parsed.crop ?? {x:.5,y:.5,zoom:1}}, "담당자 사진 교체");
+    }
+    if (!image.configured()) throw new AppError("AI 이미지 연결 설정이 필요합니다. API 키·이미지 모델·호출 비용 상한을 설정하세요.", 503);
+    if (this.jobs.size >= 2) throw new AppError("동시에 두 개까지 제작할 수 있습니다.", 429);
+    const remaining = run.limits.maxDurationMs - (run.usage.elapsedMs ?? 0);
+    if (remaining <= 0) throw new AppError("누적 실행 시간 상한에 도달했습니다.", 409);
+    const prompt = image.buildPrompt(run, card, parsed.subject);
+    const jobId = randomUUID();
+    run.imageJob = {id:jobId,cardId:card.id,expectedVersion:run.version,status:"running",prompt,startedAt:new Date().toISOString(),baseElapsedMs:run.usage.elapsedMs ?? 0};
+    run.updatedAt = run.imageJob.startedAt;
+    this.store.save(run);
+    const controller = new AbortController();
+    const timeout = AbortSignal.timeout(Math.max(1,Math.ceil(remaining)));
+    const signal = AbortSignal.any([controller.signal,timeout]);
+    const started = Date.now();
+    const priorElapsed = run.usage.elapsedMs ?? 0;
+    const persistUsage = (next: Run) => {
+      const latest = this.require(id);
+      latest.usage = {...next.usage,elapsedMs:Math.min(run.limits.maxDurationMs,priorElapsed+Date.now()-started)};
+      latest.modelCallLog = structuredClone(next.modelCallLog);
+      latest.execution = structuredClone(next.execution);
+      latest.updatedAt = new Date().toISOString();
+      this.store.save(latest);
+    };
+    const promise = Promise.resolve().then(async () => {
+      try {
+        const asset = await image.generate(run,prompt,card.image,signal,persistUsage);
+        signal.throwIfAborted();
+        const latest = this.require(id);
+        if (latest.imageJob?.id !== jobId || latest.imageJob.status !== "running") return;
+        this.version(latest,parsed.version);
+        if (run.brief.placeId && asset.placeId !== run.brief.placeId) throw new AppError("생성 이미지의 장소가 일치하지 않습니다.");
+        latest.imageJob.status = "succeeded";
+        this.applyImage(latest,card.id,{...asset,crop:{x:.5,y:.5,zoom:1}},"요청한 카드의 AI 이미지 생성");
+      } catch {
+        const latest = this.require(id);
+        if (latest.imageJob?.id === jobId && latest.imageJob.status === "running") {
+          latest.imageJob.status = controller.signal.aborted ? "cancelled" : "failed";
+          latest.imageJob.error = timeout.aborted ? "이미지 생성 시간이 초과되었습니다. 기존 사진은 유지됩니다." : controller.signal.aborted ? "이미지 생성을 취소했습니다." : "이미지 생성에 실패했습니다. 연결 설정과 남은 예산을 확인한 뒤 다시 시도하세요.";
+          latest.updatedAt = new Date().toISOString();
+          this.store.save(latest);
+        }
+      } finally {
+        persistUsage(run);
+        this.jobs.delete(id);
+      }
+    });
+    this.jobs.set(id,{controller,promise});
+    return this.require(id);
+  }
+  cancelImage(id: string, input: unknown): Run {
+    const {version} = versionSchema.parse(input);
+    const run = this.require(id);
+    this.version(run,version);
+    if (run.imageJob?.status !== "running") throw new AppError("생성 중인 이미지만 취소할 수 있습니다.",409);
+    run.imageJob.status = "cancelled";
+    run.imageJob.error = "이미지 생성을 취소했습니다. 기존 사진을 유지합니다.";
+    run.updatedAt = new Date().toISOString();
+    this.store.save(run);
+    this.jobs.get(id)?.controller.abort();
+    return run;
   }
   create(input: unknown): Run {
     const parsed = createSchema.parse(input);
     const existing = this.store.findRequest(parsed.requestId);
     if (existing) {
       if (
-        JSON.stringify(existing.brief) !== JSON.stringify(parsed.brief) ||
+        existing.brief.place !== parsed.brief.place ||
+        (existing.brief.placeId ?? getPlace(existing.brief.place)?.id) !== parsed.brief.placeId ||
+        existing.brief.audience !== parsed.brief.audience ||
+        existing.brief.goal !== parsed.brief.goal ||
+        existing.brief.cardCount !== parsed.brief.cardCount ||
+        existing.brief.includeFuture !== parsed.brief.includeFuture ||
         existing.mode !== parsed.mode ||
         existing.strategy !== parsed.strategy ||
         existing.scenario !== parsed.scenario
@@ -307,6 +441,7 @@ export class RunService {
     // Filesystem verification yields; another request may have edited/cancelled the run.
     const latest = this.require(id);
     this.version(latest, parsed.version);
+    this.idleOnly(latest);
     if (latest.status !== "ready_for_approval")
       throw new AppError(
         "제작 상태가 변경되었습니다. 최신 결과를 확인하세요.",

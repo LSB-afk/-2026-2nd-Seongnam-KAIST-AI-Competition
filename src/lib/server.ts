@@ -6,6 +6,8 @@ import { getLiveConfig } from "./provider";
 import { searchSources } from "./sources";
 import { renderCards } from "./render";
 import { checkArtifacts } from "./artifacts";
+import { defaultPlaceImage, getStoredImage } from "./images";
+import { buildImagePrompt, generateImage, getImageConfig } from "./image-provider";
 const globals = globalThis as typeof globalThis & {
   timestoryService?: RunService;
 };
@@ -18,9 +20,21 @@ export function getService(): RunService {
     globals.timestoryService = new RunService(store, {
       runner: runAgent,
       search: searchSources,
-      render: renderCards,
+      render: async (run,signal) => {
+        if (run.cards.some(card=>!card.image)) {
+          const photo = await defaultPlaceImage(run.brief.placeId ?? run.brief.place);
+          signal.throwIfAborted();
+          if (photo) {
+            for (const card of run.cards) if (!card.image) card.image = structuredClone(photo);
+            const revision = run.revisions.find(item=>item.version===run.version);
+            if (revision) revision.cards = structuredClone(run.cards);
+          }
+        }
+        return renderCards(run,signal);
+      },
       checkArtifacts,
       liveAvailable: () => getLiveConfig().configured,
+      image: {configured:()=>getImageConfig().configured,defaultImage:defaultPlaceImage,getAsset:getStoredImage,buildPrompt:buildImagePrompt,generate:generateImage},
     });
   }
   return globals.timestoryService;

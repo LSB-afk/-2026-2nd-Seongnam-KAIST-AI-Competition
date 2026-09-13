@@ -41,7 +41,7 @@ export async function handle(
     );
   }
 }
-export async function body(request: Request): Promise<unknown> {
+export async function body(request: Request, maxBytes = 16384): Promise<unknown> {
   const origin = request.headers.get("origin");
   // Next's internal Request URL normalizes 127.0.0.1 to localhost; compare the
   // browser's Origin with the original Host, restricted to the local app.
@@ -67,7 +67,7 @@ export async function body(request: Request): Promise<unknown> {
       );
   }
   const declared = Number(request.headers.get("content-length") ?? 0);
-  if (declared > 16384) throw new AppError("요청 본문이 너무 큽니다.", 413);
+  if (declared > maxBytes) throw new AppError("요청 본문이 너무 큽니다.", 413);
   if (!request.headers.get("content-type")?.includes("application/json"))
     throw new AppError("JSON 요청이 필요합니다.", 415);
   const reader = request.body?.getReader();
@@ -79,7 +79,7 @@ export async function body(request: Request): Promise<unknown> {
       const part = await reader.read();
       if (part.done) break;
       size += part.value.byteLength;
-      if (size > 16384) throw new AppError("요청 본문이 너무 큽니다.", 413);
+      if (size > maxBytes) throw new AppError("요청 본문이 너무 큽니다.", 413);
       chunks.push(part.value);
     }
   } finally {

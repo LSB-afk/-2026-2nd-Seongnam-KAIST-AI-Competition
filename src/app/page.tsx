@@ -1,16 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Brief, Card, Mode, Run, Scenario, Strategy } from "@/lib/types";
 import { AtomicReview, EvidenceLinks, ProtectedChanges, RunTrace, safeSourceUrl } from "@/components/review-trace";
 
+import { PLACES, getPlace, type Place } from "@/lib/places";
+import PlaceExplorer, { PlacePhoto } from "@/components/place-explorer";
+import ImageEditor, { CardPhoto } from "@/components/image-editor";
+import PlatformHome, { RunHistory } from "@/components/platform-home";
+
 type Config = {
+  image?: { configured: boolean; reason?: string; model?: string };
   live: { configured: boolean; reason?: string; model?: string };
 };
 const example: Brief = {
   place: "판교박물관",
+  placeId: "pangyo-museum",
   audience: "청소년",
   goal: "청소년에게 판교박물관을 소개할 카드뉴스 4장을 만들어줘. 마지막 장에는 성남의 미래 문화공간을 상상하는 내용을 넣어줘.",
   cardCount: 4,
@@ -91,6 +98,11 @@ function Mark({ small = false }: { small?: boolean }) {
 }
 
 export default function Studio() {
+  const [view, setView] = useState<"dashboard" | "explore" | "studio" | "history">("dashboard");
+  const [recordsLoaded, setRecordsLoaded] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [imageChoice, setImageChoice] = useState<"photo" | "ai">("photo");
   const [brief, setBrief] = useState<Brief>(example);
   const [mode, setMode] = useState<Mode>("fixture");
   const [strategy, setStrategy] = useState<Strategy>("agent");
@@ -102,13 +114,15 @@ export default function Studio() {
   const [error, setError] = useState("");
   const [selectedCardId, setSelectedCardId] = useState("");
   const [selectedClaimId, setSelectedClaimId] = useState("");
-  const [tab, setTab] = useState<"evidence" | "changes" | "edit">("evidence");
+  const [tab, setTab] = useState<"evidence" | "changes" | "edit" | "image">("evidence");
   const [editTitle, setEditTitle] = useState("");
   const [editBody, setEditBody] = useState("");
   const [reviewer, setReviewer] = useState("");
   const [clock, setClock] = useState(() => Date.now());
   const [historyLoading, setHistoryLoading] = useState(false);
-  const active = run?.status === "queued" || run?.status === "running";
+  const textActive = run?.status === "queued" || run?.status === "running";
+  const active = textActive || run?.imageJob?.status === "running";
+  const draftPlace = getPlace(brief.placeId || brief.place) || PLACES[0];
   const liveUnavailable = mode === "live" && !config?.live.configured;
   const card =
     run?.cards.find((item) => item.id === selectedCardId) || run?.cards[0];
@@ -129,7 +143,7 @@ export default function Studio() {
         Math.round(
           Math.max(
             run.usage.elapsedMs || 0,
-            active && run.startedAt
+            textActive && run.startedAt
               ? (run.attemptBaseElapsedMs || 0) +
                   clock -
                   new Date(run.startedAt).getTime()
@@ -139,22 +153,29 @@ export default function Studio() {
       )
     : 0;
 
+  const refreshInitial = useCallback(async () => {
+    setInitialLoading(true);
+    setLoadError("");
+    const [settings, previous] = await Promise.allSettled([
+      readJson<Config>("/api/config"),
+      readJson<Run[]>("/api/runs"),
+    ]);
+    const failures: string[] = [];
+    if (settings.status === "fulfilled") setConfig(settings.value);
+    else failures.push("AI 연결 설정을 불러오지 못했습니다.");
+    if (previous.status === "fulfilled") {
+      setHistory(previous.value);
+      setRecordsLoaded(true);
+    } else failures.push("제작 기록을 불러오지 못했습니다.");
+    setLoadError(failures.join(" "));
+    setInitialLoading(false);
+  }, []);
+
   useEffect(() => {
     let mounted = true;
-    Promise.all([readJson<Config>("/api/config"), readJson<Run[]>("/api/runs")])
-      .then(([settings, previous]) => {
-        if (mounted) {
-          setConfig(settings);
-          setHistory(previous);
-        }
-      })
-      .catch((cause: Error) => {
-        if (mounted) setError(cause.message);
-      });
-    return () => {
-      mounted = false;
-    };
-  }, []);
+    void Promise.resolve().then(() => { if (mounted) void refreshInitial(); });
+    return () => { mounted = false; };
+  }, [refreshInitial]);
 
   useEffect(() => {
     if (!active || !run?.id) return;
@@ -214,9 +235,10 @@ export default function Studio() {
         }),
       });
       setRun(next);
+      setView("studio");
       setSelectedCardId("");
       setSelectedClaimId("");
-      setTab("evidence");
+      setTab(imageChoice === "ai" ? "image" : "evidence");
       setReviewer("");
       setClock(Date.now());
       setHistory((previous) => [
@@ -266,6 +288,7 @@ export default function Studio() {
     try {
       const next = await readJson<Run>(`/api/runs/${id}`);
       setRun(next);
+      setView("studio");
       setSelectedCardId("");
       setSelectedClaimId("");
       setTab("evidence");
@@ -279,19 +302,24 @@ export default function Studio() {
     }
   }
 
+  function choosePlace(place: Place) {
+    if (active) { setError("진행 중인 제작이 끝나면 새 장소로 시작할 수 있습니다."); setView("studio"); return; }
+    setBrief((previous) => ({ ...previous, place: place.name, placeId: place.id, goal: previous.goal.replaceAll(previous.place, place.name) }));
+    setRun(null); setSelectedCardId(""); setSelectedClaimId(""); setView("studio"); setTab("evidence");
+  }
+  function receiveRun(next: Run) { setRun(next); setHistory((previous) => [next, ...previous.filter((item) => item.id !== next.id)]); }
+  const menu = [{ id: "dashboard", label: "대시보드", icon: "◫" }, { id: "explore", label: "성남 관광지 탐색", icon: "◎" }, { id: "studio", label: "카드뉴스 제작", icon: "▧" }, { id: "history", label: "제작 기록", icon: "◷" }] as const;
+
   function fileUrl(name: string) {
     return `/api/runs/${run?.id}/files/${encodeURIComponent(name)}`;
   }
 
   return (
-    <>
+    <div className="platform-shell">
+      <aside className="platform-sidebar"><Link href="/" className="brand" onClick={(event) => { event.preventDefault(); setView("dashboard"); }}><Mark /><span>성남 타임스토리<small>도시를 발견하는 새로운 방법</small></span></Link><span className="sidebar-caption">나의 콘텐츠 공간</span><nav aria-label="주 메뉴">{menu.map((item) => <button type="button" key={item.id} className={view === item.id ? "selected" : ""} aria-current={view === item.id ? "page" : undefined} onClick={() => setView(item.id)}><span aria-hidden="true">{item.icon}</span>{item.label}{item.id === "history" && recordsLoaded && <small>{history.length}</small>}</button>)}</nav><div className="sidebar-foot"><Mark small /><strong>도시의 이야기를 함께.</strong><p>공식 자료로 사실을 확인하고<br />상상으로 내일을 연결합니다.</p></div></aside>
+      <div className="platform-main">
       <header className="topbar">
-        <Link className="brand" href="/" aria-label="성남 타임스토리 홈">
-          <Mark />
-          <span>
-            성남 타임스토리<small>문화홍보 AI PD</small>
-          </span>
-        </Link>
+        <div className="topbar-location"><span>성남 타임스토리</span><span aria-hidden="true">/</span><strong>{menu.find((item) => item.id === view)?.label}</strong></div>
         <div className="header-right">
           <span className="workspace-label">콘텐츠 작업실</span>
           <label className="history-select">
@@ -314,6 +342,24 @@ export default function Studio() {
         </div>
       </header>
       <main className="workspace">
+        {loadError && <div className="error-banner initial-load-error" role="alert"><span>{loadError} 입력한 내용은 유지됩니다.</span><button type="button" className="text-button" disabled={initialLoading} onClick={() => void refreshInitial()}>설정과 기록 다시 불러오기</button></div>}
+        {error && (
+          <div className="error-banner" role="alert">
+            <span>{error}</span>
+            <button
+              type="button"
+              onClick={() => setError("")}
+              aria-label="오류 메시지 닫기"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
+        {view === "dashboard" && <PlatformHome runs={history} loaded={recordsLoaded} failed={!recordsLoaded && Boolean(loadError)} busy={active || busy} onExplore={() => setView("explore")} onCreate={choosePlace} onOpen={(id) => void loadRun(id)} />}
+        <PlaceExplorer visible={view === "explore"} onCreate={choosePlace} />
+        {view === "history" && <RunHistory runs={history} loaded={recordsLoaded} failed={!recordsLoaded && Boolean(loadError)} busy={active || busy} onOpen={(id) => void loadRun(id)} full />}
+        <div hidden={view !== "studio"}>
         <section className="intro">
           <div>
             <h1>
@@ -331,18 +377,6 @@ export default function Studio() {
             <Mark small />
           </div>
         </section>
-        {error && (
-          <div className="error-banner" role="alert">
-            <span>{error}</span>
-            <button
-              type="button"
-              onClick={() => setError("")}
-              aria-label="오류 메시지 닫기"
-            >
-              ×
-            </button>
-          </div>
-        )}
         <div className="studio-layout">
           <aside className="brief-panel">
             <div className="panel-heading">
@@ -351,7 +385,7 @@ export default function Studio() {
                 className="text-button"
                 type="button"
                 disabled={active || busy}
-                onClick={() => setBrief(example)}
+                onClick={() => setBrief({ ...example, place: draftPlace.name, placeId: draftPlace.id, goal: example.goal.replaceAll(example.place, draftPlace.name) })}
               >
                 예시 불러오기
               </button>
@@ -371,9 +405,7 @@ export default function Studio() {
                     aria-describedby="place-note"
                   />
                 </label>
-                <p id="place-note" className="field-note">
-                  첫 번째 이야기는 판교박물관에서 시작합니다.
-                </p>
+                <p id="place-note" className="field-note">{draftPlace.district} · {draftPlace.type} <button type="button" className="text-button" onClick={() => setView("explore")}>장소 변경</button></p>
                 <label>
                   누구에게 전할까요?
                   <select
@@ -409,6 +441,8 @@ export default function Studio() {
                   <span aria-hidden="true">✳</span> 마지막 장은 미래 문화공간을
                   상상해요.
                 </p>
+                <label>카드 이미지<select value={imageChoice} onChange={(event) => setImageChoice(event.target.value as "photo" | "ai")}><option value="photo">장소의 실제 사진으로 시작</option><option value="ai">제작 후 AI 이미지로 바꾸기</option></select></label>
+                <p className="field-note">{imageChoice === "ai" ? "먼저 카드 문구를 완성한 뒤 사진 편집에서 원하는 장면을 생성합니다." : "확인된 장소 사진을 사용하고, 장별로 구도를 조정할 수 있어요."}</p>
                 <div className="mode-field">
                   <span className="form-label">실행 모드</span>
                   <div className="segmented" role="group" aria-label="실행 모드 선택">
@@ -431,7 +465,7 @@ export default function Studio() {
                   </div>
                   <p className="field-note" aria-live="polite">
                     {mode === "fixture"
-                      ? "청소년 대상의 준비된 시나리오와 저장된 응답으로 체험합니다. 입력한 대상·목표를 반영한 제작은 실제 AI 모드에서 가능합니다. 실제 AI 성능을 의미하지 않습니다."
+                      ? "선택한 장소의 확인된 자료와 준비된 응답으로 체험합니다. 자유로운 목표 반영은 실제 AI 모드에서 가능합니다."
                       : liveUnavailable
                         ? "실제 AI 모드가 선택되었습니다. 아래 연결 설정을 완료하면 제작할 수 있습니다."
                         : `실제 공식 자료와 AI를 사용합니다.${config?.live.model ? ` 모델: ${config.live.model}` : ""}`}
@@ -541,7 +575,7 @@ export default function Studio() {
                   <strong>
                     {run.events.at(-1)?.message || "작업을 준비하고 있습니다."}
                   </strong>
-                  {active && (
+                  {textActive && (
                     <button
                       type="button"
                       className="text-button danger"
@@ -577,7 +611,7 @@ export default function Studio() {
                   </span>
                   <span>실제 모델 API 시도 <b>{run.execution?.apiCalls ?? "미기록"}</b>{run.execution?.apiCalls !== undefined ? "회" : ""}</span>
                   <span>
-                    {run.mode === "fixture"
+                    {run.usage.costKind === "fixture"
                       ? "모의 실행 · API 비용 없음"
                       : `추정 비용 $${run.usage.costUsd.toFixed(4)} / 상한 $${run.limits.maxCostUsd.toFixed(4)}`}
                   </span>
@@ -618,7 +652,7 @@ export default function Studio() {
                             height={1080}
                           />
                         ) : (
-                          <div className="card-design">
+                          <div className="card-design photo-card-design">
                             <div className="card-topline">
                               <span>
                                 {item.imagination
@@ -628,17 +662,10 @@ export default function Studio() {
                               <span>{String(index + 1).padStart(2, "0")}</span>
                             </div>
                             <h3>{item.title}</h3>
-                            <div
-                              className={`card-shape ${sampleCards[index]?.shape}`}
-                              aria-hidden="true"
-                            >
-                              <i />
-                              <i />
-                              <i />
-                            </div>
+                            <CardPhoto key={item.image?.src} card={item} />
                             <p>{item.body}</p>
                             <div className="card-bottomline">
-                              <span>판교박물관</span>
+                              <span>{run.brief.place}</span>
                               <span>제작 초안</span>
                             </div>
                           </div>
@@ -657,20 +684,13 @@ export default function Studio() {
                       className={`story-card card-tone-${index} example-card`}
                       key={sample.title}
                     >
-                      <div className="card-design">
+                      <div className="card-design photo-card-design">
                         <div className="card-topline">
                           <span>{sample.tag}</span>
                           <span>{String(index + 1).padStart(2, "0")}</span>
                         </div>
-                        <h3>{sample.title}</h3>
-                        <div
-                          className={`card-shape ${sample.shape}`}
-                          aria-hidden="true"
-                        >
-                          <i />
-                          <i />
-                          <i />
-                        </div>
+                        <h3>{index === 0 ? `${draftPlace.name}, 이야기를 열다` : sample.title}</h3>
+                        <PlacePhoto place={draftPlace} />
                         <p>{sample.body}</p>
                         <div className="card-bottomline">
                           <span>성남 타임스토리</span>
@@ -683,7 +703,7 @@ export default function Studio() {
             {!run && (
               <div className="example-notice">
                 <span aria-hidden="true">ⓘ</span> 위 카드는 구성 예시이며, 아직
-                조사·검수된 결과물이 아닙니다.
+                조사·검수된 결과물이 아닙니다. 사진은 실제 장소를 보여줍니다.
               </div>
             )}
             {run && (
@@ -727,6 +747,7 @@ export default function Studio() {
                   { key: "evidence", label: "문장 근거" },
                   { key: "changes", label: "수정 내역" },
                   { key: "edit", label: "직접 수정" },
+                  { key: "image", label: "사진 편집" },
                 ] as const
               ).map((item) => (
                 <button
@@ -926,6 +947,7 @@ export default function Studio() {
                       )}
                     </div>
                   )}
+                  {tab === "image" && card && <ImageEditor key={`${run.id}-${card.id}-${run.version}`} run={run} card={card} config={config?.image} locked={active || busy} onRun={receiveRun} onBusy={setBusy} />}
                   {tab === "edit" && (
                     <form
                       className="edit-form"
@@ -1027,7 +1049,7 @@ export default function Studio() {
                     </label>
                     <button
                       className="primary-button"
-                      disabled={busy || !reviewer.trim()}
+                      disabled={active || busy || !reviewer.trim()}
                       type="submit"
                     >
                       최종 결과 승인
@@ -1080,11 +1102,13 @@ export default function Studio() {
             )}
           </aside>
         </div>
+        </div>
         <footer className="workspace-footer">
           <span>성남의 어제와 오늘, 우리가 상상하는 내일.</span>
           <span>성남 × KAIST AI 경진대회 · 예선 MVP</span>
         </footer>
       </main>
-    </>
+      </div>
+    </div>
   );
 }

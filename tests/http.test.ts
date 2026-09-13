@@ -1,6 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { body } from "../src/lib/http";
 describe("browser mutation origin boundary", () => {
+  it("allows bounded image JSON without increasing the normal action limit", async()=>{
+    const request=()=>new Request("http://localhost:3000/api/images",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({data:"a".repeat(18000)})});
+    await expect(body(request())).rejects.toThrow(/너무 큽니다/);
+    await expect(body(request(),20000)).resolves.toHaveProperty("data");
+    await expect(body(request(),10000)).rejects.toThrow(/너무 큽니다/);
+  });
   it("accepts same-origin browser request when Next normalizes internal URL to localhost", async () => {
     const req = new Request("http://localhost:3000/api/runs", {
       method: "POST",

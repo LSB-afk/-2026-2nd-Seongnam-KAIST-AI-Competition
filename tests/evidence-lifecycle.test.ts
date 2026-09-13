@@ -21,6 +21,23 @@ function draft(): Run {
   run.revisions=[{version:1,createdAt:run.createdAt,cards:structuredClone(run.cards),claims:structuredClone(run.claims),reason:'draft'}];
   return run;
 }
+it('preserves the selected photo and crop when a model changes card text', async () => {
+  const { applyStoryUpdate } = await import('../src/lib/lifecycle');
+  const run = draft();
+  run.cards[0].image = {
+    id: 'user-photo', placeId: 'pangyo-museum', kind: 'upload', src: '/assets/photo.png',
+    sha256: 'hash', width: 1200, height: 800, mime: 'image/png', sourceUrl: '',
+    author: '담당자', license: '직접 촬영', licenseUrl: '', createdAt: run.createdAt,
+    crop: { x: 0.3, y: 0.6, zoom: 1.5 },
+  };
+  const before = structuredClone(run.cards[0].image);
+  const story = createFixtureStory(run);
+  delete story.cards[0].image;
+  story.cards[0].title = '새 제목';
+  applyStoryUpdate(run, story, { action: 'compose_story', targetIds: ['card-1'], evidenceIds: [], reasonSummary: '제목 수정', expectedVersion: 1, uncertainty: '' }, run.createdAt);
+  expect(run.cards[0].image).toEqual(before);
+  expect(run.revisions.at(-1)?.cards[0].image).toEqual(before);
+});
 describe('evidence and revision lifecycle', () => {
   it('retains original snapshots when a targeted search adds another source', async () => {
     const run=draft(); const d=deps();

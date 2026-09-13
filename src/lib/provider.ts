@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { getPlace } from "./places";
 import { z } from "zod";
 import { PROMPT_VERSION, REVIEW_RULES_VERSION, DECISION_PROMPT, COMPOSE_PROMPT, REVIEW_PROMPT } from "./prompts";
 import { atomicReviewSchema, validateAtomicReview } from "./verifier";
@@ -230,6 +231,7 @@ function context(run: Run) {
     });
   return {
     brief: run.brief,
+    selectedPlace: getPlace(run.brief.placeId ?? run.brief.place ?? ""),
     goal: run.brief?.goal,
     searches: run.searches ?? [],
     protectedCardIds: run.protectedCardIds ?? [],

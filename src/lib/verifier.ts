@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { getPlace, PLACES } from "./places";
+import { assertOfficialUrl } from "./sources";
 import { REVIEW_RULES_VERSION } from "./prompts";
 import type { Claim, ClaimAssessment, Evidence, ReviewIssue, Run } from "./types";
 
@@ -15,6 +17,7 @@ function covered(text: string, claims: Claim[]) {
 /** Rule checks enforce structural integrity; live mode additionally requires a model evidence review. */
 export function verifyContent(run: Run): ReviewIssue[] {
   const issues: ReviewIssue[] = [];
+  const place = getPlace(run.brief.placeId ?? run.brief.place);
   const add = (
     targetId: string,
     type: string,
@@ -79,6 +82,8 @@ export function verifyContent(run: Run): ReviewIssue[] {
   }
   const claimMap = new Map(run.claims.map((claim) => [claim.id, claim]));
   for (const card of run.cards) {
+    if (place && PLACES.some(other => other.id !== place.id && `${card.title} ${card.body} ${card.script}`.includes(other.name)))
+      add(card.id, "place_mismatch", "선택한 관광지와 다른 장소의 내용이 섞여 있습니다.");
     if (!card.title.trim() || !card.body.trim() || !card.script.trim())
       add(card.id, "empty_content", "제목·본문·대본이 필요합니다.");
     if (card.title.length > 44 || card.body.length > 220)
@@ -131,7 +136,7 @@ export function verifyContent(run: Run): ReviewIssue[] {
     add(
       "run",
       "missing_museum_facts",
-      "박물관을 소개하는 근거 있는 사실 문장이 최소 2개 필요합니다.",
+      "선택한 관광지를 소개하는 근거 있는 사실 문장이 최소 2개 필요합니다.",
     );
   const last = run.cards[3];
   if (last && (!last.imagination || !/상상/.test(last.body)))
@@ -253,6 +258,11 @@ export function evidenceIsValid(run: Run, evidenceId: string): boolean {
   if (!evidence || !evidence.quote.trim()) return false;
   const source = run.sources.find((item) => item.id === evidence.sourceId);
   if (!source || source.status !== "ok") return false;
+  const place = getPlace(run.brief.placeId ?? run.brief.place);
+  // Legacy museum snapshots predate the registry; new destinations require their own allowlist.
+  if (place && place.id !== "pangyo-museum") {
+    try { assertOfficialUrl(source.url, place.id); } catch { return false; }
+  }
   if (evidence.start !== undefined || evidence.end !== undefined) {
     return Number.isSafeInteger(evidence.start) && Number.isSafeInteger(evidence.end)
       && evidence.start! >= 0 && evidence.end! > evidence.start! && evidence.end! <= source.snapshot.length

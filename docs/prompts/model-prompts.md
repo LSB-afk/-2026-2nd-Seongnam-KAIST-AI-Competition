@@ -2,7 +2,7 @@
 
 실행 지침의 원본은 [`src/lib/prompts.ts`](../../src/lib/prompts.ts)다. 문서를 수정해도 런타임 프롬프트가 바뀌지는 않는다. 프롬프트를 변경할 때 `PROMPT_VERSION`을 올리고, 사실 검수 기준이 달라지면 `REVIEW_RULES_VERSION`도 올린다.
 
-현재 버전은 `2026-09-10.3`, 검수 규칙은 `atomic-evidence-2026-09-10.1`이다. 실행 메타데이터에는 두 버전을, 개별 호출에는 `/decision`, `/compose`, `/review` 또는 `/custom` 역할 접미사를 남긴다. 평가용 분류기는 `ATOMIC_REVIEW_RULES`를 재사용할 수 있다.
+현재 버전은 `2026-09-13.1`, 검수 규칙은 `atomic-evidence-2026-09-13.1`이다. 실행 메타데이터에는 두 버전을, 개별 호출에는 `/decision`, `/compose`, `/review` 또는 `/custom` 역할 접미사를 남긴다. 평가용 분류기는 `ATOMIC_REVIEW_RULES`를 재사용할 수 있다. 모든 역할에 `brief.placeId`와 등록 장소 자료를 전달하며 다른 장소의 사실·사진을 혼합하지 않도록 지시한다.
 
 | 역할 | 입력과 책임 | 서버가 별도로 강제하는 조건 |
 | --- | --- | --- |

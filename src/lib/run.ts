@@ -1,7 +1,9 @@
 import { randomUUID } from "node:crypto";
+import { getPlace } from "./places";
 import { PROMPT_VERSION, REVIEW_RULES_VERSION } from "./prompts";
 import type { Run, Mode, Scenario, Strategy, Brief } from "./types";
 export const DEFAULT_BRIEF: Brief = {
+  placeId: "pangyo-museum",
   place: "판교박물관",
   audience: "청소년",
   goal: "청소년에게 판교박물관을 소개할 카드뉴스 4장을 만들어줘. 마지막 장에는 성남의 미래 문화공간을 상상하는 내용을 넣어줘.",
@@ -15,9 +17,14 @@ export function newRun(options: {
   brief?: Brief;
 }): Run {
   const at = new Date().toISOString();
+  const brief = { ...(options.brief ?? DEFAULT_BRIEF) };
+  const place = getPlace(brief.placeId ?? brief.place);
+  if (!place || (brief.place && getPlace(brief.place)?.id !== place.id)) throw new Error("등록된 관광지 ID와 장소명이 일치해야 합니다.");
+  brief.placeId = place.id;
+  brief.place = place.name;
   return {
     id: randomUUID(),
-    brief: options.brief ?? { ...DEFAULT_BRIEF },
+    brief,
     mode: options.mode,
     strategy: options.strategy ?? "agent",
     scenario: options.scenario ?? "normal",

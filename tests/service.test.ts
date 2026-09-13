@@ -59,6 +59,15 @@ function readyRun() {
 }
 
 describe("review and run lifecycle", () => {
+  it("accepts registered places and canonicalizes legacy names before request deduplication",async()=>{
+    const {store,service}=setup();
+    const brief={place:"율동공원",audience:"가족",goal:"주말 산책 장소 소개",cardCount:4,includeFuture:true};
+    const run=service.create({...input,brief});
+    expect(run.brief.placeId).toBe("yuldong-park");
+    const same=service.create({...input,brief:{...brief,placeId:"yuldong-park"}});expect(same.id).toBe(run.id);
+    expect(()=>service.create({...input,requestId:"wrong-id-1",brief:{...brief,placeId:"pangyo-museum"}})).toThrow();
+    expect(()=>service.create({...input,requestId:"unknown-1",brief:{...brief,place:"가상 관광지"}})).toThrow();await service.idle(run.id);store.close();
+  });
   it("returns the same run for repeated submissions instead of starting two jobs", async () => {
     const { store, service } = setup();
     const a = service.create(input);
