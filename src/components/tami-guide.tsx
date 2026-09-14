@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useReducer, useRef, useState, type PointerEvent as ReactPointerEvent, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import { getImageProps } from "next/image";
 import {
@@ -10,6 +10,7 @@ import {
   type GuideStorage, type TamiMood,
 } from "../lib/guide";
 import "./tami-guide.css";
+import { anchorForPosition, clampDockPosition, hasDragged, positionForAnchor, restoreTamiPosition, TAMI_POSITION_KEY, type Point, type Viewport } from "../lib/tami-position";
 
 export type { GuideContext, GuideActions } from "../lib/guide";
 const TAMI_SPRITE_SRC = getImageProps({ src: "/tami/tami-sprites.png", alt: "", width: 216, height: 144 }).props.src;
@@ -28,8 +29,13 @@ function reducer(state: UiState, event: UiEvent): UiState {
   return tutorial === state.tutorial ? state : { ...state, tutorial };
 }
 type Rect = { top: number; left: number; width: number; height: number; bottom: number; right: number };
-type Geometry = { host: Element | null; target: Rect | null; found: boolean; width: number; height: number; panelWidth: number; panelHeight: number; modal: boolean };
-const EMPTY_GEOMETRY: Geometry = { host: null, target: null, found: false, width: 0, height: 0, panelWidth: 344, panelHeight: 350, modal: false };
+type Geometry = { host: Element | null; target: Rect | null; found: boolean; width: number; height: number; panelWidth: number; panelHeight: number; modal: boolean; viewport: Viewport; dockWidth: number; dockHeight: number; invitationHeight: number; mapAttribution: Rect | null };
+const EMPTY_GEOMETRY: Geometry = { host: null, target: null, found: false, width: 0, height: 0, panelWidth: 344, panelHeight: 350, modal: false, viewport: { left: 0, top: 0, width: 0, height: 0 }, dockWidth: 172, dockHeight: 72, invitationHeight: 180, mapAttribution: null };
+
+function currentViewport(): Viewport {
+  const viewport = window.visualViewport;
+  return { left: viewport?.offsetLeft ?? 0, top: viewport?.offsetTop ?? 0, width: viewport?.width ?? window.innerWidth, height: viewport?.height ?? window.innerHeight };
+}
 
 function shown(element: Element) {
   const rect = element.getBoundingClientRect();
@@ -78,16 +84,23 @@ export default function TamiGuide({ context, actions }: { context: GuideContext;
   });
   const [geometry, setGeometry] = useState<Geometry>(EMPTY_GEOMETRY);
   const [assetFailed, setAssetFailed] = useState(false);
+  const [dockAnchor, setDockAnchor] = useReducer((_current: Point | null, next: Point | null) => next, null);
+  const [dragging, setDragging] = useState(false);
+  const [positionMessage, setPositionMessage] = useState("");
   const snapshot = useMemo(() => getGuideSnapshot(context), [context]);
   const previousSnapshot = useRef(snapshot);
   const panelRef = useRef<HTMLElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const helpRef = useRef<HTMLButtonElement>(null);
+  const dockRef = useRef<HTMLDivElement>(null);
+  const drag = useRef<{ pointerId: number; start: Point; origin: Point; moved: boolean; originalAnchor: Point | null; latest: Point | null } | null>(null);
+  const suppressClick = useRef(false);
   const previousFocus = useRef<HTMLElement | null>(null);
   const pendingFocus = useRef<string | null>(null);
   const initialSnapshot = useRef(snapshot);
   const titleId = useId();
   const descriptionId = useId();
+  const moveDescriptionId = useId();
   const active = state.tutorial.status === "active";
   const targetName = getStepTarget(state.tutorial, snapshot);
   const advice = getGuideAdvice(context);
@@ -99,6 +112,7 @@ export default function TamiGuide({ context, actions }: { context: GuideContext;
     let raw: string | null = null;
     try { raw = localStorage.getItem(GUIDE_STORAGE_KEY); } catch { /* Browser privacy settings must not disable help. */ }
     dispatch({ type: "restore", storage: restoreGuideStorage(raw, initialSnapshot.current) });
+    try { setDockAnchor(restoreTamiPosition(localStorage.getItem(TAMI_POSITION_KEY))); } catch { /* Position remains available without storage. */ }
     const sprite = new window.Image();
     sprite.onerror = () => setAssetFailed(true);
     sprite.src = TAMI_SPRITE_SRC;
@@ -182,9 +196,19 @@ export default function TamiGuide({ context, actions }: { context: GuideContext;
         observedTarget = target;
       }
       const panel = panelRef.current?.getBoundingClientRect();
-      const next: Geometry = { host, target: target ? visibleRect(target, width, height) : null, found: !!target, width, height, panelWidth: panel?.width ?? Math.min(344, width - 24), panelHeight: panel?.height ?? 350, modal: !!modal };
-      setGeometry((current) => current.host === next.host && JSON.stringify({ ...current, host: null }) === JSON.stringify({ ...next, host: null }) ? current : next);
+      const dock = dockRef.current?.getBoundingClientRect();
       const invitationHeight = rootRef.current?.querySelector(".tami-invitation")?.getBoundingClientRect().height ?? 0;
+      const viewport = currentViewport();
+      const osm = document.querySelector<HTMLIFrameElement>(".osm-map-viewport iframe");
+      let mapAttribution: Rect | null = null;
+      if (osm && shown(osm)) {
+        const map = osm.getBoundingClientRect();
+        const top = Math.max(map.bottom - 64, map.top, viewport.top), bottom = Math.min(map.bottom, viewport.top + viewport.height);
+        const left = Math.max(map.left, viewport.left), right = Math.min(map.right, viewport.left + viewport.width);
+        if (bottom > top && right > left) mapAttribution = { top, bottom, left, right, width: right - left, height: bottom - top };
+      }
+      const next: Geometry = { host, target: target ? visibleRect(target, width, height) : null, found: !!target, width, height, panelWidth: panel?.width ?? Math.min(344, width - 24), panelHeight: panel?.height ?? 350, modal: !!modal, viewport, dockWidth: dock?.width ?? (width <= 600 ? 140 : 172), dockHeight: dock?.height ?? (width <= 600 ? 56 : 72), invitationHeight: invitationHeight || 180, mapAttribution };
+      setGeometry((current) => current.host === next.host && JSON.stringify({ ...current, host: null }) === JSON.stringify({ ...next, host: null }) ? current : next);
       const reserved = width <= 600 && state.panelOpen ? (panel?.height ?? 350) + 24 : invitation ? invitationHeight + 104 : width <= 600 ? 88 : 104;
       document.documentElement.style.setProperty("--tami-reserved-space", `${Math.ceil(reserved)}px`);
       if (pendingFocus.current) {
@@ -205,6 +229,7 @@ export default function TamiGuide({ context, actions }: { context: GuideContext;
     const resize = new ResizeObserver(schedule);
     resize.observe(document.body);
     if (panelRef.current) resize.observe(panelRef.current);
+    if (dockRef.current) resize.observe(dockRef.current);
     const mutation = new MutationObserver(schedule);
     mutation.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["hidden", "open", "class", "aria-hidden", "aria-modal", "data-tour"] });
     window.addEventListener("resize", schedule);
@@ -218,7 +243,7 @@ export default function TamiGuide({ context, actions }: { context: GuideContext;
       window.visualViewport?.removeEventListener("resize", schedule);
       window.visualViewport?.removeEventListener("scroll", schedule);
     };
-  }, [active, targetName, state.panelOpen, state.hydrated, snapshot.view, invitation]);
+  }, [active, targetName, state.panelOpen, state.hydrated, snapshot.view, invitation, state.preferences.minimized]);
 
   useEffect(() => () => { document.documentElement.style.removeProperty("--tami-reserved-space"); }, []);
 
@@ -263,17 +288,95 @@ export default function TamiGuide({ context, actions }: { context: GuideContext;
     openPanel(); send({ type: restart ? "restart" : "start" });
   };
   const updatePreferences = (value: Partial<GuidePreferences>) => dispatch({ type: "preferences", value });
+  const persistPosition = (anchor: Point | null) => {
+    try {
+      if (anchor) localStorage.setItem(TAMI_POSITION_KEY, JSON.stringify({ version: 1, ...anchor }));
+      else localStorage.removeItem(TAMI_POSITION_KEY);
+    } catch { /* Dragging and keyboard positioning still work in private storage modes. */ }
+  };
+  const resetPosition = () => {
+    setDockAnchor(null); persistPosition(null); setPositionMessage("타미를 기본 위치로 돌렸어요.");
+  };
+  const moveBy = (x: number, y: number) => {
+    const dock = dockRef.current?.getBoundingClientRect();
+    if (!dock) return;
+    const anchor = anchorForPosition({ x: dock.x + x, y: dock.y + y }, dock, currentViewport());
+    setDockAnchor(anchor); persistPosition(anchor); setPositionMessage("타미 위치를 옮겨 저장했어요.");
+  };
+  const beginDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (!event.isPrimary || event.button !== 0 || drag.current) return;
+    const dock = dockRef.current?.getBoundingClientRect();
+    if (!dock) return;
+    suppressClick.current = false;
+    drag.current = { pointerId: event.pointerId, start: { x: event.clientX, y: event.clientY }, origin: { x: dock.x, y: dock.y }, moved: false, originalAnchor: dockAnchor, latest: null };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+  const updateDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    const gesture = drag.current, dock = dockRef.current?.getBoundingClientRect();
+    if (!gesture || gesture.pointerId !== event.pointerId || !dock) return;
+    const pointer = { x: event.clientX, y: event.clientY };
+    if (!gesture.moved && !hasDragged(gesture.start, pointer)) return;
+    gesture.moved = true; suppressClick.current = true; setDragging(true);
+    event.preventDefault();
+    const anchor = anchorForPosition({ x: gesture.origin.x + pointer.x - gesture.start.x, y: gesture.origin.y + pointer.y - gesture.start.y }, dock, currentViewport());
+    gesture.latest = anchor; setDockAnchor(anchor);
+  };
+  const finishDrag = (event: ReactPointerEvent<HTMLButtonElement>, canceled = false) => {
+    const gesture = drag.current;
+    if (!gesture || gesture.pointerId !== event.pointerId) return;
+    drag.current = null; setDragging(false);
+    if (canceled) setDockAnchor(gesture.originalAnchor);
+    else if (gesture.moved && gesture.latest) {
+      persistPosition(gesture.latest); setPositionMessage("타미 위치를 옮겨 저장했어요.");
+    }
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+  };
+  const positionKey = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
+    const distance = event.shiftKey ? 40 : 12;
+    const delta = { ArrowLeft: [-distance, 0], ArrowRight: [distance, 0], ArrowUp: [0, -distance], ArrowDown: [0, distance] }[event.key];
+    if (delta) { event.preventDefault(); moveBy(delta[0], delta[1]); }
+    else if (event.key === "Home") { event.preventDefault(); resetPosition(); }
+  };
+  const dockHandlers = {
+    onPointerDown: beginDrag, onPointerMove: updateDrag,
+    onPointerUp: (event: ReactPointerEvent<HTMLButtonElement>) => finishDrag(event),
+    onPointerCancel: (event: ReactPointerEvent<HTMLButtonElement>) => finishDrag(event, true),
+    onLostPointerCapture: (event: ReactPointerEvent<HTMLButtonElement>) => finishDrag(event, true),
+    onKeyDown: positionKey,
+    onClick: (event: React.MouseEvent<HTMLButtonElement>) => {
+      if (suppressClick.current && event.detail !== 0) { event.preventDefault(); event.stopPropagation(); suppressClick.current = false; return; }
+      if (state.panelOpen) closePanel(); else openPanel();
+    },
+  };
   if (!state.hydrated || !geometry.host) return null;
   const step = GUIDE_STEPS[state.tutorial.step];
   const guard = getStepGuard(state.tutorial, snapshot);
   const missingTarget = active && !geometry.target;
-  const position = active ? panelPosition(geometry) : undefined;
+  const dockSize = { width: geometry.dockWidth, height: geometry.dockHeight };
+  let dockPosition = dockAnchor ? positionForAnchor(dockAnchor, dockSize, geometry.viewport) : clampDockPosition({ x: geometry.viewport.left + geometry.viewport.width - dockSize.width - (geometry.width <= 600 ? 12 : 20), y: geometry.viewport.top + geometry.viewport.height - dockSize.height - (geometry.width <= 600 ? 12 : 16) }, dockSize, geometry.viewport);
+  const attribution = geometry.mapAttribution;
+  // Keep the default dock clear of the public map's two-line credit; explicit user placement wins.
+  if (!dockAnchor && attribution && dockPosition.x < attribution.right && dockPosition.x + dockSize.width > attribution.left && dockPosition.y < attribution.bottom && dockPosition.y + dockSize.height > attribution.top) {
+    dockPosition = clampDockPosition({ x: dockPosition.x, y: attribution.top - dockSize.height - 12 }, dockSize, geometry.viewport);
+  }
+  const besideDock = (width: number, height: number) => {
+    const viewport = geometry.viewport;
+    let x = dockPosition.x + dockSize.width - width, y = dockPosition.y - height - 12;
+    if (y < viewport.top + 8) {
+      if (dockPosition.y + dockSize.height + 12 + height <= viewport.top + viewport.height - 8) y = dockPosition.y + dockSize.height + 12;
+      else if (dockPosition.x >= viewport.left + width + 20) { x = dockPosition.x - width - 12; y = dockPosition.y; }
+      else { x = dockPosition.x + dockSize.width + 12; y = dockPosition.y; }
+    }
+    const clamped = clampDockPosition({ x, y }, { width, height }, viewport);
+    return { left: clamped.x, top: clamped.y, right: "auto", bottom: "auto" };
+  };
+  const position = active ? panelPosition(geometry) : dockAnchor && geometry.width > 600 ? besideDock(geometry.panelWidth, geometry.panelHeight) : undefined;
   const completed = state.tutorial.status === "completed";
 
-  return createPortal(<div ref={rootRef} className={`tami-guide${state.preferences.animationOff ? " tami-guide--no-motion" : ""}${state.panelOpen ? " tami-guide--open" : ""}${geometry.modal ? " tami-guide--in-modal" : ""}`} data-tami-state={mood}>
+  return createPortal(<div ref={rootRef} className={`tami-guide${state.preferences.animationOff ? " tami-guide--no-motion" : ""}${state.panelOpen ? " tami-guide--open" : ""}${geometry.modal ? " tami-guide--in-modal" : ""}${dragging ? " tami-guide--dragging" : ""}`} data-tami-state={mood}>
     {active && state.panelOpen && geometry.target && <div className="tami-target-outline" aria-hidden="true" data-tami-target={targetName} style={{ top: geometry.target.top - 3, left: geometry.target.left - 3, width: geometry.target.width + 6, height: geometry.target.height + 6 }} />}
 
-    {invitation && <aside className="tami-invitation" aria-label="타미의 첫 안내">
+    {invitation && <aside className="tami-invitation" aria-label="타미의 첫 안내" style={dockAnchor ? besideDock(Math.min(278, geometry.viewport.width - 32), geometry.invitationHeight) : undefined}>
       <strong>안녕하세요, 안내 로봇 타미예요.</strong>
       <p>장소 찾기부터 카드 다운로드까지,<br />8단계로 함께 둘러볼까요?</p>
       <div className="tami-inline-actions"><button className="tami-primary" onClick={() => startTutorial()}>사용법 시작</button><button className="tami-text-button" onClick={() => updatePreferences({ invitationDismissed: true })}>나중에</button></div>
@@ -304,12 +407,16 @@ export default function TamiGuide({ context, actions }: { context: GuideContext;
           {state.tutorial.status !== "idle" && <button className="tami-text-button" onClick={() => startTutorial(true)}>처음부터 다시 시작</button>}
         </div>
       </>}
-      <details className="tami-settings"><summary>타미 설정</summary><label><input type="checkbox" checked={state.preferences.animationOff} onChange={(event) => updatePreferences({ animationOff: event.target.checked })} /> 움직임 끄기</label><label><input type="checkbox" checked={state.preferences.minimized} onChange={(event) => updatePreferences({ minimized: event.target.checked })} /> 캐릭터 최소화</label><p>설정과 사용법 진행 위치는 이 브라우저에 저장돼요.</p></details>
+      <details className="tami-settings"><summary>타미 설정</summary><label><input type="checkbox" checked={state.preferences.animationOff} onChange={(event) => updatePreferences({ animationOff: event.target.checked })} /> 움직임 끄기</label><label><input type="checkbox" checked={state.preferences.minimized} onChange={(event) => updatePreferences({ minimized: event.target.checked })} /> 캐릭터 최소화</label>
+        <div className="tami-position-controls" role="group" aria-label="타미 위치 조절"><button aria-label="타미 왼쪽으로 이동" onClick={() => moveBy(-24, 0)}>←</button><button aria-label="타미 위로 이동" onClick={() => moveBy(0, -24)}>↑</button><button aria-label="타미 아래로 이동" onClick={() => moveBy(0, 24)}>↓</button><button aria-label="타미 오른쪽으로 이동" onClick={() => moveBy(24, 0)}>→</button><button className="tami-position-reset" onClick={resetPosition}>위치 초기화</button></div>
+        <p>타미나 사용법 버튼을 끌어 옮길 수 있어요. 키보드 방향키로도 옮길 수 있고 Home 키로 초기화해요.</p><p>설정과 사용법 진행 위치는 이 브라우저에 저장돼요.</p></details>
     </section>}
 
-    <div className={`tami-dock${state.preferences.minimized ? " tami-dock--minimized" : ""}`}>
-      {!state.preferences.minimized && <button className="tami-character-button" aria-label="안내 로봇 타미" aria-expanded={state.panelOpen} onClick={state.panelOpen ? closePanel : openPanel}><Character mood={mood} animationOff={state.preferences.animationOff} failed={assetFailed} /></button>}
-      <button ref={helpRef} className="tami-help-button" aria-label="타미 사용법 열기" aria-expanded={state.panelOpen} onClick={state.panelOpen ? closePanel : openPanel}>사용법<span aria-hidden="true">{state.panelOpen ? " −" : " +"}</span></button>
+    <span id={moveDescriptionId} className="tami-sr-only">끌어서 위치 이동. 방향키로 이동, Shift와 방향키로 크게 이동, Home으로 위치 초기화. Enter나 Space로 사용법 열기.</span>
+    <span className="tami-sr-only" role="status" aria-live="polite">{positionMessage}</span>
+    <div ref={dockRef} className={`tami-dock${state.preferences.minimized ? " tami-dock--minimized" : ""}`} style={{ left: dockPosition.x, top: dockPosition.y, right: "auto", bottom: "auto" }}>
+      {!state.preferences.minimized && <button className="tami-character-button" aria-label="안내 로봇 타미" aria-describedby={moveDescriptionId} title="끌어서 타미 위치 이동" aria-expanded={state.panelOpen} {...dockHandlers}><Character mood={mood} animationOff={state.preferences.animationOff} failed={assetFailed} /></button>}
+      <button ref={helpRef} className="tami-help-button" aria-label="타미 사용법 열기" aria-describedby={moveDescriptionId} title="클릭하면 사용법, 끌면 위치 이동" aria-expanded={state.panelOpen} {...dockHandlers}>사용법<span aria-hidden="true">{state.panelOpen ? " −" : " +"}</span></button>
     </div>
   </div>, geometry.host);
 }

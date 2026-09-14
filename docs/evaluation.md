@@ -201,3 +201,51 @@ Apple의 요청 URL을 실제 데스크톱·모바일에서 열고 사진·큰 �
 - `tests/{naver-maps,workspace-state,guide,purpose}.test.ts`, `tests/{guided,tami}.e2e.spec.ts`: 추가 회귀 검증.
 
 새 npm 의존성은 추가하지 않았다. 기존 직접 타일 계산과 드래그 처리는 공식 SDK 경계로 대체했다. 실제 SDK·모델 연결, 실물 모바일 터치, 스크린리더 음성 청취는 남은 외부 검증 범위다.
+
+
+## 2026-09-14 지도 복구·타미 이동·공모전 근거 보완
+
+### 발견한 문제와 수정
+
+| 문제 | 사용자 영향 | 수정 | 검증 |
+| --- | --- | --- | --- |
+| 실제 `/api/map-config`가 `configured:false / missing-client-id` 반환 | 화면에 설정 안내만 있고 실제 지도 요청이 시작되지 않음 | 키가 없거나 SDK가 실패하면 공식 OpenStreetMap 임베드로 전환. 장소 선택 핀·필터 선택란·전국/성남 버튼·재시도 제공 | 수정 전 화면 재현, 실제 타일 응답과 화면 확인, OSM E2E |
+| NAVER 렌더링 실패 후 기존 세션의 늦은 `tilesloaded` | 기본 지도가 사라지고 빈 NAVER 컨테이너가 다시 생김 | 치명 오류 즉시 콜백 차단·세션 종료·전환 유지. 초기 생성 중 실패도 핸들 반환 직후 종료 | 회귀 테스트가 수정 전 `destroyed=0`으로 실패, 수정 후 세션 1개 종료·이벤트 0개·늦은 직접 콜백 무시 확인 |
+| 타미가 우하단 고정이며 대기 모션 없음 | 콘텐츠를 가릴 때 사용자가 위치를 조정할 수 없음 | 마우스·터치 드래그, 비율 위치 저장·복원, 키보드 이동·초기화, 4px 부유·작은 기울임. 조작 중·도움말 열림·동작 감소 설정은 정지 | 위치 단위 테스트·드래그 E2E·기존 8단계 안내 E2E |
+| 초기 기획과 최신 구현 범위가 다르고 현장 근거 기록 양식 부재 | 지도·캐릭터와 AI 판단 역할, 문제 가설과 실증 효과를 혼동할 수 있음 | 담당자 중심 1쪽 제안·최신 주제·구현 명세·AI 수정 중심 시연 대본을 통일. 질문 12개·빈 기록·짝 비교 CSV 제공 | 내부 문서 링크·CSV 열 검사. 조사·효과 수치를 생성하지 않음 |
+
+코드: [지도 전환](../src/components/tourism-map.tsx), [공식 임베드](../src/components/osm-tourism-map.tsx), [임베드 좌표](../src/lib/osm-embed.ts), [타미](../src/components/tami-guide.tsx), [위치 계산](../src/lib/tami-position.ts). 별도 npm 의존성을 추가하지 않았다. 기존 승인·편집 보호·파일 검수 규칙을 유지한다.
+
+공모전 산출물: [1쪽 제안 초안](competition-brief.md), [현재 주제](project-topic.md), [현장 질문지·빈 기록](field-validation.md), [짝 비교 CSV](templates/field-workflow-pairs.csv), [3분 연습 대본](demo.md). CSV는 열 이름 44개만 있으며 관측 행은 없다. 담당자 수요·업무 효과·시민 이해 효과와 기관 도입은 미확인이다. 3분은 공식 발표 시간이 아니다.
+
+### 실제 서비스와 모의 검증의 구분
+
+`outputs/map-keyless-before.json`과 `outputs/map-keyless-before-1440.png`에 기존 설정 누락 화면을 보존했다. 수정 후 실제 앱에서 OpenStreetMap 임베드·타일을 직접 불러왔다. `outputs/map-tami-final-browser.json`은 1440×1000, 1024×900, 390×844에서 각각 첫 지도 타일 15·9·4개를 기록했다. 장소 선택과 데스크톱 확대·이동을 포함한 응답은 총 70개이며 모두 HTTP 200, 페이지 예외·POST 요청·가로 넘침은 0이다. 확대·이동 전후 지도 캔버스가 달라지고 선택 장소 마커가 생성되는 것도 확인했다. 이 수치는 로컬 Chromium의 해당 실행 기록이며 가용성·성능 보장이나 실제 NAVER 인증 검증이 아니다.
+
+화면: `outputs/map-keyless-final-{1440,1024,390}.png`, `outputs/map-keyless-selected-{1440,1024,390}.png`, `outputs/tami-free-final-{1440,1024,390}.png`, `outputs/tami-free-help-final-{1440,1024,390}.png`. 모바일 장소 선택은 기존 상세 시트를 열므로 선택 화면 캡처가 지도 대신 상세 시트를 보여준다. 지도 핀 존재는 iframe 내부 요소와 좌표 URL로 별도 확인했다. 위치 변경 직후 포커스가 타미에 남아 있으면 모션은 의도적으로 정지한다.
+
+반복 E2E는 공용 지도 트래픽을 만들지 않도록 OSM 문서와 NAVER SDK 경계를 mock한다. 선택 장소 핀 1개·앱 버튼 상태 복원과 임베드 내부 이동/확대의 미저장 제약은 [지도 연결 계약](map-sdk-reference.md)에 기록했다. OSM의 iframe `load`만으로 타일 성공을 주장하지 않는다. 기존 NAVER 다중 마커·클러스터는 설정 시 사용 가능하며 실제 키·SDK 타일·기기 제스처는 미검증이다.
+
+`npm run eval:smoke`는 2026-09-14 08:04 UTC에 설정 누락으로 종료 코드 2, `execution:not_run_missing_configuration`, API 호출 0을 기록했다. `outputs/evaluation/live-smoke.json`의 모델·사람 승인·수정·검토 시간은 비어 있다. 이는 모델 평가 통과가 아니다. 실제 AI 모델·단가·평가 예산과 담당자의 현장 참여가 확보되어야 다음 검증을 수행할 수 있다.
+
+모바일 실제 지도 추가 확인: Chromium 터치 에뮬레이션의 CDP 터치 드래그에서 캔버스 내용이 바뀌고 페이지 `scrollY`는 460→460으로 유지됐다. 전국 보기 버튼의 대한민국 범위도 실제 임베드에서 표시했다. 별도 실행의 타일 응답 13개는 모두 HTTP 200, 페이지 예외 0이다. `outputs/map-keyless-touch.json`, `outputs/map-keyless-mobile-touch.png`, `outputs/map-keyless-mobile-nation.png`에 기록했다. 물리 모바일 기기의 손가락 조작 검증은 아니다.
+
+
+### 최종 통합 검증
+
+| 검사 | 결과 |
+| --- | --- |
+| `npm test` | 23개 파일, 301개 통과 |
+| `npm run test:e2e` | production 환경 29개 통과, 50.0초 |
+| `npm run lint` | 통과, 오류·경고 없음 |
+| `npm run typecheck` | E2E 빌드 종료 후 순차 실행하여 통과 |
+| `npm run build` | 최종 production 빌드 통과 |
+| 문서·CSV | Markdown 21개 파일의 내부 링크 84개 정상, CSV 고유 열 44개·관측 행 0개 |
+
+마지막 시각 수정은 1024px에서 타미 기본 위치가 OSM 출처와 겹친 현상이다. 기본 위치만 임베드 하단 64px 영역을 피하게 했고, 사용자가 옮긴 좌표는 보존한다. 회귀는 수정 전 실패하고 수정 후 통과했다. 기존 타미 8단계·생성/승인 비자동화, 카드·사진 편집과 검수·승인·실제 ZIP 흐름도 모두 통과했다.
+
+초기 전체 검사 중 일반 함수 이름 `useFallback`을 React Hook으로 해석한 린트 오류는 `switchToFallback`으로 수정했다. 타입 검사와 E2E 빌드를 동시에 돌렸을 때 생성 중인 `.next-e2e` 타입 파일을 찾지 못한 오류는 검사 순서를 분리해 해소했다. 마지막 전체 검사는 위 표의 통과 결과이며 임시 개발 빌드 경로는 제거했다. 독립 코드 검토에서 발견한 늦은 NAVER 이벤트 경합도 수정·재검토를 마쳤다.
+
+아직 측정하지 않은 것은 실제 NAVER 인증·SDK 품질, 실제 유료 모델의 생성·수정·이미지 품질, 물리 모바일 기기·스크린리더 음성, 담당자 인터뷰·업무 비교와 기관 도입 효과다. 이 항목을 회귀 테스트 수나 fixture 시연으로 대체하지 않는다.
+
+최종 빌드의 실제 움직임은 `outputs/tami-idle-final.json`에 별도로 확인했다. 1440·1024·390px에서 조작 뒤 화면 제목을 클릭해 포커스를 옮기면 `tami-float`가 실행되고 250ms 간격의 transform이 변한다. 안내를 열면 `paused`, 동작 감소를 켜면 `animation-name:none`이다. 안정화 후 측정한 안내 패널은 세 화면 안에 있고 예외 0이다. 같은 최종 빌드의 1024px 실제 지도에서 타일 9개 HTTP 200, 기본 타미와 출처 표시 사이 여백 12px을 확인했다. `outputs/map-keyless-final-1024.png`는 이 수정 후 화면으로 교체했다.

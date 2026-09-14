@@ -3,6 +3,7 @@ import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { unzipSync, strFromU8 } from "fflate";
 import type { Run } from "../src/lib/types";
 import { PLACES } from "../src/lib/places";
+import { mockOsmEmbed } from "./helpers/mock-osm";
 
 /** Tests SDK integration only; the fixture deliberately labels itself a mock map. */
 async function mockNaverMap(page: Page, failScript: () => boolean = () => false) {
@@ -14,6 +15,7 @@ const nav = (page: Page) => page.getByRole("navigation", { name: "주 메뉴" })
 const mockZoom = (page: Page) => page.evaluate<number>("window.__naverMock.maps.filter(map => !map.dead).at(-1).getZoom()");
 
 test.beforeEach(async ({ page }) => {
+  await mockOsmEmbed(page);
   // These are studio regressions; the separate guided journey exercises onboarding.
   await page.addInitScript(() => localStorage.setItem("timestory:tami-guide:v1", JSON.stringify({ version: 1, tutorial: { version: 1, status: "idle", step: 0, placeId: null, runId: null, sourcePlaceId: null }, preferences: { minimized: true, animationOff: true, invitationDismissed: true } })));
 });
@@ -205,10 +207,10 @@ test("responsive place details and keyboard SDK markers survive network failure 
   let failScript = true;
   await mockNaverMap(page, () => failScript);
   await page.goto("/");await nav(page).getByRole("button",{name:"성남 둘러보기",exact:true}).click();
-  await expect(page.locator("[data-map-state='script-network']")).toBeVisible();
+  await expect(page.locator("[data-map-fallback-reason='script-network']")).toBeVisible();
   await expect(page.locator(".place-result")).toHaveCount(8);
   failScript = false;
-  await page.getByRole("button",{name:"지도 다시 불러오기"}).click();
+  await page.getByRole("button",{name:"NAVER 지도 재연결"}).click();
   await expect(page.locator("[data-map-state='ready']")).toBeAttached();
   await expect(nav(page).getByRole("button",{name:"성남 둘러보기",exact:true})).toHaveAttribute("aria-current","page");
   for(const width of [1440,1024,390]) {

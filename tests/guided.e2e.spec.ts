@@ -1,11 +1,13 @@
 import {test,expect,type Page} from '@playwright/test';
 import {newRun} from '../src/lib/run';
 import type {Run} from '../src/lib/types';
+import {mockOsmEmbed} from './helpers/mock-osm';
 
 function fixture(title:string):Run {
  const run=newRun({mode:'fixture'});return {...run,status:'needs_review',version:1,cards:[1,2,3,4].map(n=>({id:`card-${n}`,title:`${title} ${n}`,body:'공식 자료를 확인하며 이야기를 만드는 본문입니다.',script:'공식 자료를 확인합니다.',claimIds:[],imagination:n===4}))};
 }
 async function setup(page:Page,runs:Run[]=[]){
+ await mockOsmEmbed(page);
  await page.route('**/api/map-config',r=>r.fulfill({json:{provider:'naver',configured:false,reason:'테스트: 지도 설정 없음'}}));
  await page.route('**/api/config',r=>r.fulfill({json:{live:{configured:false},image:{configured:false}}}));
  await page.route('**/api/runs',r=>r.fulfill({json:runs}));
@@ -57,7 +59,7 @@ test('history filters persist and missing map configuration keeps the list usabl
  await nav(page,'제작 기록').click();await page.getByRole('searchbox').fill('검색 대상');
  await expect(page.locator('.history-row')).toHaveCount(1);
  await page.reload();await expect(page.getByRole('searchbox')).toHaveValue('검색 대상');
- await nav(page,'성남 둘러보기').click();await expect(page.locator('.map-frame')).toContainText(/설정|연결/);await expect(page.locator('.place-result')).toHaveCount(8);
+ await nav(page,'성남 둘러보기').click();await expect(page.locator('.map-frame')).toContainText('OpenStreetMap · 기본 지도');await expect(page.locator('.place-result')).toHaveCount(8);
  await page.locator('.place-result').first().click();await expect(page.locator('.place-detail')).toBeVisible();
 });
 
@@ -85,7 +87,7 @@ test('mobile map and list controls scroll into reach and Korean title words stay
  const wordLines=await page.locator('.page-heading h1').evaluate(heading=>{const node=heading.firstChild!;const start=node.textContent!.indexOf('만날까요?');const range=document.createRange();range.setStart(node,start);range.setEnd(node,start+'만날까요?'.length);return range.getClientRects().length;});expect(wordLines).toBe(1);
  await page.getByRole('button',{name:'지도',exact:true}).click();
  await expect.poll(async()=>{const box=await page.locator('.explorer-toolbar').boundingBox();return !!box&&box.y>=154&&box.y<200;}).toBe(true);
- await expect(page.locator('.naver-map-stage')).toBeVisible();await page.getByRole('button',{name:'목록',exact:true}).click();
+ await expect(page.locator('.osm-map-viewport iframe')).toBeVisible();await page.getByRole('button',{name:'목록',exact:true}).click();
  await expect(page.locator('.place-result').first()).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBe(390);
 });

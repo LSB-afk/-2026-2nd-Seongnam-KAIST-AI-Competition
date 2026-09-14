@@ -39,13 +39,13 @@ export default function PlaceExplorer({visible,onCreate,state,onStateChange,save
   },[visible,compact,selectedId]);
   function change(patch:Partial<ExploreState>,push=false){onStateChange(normaliseExplore({...state,...patch}),push);}
   function showMobileView(mobileView:ExploreState["mobileView"]){change({mobileView});requestAnimationFrame(()=>toolbar.current?.scrollIntoView({block:"start",behavior:"instant"}));}
-  function choose(place:Place){returnFocus.current=document.activeElement as HTMLElement;change({selectedId:place.id},true);}
+  function choose(place:Place){returnFocus.current=document.activeElement as HTMLElement;change({selectedId:place.id,mapView:{lat:place.lat,lng:place.lng,zoom:15}},true);}
   function close(){change({selectedId:null},true);requestAnimationFrame(()=>{if(returnFocus.current?.isConnected)returnFocus.current.focus();else results.current?.focus();});}
   function toggle(id:string){onToggleSaved(id);if(savedOnly&&state.selectedId===id&&savedIds.includes(id))change({selectedId:null});}
   return <section className="explorer-page" hidden={!visible} aria-label={savedOnly?'저장한 장소':'관광지 탐색'}>
     <div className="page-heading"><div><h1>{savedOnly?'다시 만나고 싶은 장소.':'성남의 어떤 장면을 만날까요?'}</h1><p>{savedOnly?'이 브라우저에 저장한 장소를 모았어요. 마음에 드는 곳으로 이야기를 이어가세요.':'공식 자료로 확인한 성남 관광지 8곳을 지도와 목록에서 찾아보세요.'}</p></div><span className="region-tag">경기도 성남시</span></div>
     <div className="explorer-filters">
-      <label className="search-field"><span className="sr-only">관광지 검색</span><span aria-hidden="true">⌕</span><input maxLength={100} placeholder="등록 관광지 8곳에서 검색" value={state.query} onChange={event=>change({query:event.target.value})}/></label>
+      <label className="search-field"><span className="sr-only">관광지 검색</span><span aria-hidden="true">⌕</span><input maxLength={100} placeholder="등록 관광지 8곳에서 검색" value={state.query} onChange={event=>change({query:event.target.value,mapView:undefined})}/></label>
       <label><span className="sr-only">지역 필터</span><select value={state.district} onChange={event=>change({district:event.target.value,selectedId:null,mapView:undefined})}><option>전체 지역</option><option>수정구</option><option>중원구</option><option>분당구</option></select></label>
       <label><span className="sr-only">유형 필터</span><select value={state.category} onChange={event=>change({category:event.target.value,selectedId:null,mapView:undefined})}><option>전체 유형</option>{[...new Set(PLACES.map(p=>p.type))].map(type=><option key={type}>{type}</option>)}</select></label>
     </div>

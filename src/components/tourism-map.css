@@ -22,3 +22,27 @@
 .naver-map-group-place span { margin-left: 10px; font-size: 11px; font-weight: 400; color: #64776a; white-space: nowrap; }
 .naver-map-group-place[aria-pressed="true"] { background: #edf3e7; }
 @media (max-width: 600px) { .naver-map-location-controls { left: 10px; top: 12px; gap: 5px; } .naver-map-location-controls button { padding: 0 10px; font-size: 12px; } .naver-map-zoom-controls { right: 10px; top: 12px; } .naver-map-notice { left: 10px; top: 65px; } }
+
+.osm-tourism-map { display: flex; flex-direction: column; background: #eef1ec; touch-action: auto; }
+.osm-tourism-map[hidden] { display: none; }
+.osm-map-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 12px; background: #f7f9f5; }
+.osm-map-location { display: flex; gap: 6px; }
+.osm-map-toolbar button, .osm-map-toolbar select { min-height: 44px; border: 1px solid #cdd8d0; border-radius: 10px; padding: 8px 11px; color: #264c3f; background: #fff; font: inherit; font-size: 13px; }
+.osm-map-toolbar button { font-weight: 600; cursor: pointer; }
+.osm-map-toolbar label { flex: 1 1 185px; max-width: 250px; min-width: 0; }
+.osm-map-toolbar select { width: 100%; }
+.osm-map-viewport { position: relative; flex: 1; min-height: 260px; }
+.osm-map-viewport iframe { display: block; width: 100%; height: 100%; min-height: 260px; position: absolute; inset: 0; border: 0; }
+.osm-map-loading { position: absolute; z-index: 1; top: 10px; left: 10px; right: 60px; margin: 0; padding: 10px; border-radius: 8px; background: #fffffff2; color: #365348; font-size: 13px; pointer-events: none; }
+.osm-map-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 14px; padding: 10px 12px; background: #f7f9f5; }
+.osm-map-footer p { margin: 0; color: #526158; font-size: 12px; line-height: 1.65; }
+.osm-map-footer strong, .osm-map-footer span { display: block; }
+.osm-map-footer strong { color: #264c3f; font-weight: 600; }
+.osm-map-footer > div { display: flex; flex-wrap: wrap; gap: 5px 14px; }
+.osm-map-footer button, .osm-map-footer a { display: inline-flex; align-items: center; min-height: 44px; padding: 0; border: 0; background: transparent; color: #244cc5; font: inherit; font-size: 12px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.osm-tourism-map :is(button, select, a):focus-visible { outline: 3px solid #244cc5; outline-offset: 2px; }
+@media (max-width: 600px) {
+  .osm-map-toolbar { gap: 8px; padding: 10px; }
+  .osm-map-toolbar label { max-width: none; }
+  .osm-map-footer { padding: 8px 10px; }
+}
