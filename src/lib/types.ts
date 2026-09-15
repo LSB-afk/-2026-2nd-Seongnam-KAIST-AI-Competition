@@ -1,5 +1,6 @@
 export type Mode = "fixture" | "live";
 export type CreationPurpose = "place_intro" | "visit_guide" | "youth_story";
+export type ReadingStyle = "standard" | "easy";
 export type Strategy = "agent" | "baseline";
 export type Status =
   | "queued"
@@ -27,6 +28,7 @@ export interface Brief {
   place: string;
   placeId?: string;
   purpose?: CreationPurpose;
+  readingStyle?: ReadingStyle;
   audience: string;
   goal: string;
   cardCount: 4;
@@ -244,6 +246,7 @@ export interface Usage {
 export interface Run {
   id: string;
   brief: Brief;
+  submittedReadingStyle?: ReadingStyle;
   mode: Mode;
   strategy: Strategy;
   scenario: Scenario;
@@ -272,6 +275,12 @@ export interface Run {
   automaticRevisions?: number;
   protectedCardIds?: string[];
   proposedChanges?: ProposedChange[];
+  readingStyleChange?: {
+    expectedVersion: number;
+    targetCardIds: string[];
+    status: "requested" | "applied";
+    appliedVersion?: number;
+  };
   execution?: {
     model: string | null;
     promptVersion: string;

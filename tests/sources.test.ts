@@ -5,6 +5,7 @@ import {
   searchSources,
 } from "../src/lib/sources";
 import { newRun } from "../src/lib/run";
+import { getPlace } from "../src/lib/places";
 import type { Decision } from "../src/lib/types";
 
 afterEach(() => vi.unstubAllGlobals());
@@ -16,6 +17,23 @@ const htmlResponse = (html: string) => new Response(html, { headers: { "content-
 const page = (body: string, links = "") => `<html><head><title>판교박물관 안내</title></head><body><nav>판교박물관 관람료 검색</nav><div class="con_body">${body}</div>${links}</body></html>`;
 
 describe("official sources boundary", () => {
+  it.each(['maengsan-ecology-center', 'pangyo-ecology-center'])("accepts the exact registered HTTPS endpoint for %s, including its published port", placeId => {
+    const sourceUrl = getPlace(placeId)!.sourceUrl;
+    expect(new URL(sourceUrl).port).not.toBe('');
+    expect(() => assertOfficialUrl(sourceUrl, placeId)).not.toThrow();
+    for (const mutate of [
+      (url: URL) => { url.port = '8443'; },
+      (url: URL) => { url.pathname = '/admin/delete'; },
+      (url: URL) => { url.searchParams.set('action', 'delete'); },
+      (url: URL) => { url.hostname = '127.0.0.1'; },
+      (url: URL) => { url.username = 'user'; },
+    ]) {
+      const url = new URL(sourceUrl);
+      mutate(url);
+      expect(() => assertOfficialUrl(url.href, placeId)).toThrow();
+    }
+    expect(() => assertOfficialUrl(sourceUrl, 'pangyo-museum')).toThrow();
+  });
   it.each([
     "http://museum.seongnam.go.kr/pangyo",
     "https://127.0.0.1",

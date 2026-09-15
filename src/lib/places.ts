@@ -1,4 +1,6 @@
-/** Official place facts verified on 2026-09-13. Unknown operational facts remain null.
+import expandedPlaces from './places-expanded.json' with { type: 'json' };
+
+/** Official place facts verified per record; expanded on 2026-09-15. Unknown operational facts remain null.
  * Exact provenance, coordinate interpretation and photo rights: docs/place-sources.md.
  */
 export interface PlacePhoto {
@@ -376,7 +378,8 @@ export const PLACES: Place[] = [
         "sourceUrl": "https://www.kctg.or.kr/tour/touristSiteView.do?tourist_cd=TOURIST_ID00011160"
       }
     ]
-  }
+  },
+  ...(expandedPlaces as Place[]),
 ];
 
 /** Accept both durable IDs and the exact display names used by older runs. */

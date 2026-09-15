@@ -1,0 +1,270 @@
+.review {
+  color: var(--ink, #202a3c);
+}
+
+.reviewHeading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 16px;
+}
+
+.review .reviewHeading h3 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+
+.reviewHeading > span {
+  color: var(--muted, #627084);
+  font-size: 12px;
+}
+
+.review .intro,
+.review .distinction {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--muted, #627084);
+  margin-top: 8px;
+}
+
+.review .demoNotice {
+  display: inline-block;
+  margin: 12px 0 0;
+  padding: 5px 10px;
+  border: 1px solid #d6dfee;
+  border-radius: 6px;
+  color: #445b7f;
+  background: #f4f7fc;
+  font-size: 12px;
+}
+
+.review .reviewNotice {
+  padding: 14px;
+  margin-top: 14px;
+  border-radius: 10px;
+  border: 1px solid #e3d2a8;
+  background: #fff8e8;
+  color: #70511a;
+  font-size: 13px;
+}
+
+.reviewCounts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 20px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.reviewCounts > span {
+  color: var(--muted, #627084);
+}
+
+.claimList {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.claim {
+  min-width: 0;
+  border: 1px solid #dfe4ec;
+  border-radius: 12px;
+  background: white;
+  overflow: hidden;
+}
+
+.claim[open] {
+  border-color: #b4c5de;
+}
+
+.claimSummary {
+  display: block;
+  cursor: pointer;
+  padding: 16px;
+  list-style: none;
+  transition: background-color 160ms ease;
+}
+
+.claimSummary::-webkit-details-marker {
+  display: none;
+}
+
+.claimSummary:hover {
+  background: #f6f8fc;
+}
+
+.claimSummary:focus-visible,
+.evidence > summary:focus-visible,
+.history > summary:focus-visible {
+  outline: 3px solid #6085d2;
+  outline-offset: -3px;
+  border-radius: 8px;
+}
+
+.claimHeading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: #637088;
+  font-size: 12px;
+}
+
+.disclosure {
+  margin-left: auto;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.claim[open] .disclosure {
+  transform: rotate(45deg);
+}
+
+.sentence {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.8;
+  margin-top: 10px;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+.claimContent {
+  border-top: 1px solid #e8edf4;
+  padding: 16px;
+  display: grid;
+  gap: 16px;
+}
+
+.claimContent strong {
+  font-size: 12px;
+  font-weight: 700;
+  color: #42556d;
+}
+
+.claimContent p {
+  font-size: 13px;
+  line-height: 1.85;
+  margin-top: 5px;
+  overflow-wrap: anywhere;
+}
+
+.claimContent .freshness {
+  font-size: 12px;
+  color: var(--muted, #627084);
+}
+
+.nextAction {
+  padding: 12px;
+  border-radius: 8px;
+  background: #f3f6fa;
+}
+
+.nextAction button {
+  margin-top: 10px;
+  min-height: 40px;
+}
+
+.linkedEvidence,
+.source,
+.evidence {
+  min-width: 0;
+}
+
+.evidence > summary {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 5px 0;
+}
+
+.evidence blockquote {
+  font-size: 14px;
+  line-height: 1.85;
+  color: #34455e;
+  padding: 10px 12px;
+  margin: 8px 0;
+  background: #f7f9fd;
+  border-left: 3px solid #91a9d0;
+  border-radius: 0 6px 6px 0;
+}
+
+.evidence .relation {
+  color: #425d80;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.evidence .locator {
+  color: #627084;
+  font-size: 12px;
+}
+
+.source > a,
+.source > strong {
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.sourceDates {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 5px 12px;
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.sourceDates dt {
+  color: #627084;
+}
+
+.sourceDates dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.sourceDates dd span {
+  white-space: nowrap;
+  color: #627084;
+}
+
+.source .dateNote {
+  color: #627084;
+  font-size: 12px;
+}
+
+.history {
+  margin-top: 20px;
+  border-top: 1px solid #e2e7ef;
+  padding-top: 14px;
+}
+
+.history > summary {
+  font-size: 13px;
+  line-height: 1.8;
+  cursor: pointer;
+  color: #526884;
+  padding: 4px 0;
+}
+
+@media (max-width: 480px) {
+  .claimSummary,
+  .claimContent {
+    padding: 12px;
+  }
+
+  .sourceDates {
+    gap: 5px 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .claimSummary {
+    transition: none;
+  }
+}

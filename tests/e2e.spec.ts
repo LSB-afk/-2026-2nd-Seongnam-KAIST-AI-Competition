@@ -30,8 +30,8 @@ test("initial settings and history failures recover without losing the draft", a
   await page.goto("/");
   await expect(page.locator(".initial-load-error[role=alert]")).toContainText("제작 기록을 불러오지 못했습니다");
   await expect(page.locator(".guided-home")).toContainText("기록을 불러오지 못했습니다");
-  await expect(nav(page).getByRole("button")).toHaveCount(5);
-  for (const name of ["홈·대시보드", "성남 둘러보기", "저장한 장소", "카드뉴스 작업실", "제작 기록"]) await expect(nav(page).getByRole("button", { name, exact: true })).toBeVisible();
+  await expect(nav(page).getByRole("button")).toHaveCount(7);
+  for (const name of ["홈·대시보드", "성남 둘러보기", "성남 3D 여행", "저장한 장소", "카드뉴스 작업실", "제작 기록", "AI 에이전트"]) await expect(nav(page).getByRole("button", { name, exact: true })).toBeVisible();
   await page.getByRole("navigation", { name: "주 메뉴" }).getByRole("button", { name: /카드뉴스/ }).click();
   const goal = page.getByRole("textbox", { name: "어떤 이야기를 만들까요?" });
   const draft = "가족과 함께 즐길 수 있는 성남 관광 이야기를 만들어 주세요.";
@@ -159,15 +159,15 @@ test("tourism dashboard, geographic filters and photo edits lead to a versioned 
   const records:Run[]=await request.get("/api/runs").then(r=>r.json());
   await expect(page.locator(".home-resume-card").filter({hasText:"최근 제작 기록"})).toContainText(String(records.length));
   await nav(page).getByRole("button",{name:"성남 둘러보기",exact:true}).click();
-  await expect(page.locator(".place-result")).toHaveCount(8);
+  await expect(page.locator(".place-result")).toHaveCount(PLACES.length);
   await expect(page.locator("[data-map-state='ready']")).toBeAttached();
   await expect.poll(() => mockZoom(page)).toBe(12);
   await page.getByRole("button",{name:"전국 보기",exact:true}).click();
   await expect.poll(() => mockZoom(page)).toBe(7);
   await page.getByRole("region",{name:"성남 관광지 지도",exact:true}).getByRole("button",{name:"성남 둘러보기",exact:true}).click();
   await expect.poll(() => mockZoom(page)).toBe(12);
-  await page.getByLabel("지역 필터").selectOption("수정구");await expect(page.locator(".place-result")).toHaveCount(2);
-  await page.getByLabel("지역 필터").selectOption("전체 지역");await page.getByLabel("유형 필터").selectOption("공원");await expect(page.locator(".place-result")).toHaveCount(2);
+  await page.getByLabel("지역 필터").selectOption("수정구");await expect(page.locator(".place-result")).toHaveCount(PLACES.filter(place=>place.district==="수정구").length);
+  await page.getByLabel("지역 필터").selectOption("전체 지역");await page.getByLabel("유형 필터").selectOption("공원");await expect(page.locator(".place-result")).toHaveCount(PLACES.filter(place=>place.type==="공원").length);
   await page.getByRole("textbox",{name:"관광지 검색",exact:true}).fill("율동");await expect(page.locator(".place-result")).toHaveCount(1);
   await page.getByRole("button",{name:"율동공원 상세 열기"}).click();
   await expect(page.locator(".place-result")).toHaveAttribute("aria-pressed","true");
@@ -208,7 +208,7 @@ test("responsive place details and keyboard SDK markers survive network failure 
   await mockNaverMap(page, () => failScript);
   await page.goto("/");await nav(page).getByRole("button",{name:"성남 둘러보기",exact:true}).click();
   await expect(page.locator("[data-map-fallback-reason='script-network']")).toBeVisible();
-  await expect(page.locator(".place-result")).toHaveCount(8);
+  await expect(page.locator(".place-result")).toHaveCount(PLACES.length);
   failScript = false;
   await page.getByRole("button",{name:"NAVER 지도 재연결"}).click();
   await expect(page.locator("[data-map-state='ready']")).toBeAttached();

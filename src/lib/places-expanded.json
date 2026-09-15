@@ -1,0 +1,1454 @@
+[
+  {
+    "id": "seongnam-botanical-garden",
+    "name": "성남시 식물원",
+    "district": "중원구",
+    "type": "식물원",
+    "description": "은행동에서 식물과 녹지를 둘러볼 수 있는 시립 식물원입니다.",
+    "address": "경기도 성남시 중원구 은행로 72, 성남시 식물원",
+    "lat": 37.4529872309109,
+    "lng": 127.167816809231,
+    "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "성남시 식물원",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001"
+      },
+      {
+        "text": "은행로 72",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001"
+      },
+      {
+        "text": "경기도 성남시 중원구",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+    "verificationNote": "운영시간·요금은 이 조사에서 확정하지 않았습니다."
+  },
+  {
+    "id": "seongnam-culture-house",
+    "name": "성남문화의집",
+    "district": "수정구",
+    "type": "문화예술",
+    "description": "문화예술 강좌와 관람·연습 공간을 운영하는 생활문화 공간입니다.",
+    "address": "경기도 성남시 수정구 산성대로215번길 7 (신흥동)",
+    "lat": 37.4390504280853,
+    "lng": 127.140849396644,
+    "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "성남문화의집",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001"
+      },
+      {
+        "text": "산성대로215번길 7",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001"
+      },
+      {
+        "text": "문화예술강좌",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+    "verificationNote": "운영시간·요금은 이 조사에서 확정하지 않았습니다."
+  },
+  {
+    "id": "seohyeon-culture-house",
+    "name": "서현문화의집",
+    "district": "분당구",
+    "type": "문화예술",
+    "description": "서현동 주민의 문화예술 활동과 학습을 지원하는 공간입니다.",
+    "address": "경기도 성남시 분당구 중앙공원로39번길 29 (서현동)",
+    "lat": 37.3825714389845,
+    "lng": 127.126549968818,
+    "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "서현문화의집",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001"
+      },
+      {
+        "text": "중앙공원로39번길 29",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001"
+      },
+      {
+        "text": "문화관람실",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+    "verificationNote": "운영시간·요금은 이 조사에서 확정하지 않았습니다."
+  },
+  {
+    "id": "seongnam-museum-experience",
+    "name": "성남시박물관 체험동",
+    "district": "수정구",
+    "type": "박물관",
+    "description": "성남의 역사와 생활을 전시·교육·체험으로 만나는 박물관 체험동입니다.",
+    "address": "경기도 성남시 수정구 희망로 475 (신흥동)성남시박물관",
+    "lat": 37.4459173634216,
+    "lng": 127.153761235725,
+    "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "성남시박물관",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001"
+      },
+      {
+        "text": "희망로 475",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001"
+      },
+      {
+        "text": "박물관 체험동",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+    "verificationNote": "현재 공개된 체험동만 표시합니다. 공식 페이지는 본관의 2027년 개관 목표를 안내합니다."
+  },
+  {
+    "id": "seongnam-atreum",
+    "name": "성남아트리움",
+    "district": "수정구",
+    "type": "문화예술",
+    "description": "옛 시민회관 자리에 조성된 대극장과 소극장을 갖춘 공연장입니다.",
+    "address": "경기도 성남시 수정구 수정로171번길 10 (태평동)",
+    "lat": 37.4449845572902,
+    "lng": 127.139057724536,
+    "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "성남아트리움",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001"
+      },
+      {
+        "text": "수정로171번길 10",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001"
+      },
+      {
+        "text": "대극장과 소극장",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+    "verificationNote": "운영시간·요금은 이 조사에서 확정하지 않았습니다."
+  },
+  {
+    "id": "korea-jobworld",
+    "name": "한국잡월드",
+    "district": "분당구",
+    "type": "체험",
+    "description": "어린이와 청소년이 직업의 세계를 탐색하는 체험 공간입니다.",
+    "address": "경기도 성남시 분당구 분당수서로 501",
+    "lat": 37.3784945143157,
+    "lng": 127.106393759631,
+    "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "한국잡월드",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001"
+      },
+      {
+        "text": "분당수서로 501",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001"
+      },
+      {
+        "text": "직업체험관",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+    "verificationNote": "운영시간·요금은 이 조사에서 확정하지 않았습니다."
+  },
+  {
+    "id": "hwarang-park",
+    "name": "화랑공원",
+    "district": "분당구",
+    "type": "공원",
+    "description": "공원 산책과 함께 맨발황톳길을 둘러볼 수 있는 녹지 공간입니다.",
+    "address": "경기도 성남시 분당구 대왕판교로 609",
+    "lat": 37.3995304635982,
+    "lng": 127.103810999054,
+    "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "화랑공원",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309"
+      },
+      {
+        "text": "맨발황톳길",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309"
+      },
+      {
+        "text": "생태호수 옆",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+    "verificationNote": "좌표는 공원 경계나 정문이 아닌 공식 맨발황톳길 안내 지점입니다: 생태호수 옆"
+  },
+  {
+    "id": "daewon-park",
+    "name": "대원공원",
+    "district": "중원구",
+    "type": "공원",
+    "description": "공원 산책과 함께 맨발황톳길을 둘러볼 수 있는 녹지 공간입니다.",
+    "address": "경기도 성남시 중원구 대원공원 내 이지직묘 오른쪽",
+    "lat": 37.4346812686807,
+    "lng": 127.149186850063,
+    "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "대원공원",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309"
+      },
+      {
+        "text": "맨발황톳길",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309"
+      },
+      {
+        "text": "이지직묘 오른쪽",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+    "verificationNote": "좌표는 공원 경계나 정문이 아닌 공식 맨발황톳길 안내 지점입니다: 이지직묘 오른쪽"
+  },
+  {
+    "id": "hwangsong-park",
+    "name": "황송공원",
+    "district": "중원구",
+    "type": "공원",
+    "description": "공원 산책과 함께 맨발황톳길을 둘러볼 수 있는 녹지 공간입니다.",
+    "address": "경기도 성남시 중원구 황송로 6",
+    "lat": 37.4450967807,
+    "lng": 127.1685375745,
+    "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "황송공원",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309"
+      },
+      {
+        "text": "맨발황톳길",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309"
+      },
+      {
+        "text": "축구장 옆 운동공간",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+    "verificationNote": "좌표는 공원 경계나 정문이 아닌 공식 맨발황톳길 안내 지점입니다: 축구장 옆 운동공간"
+  },
+  {
+    "id": "sanseong-park",
+    "name": "산성공원",
+    "district": "중원구",
+    "type": "공원",
+    "description": "공원 산책과 함께 맨발황톳길을 둘러볼 수 있는 녹지 공간입니다.",
+    "address": "경기도 성남시 중원구 산성공원 내 맨발지압장 옆",
+    "lat": 37.452610619754,
+    "lng": 127.168631280451,
+    "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "산성공원",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309"
+      },
+      {
+        "text": "맨발황톳길",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309"
+      },
+      {
+        "text": "맨발지압장 옆 산책로",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+    "verificationNote": "좌표는 공원 경계나 정문이 아닌 공식 맨발황톳길 안내 지점입니다: 맨발지압장 옆 산책로"
+  },
+  {
+    "id": "wirye-park",
+    "name": "위례공원",
+    "district": "수정구",
+    "type": "공원",
+    "description": "공원 산책과 함께 맨발황톳길을 둘러볼 수 있는 녹지 공간입니다.",
+    "address": "경기도 성남시 수정구 위례근린공원 주차장 옆",
+    "lat": 37.4681622945058,
+    "lng": 127.138817024259,
+    "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "위례공원",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309"
+      },
+      {
+        "text": "맨발황톳길",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309"
+      },
+      {
+        "text": "위례근린공원 주차장 옆",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+    "verificationNote": "좌표는 공원 경계나 정문이 아닌 공식 맨발황톳길 안내 지점입니다: 위례근린공원 주차장 옆"
+  },
+  {
+    "id": "sujin-park",
+    "name": "수진공원",
+    "district": "수정구",
+    "type": "공원",
+    "description": "공원 산책과 함께 맨발황톳길을 둘러볼 수 있는 녹지 공간입니다.",
+    "address": "경기도 성남시 수정구 산성대로 41",
+    "lat": 37.4355426733266,
+    "lng": 127.123194413519,
+    "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "수진공원",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309"
+      },
+      {
+        "text": "맨발황톳길",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309"
+      },
+      {
+        "text": "벌터산",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+    "verificationNote": "좌표는 공원 경계나 정문이 아닌 공식 맨발황톳길 안내 지점입니다: 수정구 수진공원(벌터산)"
+  },
+  {
+    "id": "huimangdae-park",
+    "name": "희망대공원",
+    "district": "수정구",
+    "type": "공원",
+    "description": "공원 산책과 함께 맨발황톳길을 둘러볼 수 있는 녹지 공간입니다.",
+    "address": "경기도 성남시 수정구 공원로370번길 26",
+    "lat": 37.4464072996998,
+    "lng": 127.151766616046,
+    "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "희망대공원",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309"
+      },
+      {
+        "text": "맨발황톳길",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309"
+      },
+      {
+        "text": "중앙계단 서쪽 녹지대",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+    "verificationNote": "좌표는 공원 경계나 정문이 아닌 공식 맨발황톳길 안내 지점입니다: 희망대공원 정상부/중앙계단 서쪽 녹지대"
+  },
+  {
+    "id": "moran-food-street",
+    "name": "모란 음식문화거리",
+    "district": "중원구",
+    "type": "특화거리",
+    "description": "모란역 주변 음식점이 모여 있는 거리입니다.",
+    "address": "경기도 성남시 중원구 광명로 2 (성남동) ~ 성남대로 1128 일원",
+    "lat": 37.4327224879089,
+    "lng": 127.129439849632,
+    "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "모란 음식문화거리",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006"
+      },
+      {
+        "text": "광명로 2",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006"
+      },
+      {
+        "text": "모란민속장터",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006",
+    "verificationNote": "거리의 대표 지도 지점입니다. 개별 점포 영업 여부는 확인하지 않았습니다."
+  },
+  {
+    "id": "baekhyeon-cafe-street",
+    "name": "백현동카페문화특화거리",
+    "district": "분당구",
+    "type": "특화거리",
+    "description": "카페와 음식점을 걸어서 둘러볼 수 있는 백현동 거리입니다.",
+    "address": "경기도 성남시 분당구 판교역로2번길 40 (백현동)일대",
+    "lat": 37.3864461455356,
+    "lng": 127.111472338153,
+    "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "백현동카페문화특화거리",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006"
+      },
+      {
+        "text": "판교역로2번길 40",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006"
+      },
+      {
+        "text": "카페와 레스토랑",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006",
+    "verificationNote": "거리의 대표 지도 지점입니다. 개별 점포 영업 여부는 확인하지 않았습니다."
+  },
+  {
+    "id": "jeongja-cafe-street",
+    "name": "정자동 카페거리",
+    "district": "분당구",
+    "type": "특화거리",
+    "description": "테라스가 있는 카페들이 자리한 정자동 거리입니다.",
+    "address": "경기도 성남시 분당구 정자일로 234",
+    "lat": 37.3711971238493,
+    "lng": 127.106282749957,
+    "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "정자동 카페거리",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006"
+      },
+      {
+        "text": "정자일로 234",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006"
+      },
+      {
+        "text": "테라스",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006",
+    "verificationNote": "거리의 대표 지도 지점입니다. 개별 점포 영업 여부는 확인하지 않았습니다."
+  },
+  {
+    "id": "moran-oil-street",
+    "name": "제1호 백년기름 특화거리",
+    "district": "중원구",
+    "type": "특화거리",
+    "description": "참기름과 들기름을 짜는 점포가 모여 있는 모란의 거리입니다.",
+    "address": "경기도 성남시 중원구 둔촌대로69번길 8 (성남동) ~ 성남동 4255일대",
+    "lat": 37.4306345186502,
+    "lng": 127.127491441618,
+    "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "백년기름 특화거리",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006"
+      },
+      {
+        "text": "둔촌대로69번길 8",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006"
+      },
+      {
+        "text": "참기름과 들기름",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006",
+    "verificationNote": "거리의 대표 지도 지점입니다. 개별 점포 영업 여부는 확인하지 않았습니다."
+  },
+  {
+    "id": "naksaengdae-park",
+    "name": "낙생대공원",
+    "district": "분당구",
+    "type": "공원",
+    "description": "판교에서 산책과 휴식을 즐길 수 있는 공원입니다.",
+    "address": "경기도 성남시 분당구 판교역로 75",
+    "lat": 37.3875773384,
+    "lng": 127.107683771,
+    "sourceUrl": "https://data.visitkorea.or.kr/page/2759981",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "낙생대공원",
+        "sourceUrl": "https://data.visitkorea.or.kr/page/2759981"
+      },
+      {
+        "text": "판교역로 75",
+        "sourceUrl": "https://data.visitkorea.or.kr/page/2759981"
+      },
+      {
+        "text": "분당구",
+        "sourceUrl": "https://data.visitkorea.or.kr/page/2759981"
+      }
+    ],
+    "coordinateSourceUrl": "https://data.visitkorea.or.kr/page/2759981",
+    "descriptionSourceUrl": "https://data.visitkorea.or.kr/page/2759981",
+    "verificationNote": "한국관광공사 관광 LOD의 주소·위경도 확인. 지번이 없는 주소는 동 단위 그대로 표시합니다."
+  },
+  {
+    "id": "sanghui-park",
+    "name": "상희공원",
+    "district": "분당구",
+    "type": "공원",
+    "description": "야탑동에 자리한 동네 공원입니다.",
+    "address": "경기도 성남시 분당구 야탑동",
+    "lat": 37.4109418991,
+    "lng": 127.1411856228,
+    "sourceUrl": "https://data.visitkorea.or.kr/page/2914491",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "상희공원",
+        "sourceUrl": "https://data.visitkorea.or.kr/page/2914491"
+      },
+      {
+        "text": "야탑동",
+        "sourceUrl": "https://data.visitkorea.or.kr/page/2914491"
+      },
+      {
+        "text": "분당구",
+        "sourceUrl": "https://data.visitkorea.or.kr/page/2914491"
+      }
+    ],
+    "coordinateSourceUrl": "https://data.visitkorea.or.kr/page/2914491",
+    "descriptionSourceUrl": "https://data.visitkorea.or.kr/page/2914491",
+    "verificationNote": "한국관광공사 관광 LOD의 주소·위경도 확인. 지번이 없는 주소는 동 단위 그대로 표시합니다."
+  },
+  {
+    "id": "shin-hae-chul-street",
+    "name": "신해철거리",
+    "district": "분당구",
+    "type": "특화거리",
+    "description": "음악가 신해철을 기억하는 수내동의 거리입니다.",
+    "address": "경기도 성남시 분당구 수내동",
+    "lat": 37.3657774332,
+    "lng": 127.1269493023,
+    "sourceUrl": "https://data.visitkorea.or.kr/page/2650828",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "신해철거리",
+        "sourceUrl": "https://data.visitkorea.or.kr/page/2650828"
+      },
+      {
+        "text": "수내동",
+        "sourceUrl": "https://data.visitkorea.or.kr/page/2650828"
+      },
+      {
+        "text": "분당구",
+        "sourceUrl": "https://data.visitkorea.or.kr/page/2650828"
+      }
+    ],
+    "coordinateSourceUrl": "https://data.visitkorea.or.kr/page/2650828",
+    "descriptionSourceUrl": "https://data.visitkorea.or.kr/page/2650828",
+    "verificationNote": "한국관광공사 관광 LOD의 주소·위경도 확인. 지번이 없는 주소는 동 단위 그대로 표시합니다."
+  },
+  {
+    "id": "seongnam-general-market",
+    "name": "성남종합시장",
+    "district": "수정구",
+    "type": "전통시장",
+    "description": "신흥동에서 지역 상권을 둘러볼 수 있는 시장입니다.",
+    "address": "경기도 성남시 수정구 산성대로255번길 3-1",
+    "lat": 37.4405718713,
+    "lng": 127.145353849,
+    "sourceUrl": "https://data.visitkorea.or.kr/page/2762739",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "성남종합시장",
+        "sourceUrl": "https://data.visitkorea.or.kr/page/2762739"
+      },
+      {
+        "text": "산성대로255번길 3-1",
+        "sourceUrl": "https://data.visitkorea.or.kr/page/2762739"
+      },
+      {
+        "text": "수정구",
+        "sourceUrl": "https://data.visitkorea.or.kr/page/2762739"
+      }
+    ],
+    "coordinateSourceUrl": "https://data.visitkorea.or.kr/page/2762739",
+    "descriptionSourceUrl": "https://data.visitkorea.or.kr/page/2762739",
+    "verificationNote": ""
+  },
+  {
+    "id": "shingu-botanic-garden",
+    "name": "신구대학교식물원",
+    "district": "수정구",
+    "type": "식물원",
+    "description": "식물 관람과 교육 프로그램을 운영하는 대학 식물원입니다.",
+    "address": "경기도 성남시 수정구 적푸리로 9",
+    "lat": 37.43394,
+    "lng": 127.0809,
+    "sourceUrl": "https://www.sbg.or.kr/guide/guide.html",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "신구대학교식물원",
+        "sourceUrl": "https://www.sbg.or.kr/guide/guide.html"
+      },
+      {
+        "text": "적푸리로 9",
+        "sourceUrl": "https://www.sbg.or.kr/guide/guide.html"
+      },
+      {
+        "text": "교육프로그램",
+        "sourceUrl": "https://www.sbg.or.kr/guide/guide.html"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.sbg.or.kr/guide/location.html",
+    "descriptionSourceUrl": "https://www.sbg.or.kr/guide/guide.html",
+    "verificationNote": "공식 오시는 길의 구형 지도 좌표와 OSM node/368869794가 약 60m 이내로 일치합니다. 공식 좌표를 유지하며 정문 좌표로 보장하지 않습니다."
+  },
+  {
+    "id": "daegwangsa",
+    "name": "대광사",
+    "district": "분당구",
+    "type": "문화유산",
+    "description": "구미동에 자리하며 성남시 관광 안내에 소개된 사찰입니다.",
+    "address": "경기도 성남시 분당구 구미로185번길 30",
+    "lat": 37.3467451993128,
+    "lng": 127.127636016067,
+    "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030604?curPage=1#136",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "대광사",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030101/44"
+      },
+      {
+        "text": "구미로185번길 30",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030101/44"
+      },
+      {
+        "text": "구미동",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030101/44"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030101/44",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030604?curPage=1#136",
+    "verificationNote": "주소와 좌표는 성남시 공식 주변시설 지도에서 확인했습니다. 프로그램·운영시간은 미확인입니다."
+  },
+  {
+    "id": "sangdaewon-market",
+    "name": "상대원시장",
+    "district": "중원구",
+    "type": "전통시장",
+    "description": "지역 점포를 둘러볼 수 있는 생활 시장입니다.",
+    "address": "경기도 성남시 중원구 희망로344번길 6",
+    "lat": 37.4359793988912,
+    "lng": 127.15877214678,
+    "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030101/44",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "상대원시장(상대원프라자)",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030101/44"
+      },
+      {
+        "text": "희망로344번길 6",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030101/44"
+      },
+      {
+        "text": "전통시장",
+        "sourceUrl": "https://www.seongnam.go.kr/ct-pm080303"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030101/44",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030101/44",
+    "verificationNote": "공식 관광 포털의 시장 소재 개방화장실 지도 지점입니다. 시장의 중심점·정문을 뜻하지 않습니다."
+  },
+  {
+    "id": "dandae-traditional-market",
+    "name": "단대전통시장",
+    "district": "중원구",
+    "type": "전통시장",
+    "description": "지역 점포를 둘러볼 수 있는 생활 시장입니다.",
+    "address": "경기도 성남시 중원구 산성대로372번길 10",
+    "lat": 37.4448137767196,
+    "lng": 127.15801581522,
+    "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030101/44",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "단대전통시장",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030101/44"
+      },
+      {
+        "text": "산성대로372번길 10",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030101/44"
+      },
+      {
+        "text": "금광동",
+        "sourceUrl": "https://share.seongnam.go.kr/map/map"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030101/44",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030101/44",
+    "verificationNote": "공식 관광 포털의 시장 소재 개방화장실 지도 지점입니다. 시장의 중심점·정문을 뜻하지 않습니다."
+  },
+  {
+    "id": "namhansanseong-market",
+    "name": "남한산성시장",
+    "district": "중원구",
+    "type": "전통시장",
+    "description": "지역 점포를 둘러볼 수 있는 생활 시장입니다.",
+    "address": "경기도 성남시 중원구 산성대로524번길 8",
+    "lat": 37.4571304839997,
+    "lng": 127.164649953864,
+    "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030101/44",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "남한산성시장",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030101/44"
+      },
+      {
+        "text": "산성대로524번길 8",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030101/44"
+      },
+      {
+        "text": "전통시장",
+        "sourceUrl": "https://www.seongnam.go.kr/ct-pm080303"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030101/44",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030101/44",
+    "verificationNote": "공식 관광 포털의 시장 소재 개방화장실 지도 지점입니다. 시장의 중심점·정문을 뜻하지 않습니다."
+  },
+  {
+    "id": "yeongjang-park",
+    "name": "영장공원",
+    "district": "수정구",
+    "type": "공원",
+    "description": "영장산 주변의 숲과 산책 공간을 만나는 공원입니다.",
+    "address": "경기도 성남시 수정구 신흥·태평·복정·산성동 일원",
+    "lat": 37.45096135,
+    "lng": 127.13385592905718,
+    "sourceUrl": "https://www.sujeong-gu.go.kr/sub/content.asp?cIdx=217",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "영장공원",
+        "sourceUrl": "https://www.sujeong-gu.go.kr/sub/content.asp?cIdx=217"
+      },
+      {
+        "text": "태평동 224-3",
+        "sourceUrl": "https://www.sujeong-gu.go.kr/sub/content.asp?cIdx=217"
+      },
+      {
+        "text": "복정",
+        "sourceUrl": "https://www.sujeong-gu.go.kr/sub/content.asp?cIdx=217"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.openstreetmap.org/way/893207875",
+    "descriptionSourceUrl": "https://www.sujeong-gu.go.kr/sub/content.asp?cIdx=217",
+    "verificationNote": "주소와 시설 소개는 수정구청, 좌표는 같은 이름의 OSM 공원 영역 내부 지점입니다. 정문 좌표가 아닙니다."
+  },
+  {
+    "id": "yangji-park",
+    "name": "양지공원",
+    "district": "수정구",
+    "type": "공원",
+    "description": "양지동에서 산책과 휴식을 즐길 수 있는 공원입니다.",
+    "address": "경기도 성남시 수정구 양지동 972번지 일원",
+    "lat": 37.464145900000005,
+    "lng": 127.16361303905776,
+    "sourceUrl": "https://www.sujeong-gu.go.kr/sub/content.asp?cIdx=218",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "양지공원",
+        "sourceUrl": "https://www.sujeong-gu.go.kr/sub/content.asp?cIdx=218"
+      },
+      {
+        "text": "양지동 972번지",
+        "sourceUrl": "https://www.sujeong-gu.go.kr/sub/content.asp?cIdx=218"
+      },
+      {
+        "text": "공원입구",
+        "sourceUrl": "https://www.sujeong-gu.go.kr/sub/content.asp?cIdx=218"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.openstreetmap.org/way/871411648",
+    "descriptionSourceUrl": "https://www.sujeong-gu.go.kr/sub/content.asp?cIdx=218",
+    "verificationNote": "주소와 시설 소개는 수정구청, 좌표는 같은 이름의 OSM 공원 영역 내부 지점입니다. 정문 좌표가 아닙니다."
+  },
+  {
+    "id": "dandae-park",
+    "name": "단대공원",
+    "district": "수정구",
+    "type": "공원",
+    "description": "단대동과 산성동 일대에 걸쳐 있는 근린공원입니다.",
+    "address": "경기도 성남시 수정구 단대동·산성동 일원",
+    "lat": 37.45438905,
+    "lng": 127.15661838497658,
+    "sourceUrl": "https://www.sujeong-gu.go.kr/sub/content.asp?cIdx=219",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "단대공원",
+        "sourceUrl": "https://www.sujeong-gu.go.kr/sub/content.asp?cIdx=219"
+      },
+      {
+        "text": "산성동 509",
+        "sourceUrl": "https://www.sujeong-gu.go.kr/sub/content.asp?cIdx=219"
+      },
+      {
+        "text": "단대동",
+        "sourceUrl": "https://www.sujeong-gu.go.kr/sub/content.asp?cIdx=219"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.openstreetmap.org/way/240822064",
+    "descriptionSourceUrl": "https://www.sujeong-gu.go.kr/sub/content.asp?cIdx=219",
+    "verificationNote": "주소와 시설 소개는 수정구청, 좌표는 같은 이름의 OSM 공원 영역 내부 지점입니다. 정문 좌표가 아닙니다."
+  },
+  {
+    "id": "moka",
+    "name": "현대어린이책미술관",
+    "district": "분당구",
+    "type": "미술관",
+    "description": "어린이책을 주제로 전시와 교육을 운영하는 미술관입니다.",
+    "address": "경기도 성남시 분당구 판교역로146번길 20 현대백화점 판교점 Office H 5층",
+    "lat": 37.3927998,
+    "lng": 127.1119913,
+    "sourceUrl": "https://www.hmoka.org/main/index.do",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "현대어린이책미술관",
+        "sourceUrl": "https://www.hmoka.org/visit/directions/main.do?st_cd=480"
+      },
+      {
+        "text": "판교역로 146번길 20",
+        "sourceUrl": "https://www.hmoka.org/visit/directions/main.do?st_cd=480"
+      },
+      {
+        "text": "현대백화점 판교점",
+        "sourceUrl": "https://www.hmoka.org/visit/directions/main.do?st_cd=480"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.openstreetmap.org/node/4350141121",
+    "descriptionSourceUrl": "https://www.hmoka.org/main/index.do",
+    "verificationNote": "공식 오시는 길의 주소를 OSM 현대백화점 판교점 주소와 대조했습니다. 같은 건물의 대표 좌표이며 미술관 전용 출입구 좌표는 아닙니다."
+  },
+  {
+    "id": "sagimakgol-park",
+    "name": "사기막골공원",
+    "district": "중원구",
+    "type": "공원",
+    "description": "상대원동의 숲과 야외 공간을 둘러볼 수 있는 공원입니다.",
+    "address": "경기도 성남시 중원구 상대원동 39-8번지 일대",
+    "lat": 37.44558395,
+    "lng": 127.18267918005031,
+    "sourceUrl": "https://www.seongnam.go.kr/park/poolList.do?menuIdx=1000814&returnURL=%2Fmain.do&searchCode=park",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "사기막골공원 물놀이장",
+        "sourceUrl": "https://www.seongnam.go.kr/park/poolList.do?menuIdx=1000814&returnURL=%2Fmain.do&searchCode=park"
+      },
+      {
+        "text": "중원구 상대원동 39-8번지",
+        "sourceUrl": "https://www.seongnam.go.kr/park/poolList.do?menuIdx=1000814&returnURL=%2Fmain.do&searchCode=park"
+      },
+      {
+        "text": "공원과 공원운영1팀",
+        "sourceUrl": "https://www.seongnam.go.kr/park/poolList.do?menuIdx=1000814&returnURL=%2Fmain.do&searchCode=park"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.openstreetmap.org/way/1092611499",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/park/poolList.do?menuIdx=1000814&returnURL=%2Fmain.do&searchCode=park",
+    "verificationNote": "공식 주소는 공원 내 물놀이장 주소입니다. 좌표는 OSM 공원 영역 내부 지점입니다. 물놀이장 계절 운영 여부는 미확인입니다."
+  },
+  {
+    "id": "cheonrimsan-beacon",
+    "name": "천림산 봉수 유적",
+    "district": "수정구",
+    "type": "문화유산",
+    "description": "조선시대에 서울로 봉수 신호를 전달하던 유적입니다.",
+    "address": "경기도 성남시 수정구 달래내로 295",
+    "lat": 37.4221952,
+    "lng": 127.0756511,
+    "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030401",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "제2로 직봉 성남 천림산 봉수 유적",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030401"
+      },
+      {
+        "text": "달래내로 295",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030401"
+      },
+      {
+        "text": "사적",
+        "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030401"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.openstreetmap.org/node/7023179789",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030401",
+    "verificationNote": "OSM 명칭은 천림산봉수대입니다. 산길 접근과 현장 개방 여부는 별도 확인이 필요합니다. OSM의 같은 이름 지점을 공식 주소와 대조했습니다. 영역 내부 좌표는 출입구 좌표가 아닙니다."
+  },
+  {
+    "id": "sunae-historic-house",
+    "name": "수내동가옥",
+    "district": "분당구",
+    "type": "문화유산",
+    "description": "중앙공원 안에 보존된 조선시대의 옛 살림집입니다.",
+    "address": "경기도 성남시 분당구 성남대로 550",
+    "lat": 37.3753670478954,
+    "lng": 127.124304824462,
+    "sourceUrl": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=3413100780000&pageNo=1_1_2_0",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "수내동가옥",
+        "sourceUrl": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=3413100780000&pageNo=1_1_2_0"
+      },
+      {
+        "text": "성남대로 550",
+        "sourceUrl": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=3413100780000&pageNo=1_1_2_0"
+      },
+      {
+        "text": "조선시대",
+        "sourceUrl": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=3413100780000&pageNo=1_1_2_0"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=3413100780000&pageNo=1_1_2_0",
+    "descriptionSourceUrl": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=3413100780000&pageNo=1_1_2_0",
+    "verificationNote": "국가유산포털 지도에 포함된 숫자 좌표입니다. 독립 지정 문화유산으로 중앙공원과 구별합니다."
+  },
+  {
+    "id": "gumi-park",
+    "name": "구미공원",
+    "district": "분당구",
+    "type": "공원",
+    "description": "구미동의 야외 공간과 운동시설을 둘러볼 수 있는 공원입니다.",
+    "address": "경기도 성남시 분당구 구미동 299",
+    "lat": 37.3421784,
+    "lng": 127.12008429810805,
+    "sourceUrl": "https://www.seongnam.go.kr/ct-pm080303",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "구미공원 배드민턴장",
+        "sourceUrl": "https://www.seongnam.go.kr/ct-pm080303"
+      },
+      {
+        "text": "구미동 299",
+        "sourceUrl": "https://www.seongnam.go.kr/ct-pm080303"
+      },
+      {
+        "text": "시립공원",
+        "sourceUrl": "https://www.seongnam.go.kr/ct-pm080303"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.openstreetmap.org/way/480806780",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/ct-pm080303",
+    "verificationNote": "성남시 공공와이파이 시설 목록에서 시설명과 주소를 확인했습니다. 해당 목록의 소수점 두 자리 좌표는 쓰지 않았습니다. OSM의 같은 이름 지점을 공식 주소와 대조했습니다. 영역 내부 좌표는 출입구 좌표가 아닙니다."
+  },
+  {
+    "id": "hwangsaeul-park",
+    "name": "황새울공원",
+    "district": "분당구",
+    "type": "공원",
+    "description": "수내동에서 야외 산책과 휴식을 즐길 수 있는 공원입니다.",
+    "address": "경기도 성남시 분당구 황새울로 287",
+    "lat": 37.384130299999995,
+    "lng": 127.11837433626073,
+    "sourceUrl": "https://www.seongnam.go.kr/ct-pm080303",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "황새울공원",
+        "sourceUrl": "https://www.seongnam.go.kr/ct-pm080303"
+      },
+      {
+        "text": "황새울로 287",
+        "sourceUrl": "https://www.seongnam.go.kr/ct-pm080303"
+      },
+      {
+        "text": "시립공원",
+        "sourceUrl": "https://www.seongnam.go.kr/ct-pm080303"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.openstreetmap.org/way/437236112",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/ct-pm080303",
+    "verificationNote": "성남시 공공와이파이 시설 목록에서 시설명과 주소를 확인했습니다. 해당 목록의 소수점 두 자리 좌표는 쓰지 않았습니다. OSM의 같은 이름 지점을 공식 주소와 대조했습니다. 영역 내부 좌표는 출입구 좌표가 아닙니다."
+  },
+  {
+    "id": "neunggol-park",
+    "name": "능골공원",
+    "district": "분당구",
+    "type": "공원",
+    "description": "정자동의 녹지와 야외 공간을 둘러보는 공원입니다.",
+    "address": "경기도 성남시 분당구 정자동 103",
+    "lat": 37.37038955,
+    "lng": 127.11652786876341,
+    "sourceUrl": "https://www.seongnam.go.kr/ct-pm080303",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "능골공원",
+        "sourceUrl": "https://www.seongnam.go.kr/ct-pm080303"
+      },
+      {
+        "text": "정자동 103",
+        "sourceUrl": "https://www.seongnam.go.kr/ct-pm080303"
+      },
+      {
+        "text": "시립공원",
+        "sourceUrl": "https://www.seongnam.go.kr/ct-pm080303"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.openstreetmap.org/way/468668906",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/ct-pm080303",
+    "verificationNote": "성남시 공공와이파이 시설 목록에서 시설명과 주소를 확인했습니다. 해당 목록의 소수점 두 자리 좌표는 쓰지 않았습니다. OSM의 같은 이름 지점을 공식 주소와 대조했습니다. 영역 내부 좌표는 출입구 좌표가 아닙니다."
+  },
+  {
+    "id": "unjung-park",
+    "name": "운중공원",
+    "district": "분당구",
+    "type": "공원",
+    "description": "운중동의 주거지 가까이에서 산책하기 좋은 공원입니다.",
+    "address": "경기도 성남시 분당구 운중동 953",
+    "lat": 37.3908623,
+    "lng": 127.07163842276503,
+    "sourceUrl": "https://www.seongnam.go.kr/ct-pm080303",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "운중공원",
+        "sourceUrl": "https://www.seongnam.go.kr/ct-pm080303"
+      },
+      {
+        "text": "운중동 953",
+        "sourceUrl": "https://www.seongnam.go.kr/ct-pm080303"
+      },
+      {
+        "text": "시립공원",
+        "sourceUrl": "https://www.seongnam.go.kr/ct-pm080303"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.openstreetmap.org/way/493944599",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/ct-pm080303",
+    "verificationNote": "성남시 공공와이파이 시설 목록에서 시설명과 주소를 확인했습니다. 해당 목록의 소수점 두 자리 좌표는 쓰지 않았습니다. OSM의 같은 이름 지점을 공식 주소와 대조했습니다. 영역 내부 좌표는 출입구 좌표가 아닙니다."
+  },
+  {
+    "id": "geumgok-park",
+    "name": "금곡공원",
+    "district": "분당구",
+    "type": "공원",
+    "description": "정자동 금곡로에 위치한 공원입니다.",
+    "address": "경기도 성남시 분당구 금곡로 298",
+    "lat": 37.35731425,
+    "lng": 127.1092875097591,
+    "sourceUrl": "https://www.seongnam.go.kr/ct-pm080303",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "금곡공원",
+        "sourceUrl": "https://www.seongnam.go.kr/ct-pm080303"
+      },
+      {
+        "text": "금곡로 298",
+        "sourceUrl": "https://www.seongnam.go.kr/ct-pm080303"
+      },
+      {
+        "text": "시립공원",
+        "sourceUrl": "https://www.seongnam.go.kr/ct-pm080303"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.openstreetmap.org/way/435659202",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/ct-pm080303",
+    "verificationNote": "성남시 공공와이파이 시설 목록에서 시설명과 주소를 확인했습니다. 해당 목록의 소수점 두 자리 좌표는 쓰지 않았습니다. OSM의 같은 이름 지점을 공식 주소와 대조했습니다. 영역 내부 좌표는 출입구 좌표가 아닙니다."
+  },
+  {
+    "id": "maru-park",
+    "name": "마루공원",
+    "district": "분당구",
+    "type": "공원",
+    "description": "수내동의 피크닉 공간과 녹지를 둘러볼 수 있는 공원입니다.",
+    "address": "경기도 성남시 분당구 수내동 49-1",
+    "lat": 37.38198975,
+    "lng": 127.1134622544655,
+    "sourceUrl": "https://www.seongnam.go.kr/ct-pm080303",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "마루공원 피크닉장",
+        "sourceUrl": "https://www.seongnam.go.kr/ct-pm080303"
+      },
+      {
+        "text": "수내동 49-1",
+        "sourceUrl": "https://www.seongnam.go.kr/ct-pm080303"
+      },
+      {
+        "text": "시립공원",
+        "sourceUrl": "https://www.seongnam.go.kr/ct-pm080303"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.openstreetmap.org/way/437912680",
+    "descriptionSourceUrl": "https://www.seongnam.go.kr/ct-pm080303",
+    "verificationNote": "성남시 공공와이파이 시설 목록에서 시설명과 주소를 확인했습니다. 해당 목록의 소수점 두 자리 좌표는 쓰지 않았습니다. OSM의 같은 이름 지점을 공식 주소와 대조했습니다. 영역 내부 좌표는 출입구 좌표가 아닙니다."
+  },
+  {
+    "id": "book-theme-park-library",
+    "name": "책테마파크도서관",
+    "district": "분당구",
+    "type": "도서문화",
+    "description": "율동공원에서 책을 읽고 독서 문화를 만나는 도서관입니다.",
+    "address": "경기도 성남시 분당구 문정로 145",
+    "lat": 37.379328528077636,
+    "lng": 127.14822129192616,
+    "sourceUrl": "https://www2.snlib.go.kr/bt/menu/12754/contents/41763/contents.do",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "책테마파크도서관",
+        "sourceUrl": "https://www2.snlib.go.kr/bt/menu/12754/contents/41763/contents.do"
+      },
+      {
+        "text": "문정로 145",
+        "sourceUrl": "https://www2.snlib.go.kr/bt/menu/12754/contents/41763/contents.do"
+      },
+      {
+        "text": "율동318",
+        "sourceUrl": "https://www2.snlib.go.kr/bt/menu/12754/contents/41763/contents.do"
+      }
+    ],
+    "coordinateSourceUrl": "https://www2.snlib.go.kr/bt/menu/12754/contents/41763/contents.do",
+    "descriptionSourceUrl": "https://www2.snlib.go.kr/bt/menu/12754/contents/41763/contents.do",
+    "verificationNote": "공식 홈페이지에 삽입된 카카오 지도 key 2fw7x의 placeX/Y를 카카오 지도 JS API로 WGS84 변환했습니다. 율동공원 내 독립 도서관입니다."
+  },
+  {
+    "id": "maengsan-ecology-center",
+    "name": "맹산환경생태학습원",
+    "district": "분당구",
+    "type": "생태체험",
+    "description": "자연을 관찰하고 환경과 생태를 배우는 학습원입니다.",
+    "address": "경기도 성남시 분당구 판교로 628",
+    "lat": 37.405224303434935,
+    "lng": 127.1420150284589,
+    "sourceUrl": "https://mpark.seongnam.go.kr:10003/main.php?menugrp=010400&master=html&act=page",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "맹산환경생태학습원",
+        "sourceUrl": "https://mpark.seongnam.go.kr:10003/main.php?menugrp=010400&master=html&act=page"
+      },
+      {
+        "text": "판교로 628",
+        "sourceUrl": "https://mpark.seongnam.go.kr:10003/main.php?menugrp=010400&master=html&act=page"
+      },
+      {
+        "text": "야탑동422-3",
+        "sourceUrl": "https://mpark.seongnam.go.kr:10003/main.php?menugrp=010400&master=html&act=page"
+      }
+    ],
+    "coordinateSourceUrl": "https://mpark.seongnam.go.kr:10003/main.php?menugrp=010400&master=html&act=page",
+    "descriptionSourceUrl": "https://mpark.seongnam.go.kr:10003/main.php?menugrp=010400&master=html&act=page",
+    "verificationNote": "공식 홈페이지 카카오 지도 key mcjs의 placeX/Y를 카카오 지도 JS API로 WGS84 변환했습니다."
+  },
+  {
+    "id": "pangyo-ecology-center",
+    "name": "판교환경생태학습원",
+    "district": "분당구",
+    "type": "생태체험",
+    "description": "판교에서 환경과 생태를 배우는 전시·체험 공간입니다.",
+    "address": "경기도 성남시 분당구 대왕판교로645번길 21",
+    "lat": 37.39959118660318,
+    "lng": 127.10381763324789,
+    "sourceUrl": "https://ppark.seongnam.go.kr:10013/info/location",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "판교환경생태학습원",
+        "sourceUrl": "https://ppark.seongnam.go.kr:10013/info/location"
+      },
+      {
+        "text": "대왕판교로645번길 21",
+        "sourceUrl": "https://ppark.seongnam.go.kr:10013/info/location"
+      },
+      {
+        "text": "삼평동 637번지",
+        "sourceUrl": "https://ppark.seongnam.go.kr:10013/info/location"
+      }
+    ],
+    "coordinateSourceUrl": "https://ppark.seongnam.go.kr:10013/info/location",
+    "descriptionSourceUrl": "https://ppark.seongnam.go.kr:10013/info/location",
+    "verificationNote": "공식 홈페이지 카카오 지도 key tahj의 placeX/Y를 카카오 지도 JS API로 WGS84 변환했습니다. 화랑공원과 별개의 교육 시설입니다."
+  },
+  {
+    "id": "tancheon-sports-complex",
+    "name": "탄천종합운동장",
+    "district": "분당구",
+    "type": "체육문화",
+    "description": "야탑동에서 스포츠 경기와 체육활동을 만나는 종합운동장입니다.",
+    "address": "경기도 성남시 분당구 탄천로 215",
+    "lat": 37.4101669,
+    "lng": 127.12119700244162,
+    "sourceUrl": "https://spo.isdc.co.kr/tan_visitWay.do",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "탄천종합운동장",
+        "sourceUrl": "https://spo.isdc.co.kr/tan_visitWay.do"
+      },
+      {
+        "text": "탄천로 215",
+        "sourceUrl": "https://spo.isdc.co.kr/tan_visitWay.do"
+      },
+      {
+        "text": "야탑동 486",
+        "sourceUrl": "https://spo.isdc.co.kr/tan_visitWay.do"
+      }
+    ],
+    "coordinateSourceUrl": "https://www.openstreetmap.org/way/658766450",
+    "descriptionSourceUrl": "https://spo.isdc.co.kr/tan_visitWay.do",
+    "verificationNote": "경기·프로그램별 입장과 이용 조건은 공식 시설 안내를 확인해야 합니다. OSM의 같은 이름 지점을 공식 주소와 대조했습니다. 영역 내부 좌표는 출입구 좌표가 아닙니다."
+  },
+  {
+    "id": "saemaul-history-museum",
+    "name": "새마을역사관",
+    "district": "분당구",
+    "type": "박물관",
+    "description": "새마을운동중앙연수원에서 새마을운동의 역사를 살펴보는 전시 공간입니다.",
+    "address": "경기도 성남시 분당구 새마을로 257",
+    "lat": 37.3890558273,
+    "lng": 127.156748717,
+    "sourceUrl": "https://gnews.gg.go.kr/news/news_detail.do?number=202511091548397897C094&s_code=C094",
+    "verifiedAt": "2026-09-15",
+    "operatingHours": null,
+    "closedDays": null,
+    "admission": null,
+    "photo": null,
+    "officialQuotes": [
+      {
+        "text": "새마을역사관",
+        "sourceUrl": "https://gnews.gg.go.kr/news/news_detail.do?number=202511091548397897C094&s_code=C094"
+      },
+      {
+        "text": "새마을로 257",
+        "sourceUrl": "https://gnews.gg.go.kr/news/news_detail.do?number=202511091548397897C094&s_code=C094"
+      },
+      {
+        "text": "사전 예약 후 관람 가능",
+        "sourceUrl": "https://gnews.gg.go.kr/news/news_detail.do?number=202511091548397897C094&s_code=C094"
+      }
+    ],
+    "coordinateSourceUrl": "https://data.visitkorea.or.kr/linkedview/131687",
+    "descriptionSourceUrl": "https://gnews.gg.go.kr/news/news_detail.do?number=202511091548397897C094&s_code=C094",
+    "verificationNote": "한국관광공사 좌표는 새마을운동중앙연수원 전체 대표 지점으로 역사관 출입구는 아닙니다. 2025년 경기도 기사에 사전 예약 안내가 있어 방문 전 공식 기관에 확인해야 합니다. 시간·요금은 최신 운영 확인 전 미입력입니다."
+  }
+]

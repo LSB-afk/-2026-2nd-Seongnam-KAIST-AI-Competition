@@ -1,7 +1,8 @@
 import { getPlace, type Place } from "./places";
 import type { Run } from "./types";
+import type { WorkspaceView } from "./workspace-state";
 
-export type GuideView = "dashboard" | "explore" | "saved" | "studio" | "history";
+export type GuideView = WorkspaceView;
 export type GuideContext = {
   view: GuideView;
   selectedPlace: Place | null;
@@ -211,6 +212,10 @@ export function getGuideAdvice(context: GuideContext): GuideAdvice {
   const snapshot = getGuideSnapshot(context);
   if (snapshot.running || context.busy) return { mood: "working", title: "이야기를 준비하고 있어요", body: "진행 기록에서 현재 작업을 확인할 수 있어요. 완료되면 카드와 검수 결과를 함께 살펴봐요.", action: null, actionLabel: "" };
   if (context.error) return { mood: "error", title: "확인이 필요한 상황이에요", body: context.error.slice(0, 240), action: context.run ? "review" : "explore", actionLabel: context.run ? "현재 작업 확인" : "장소 목록 보기" };
+  if (context.view === "diorama" && context.selectedPlace)
+    return { mood: "guiding", title: `${context.selectedPlace.name}을 입체로 만나요`, body: "모형을 돌려보거나 이름표를 눌러 이야기를 읽어 보세요. 실제 사진과 위치를 확인한 뒤 같은 장소로 카드뉴스를 만들 수 있어요.", action: "studio", actionLabel: "이 장소로 제작 화면 열기" };
+  if (context.view === "diorama")
+    return { mood: "guiding", title: "성남 전체가 한눈에 보여요", body: "수정구·중원구·분당구를 함께 둘러보세요. 지역이나 명소를 누르면 같은 도시 안에서 가까이 이동해요. 성남 전체 버튼으로 다시 돌아올 수 있어요.", action: null, actionLabel: "" };
   if ((context.view === "explore" || context.view === "saved") && context.selectedPlace)
     return { mood: "guiding", title: `${context.selectedPlace.name}, 만나볼까요?`, body: "공식 출처와 방문 정보를 확인한 뒤 이 장소로 카드뉴스를 만들 수 있어요.", action: "studio", actionLabel: "이 장소로 제작 화면 열기" };
   const issue = context.run?.issues.find((entry) => !entry.resolved && entry.severity === "error");
@@ -223,5 +228,6 @@ export function getGuideAdvice(context: GuideContext): GuideAdvice {
   if (snapshot.reviewed) return { mood: "guiding", title: "마지막으로 직접 확인해 주세요", body: "현재 버전의 검수가 통과했어요. 문구와 사진을 살펴본 뒤 승인하면 내려받을 수 있어요.", action: "approve", actionLabel: "승인 위치 보기" };
   if (context.run?.cards.length) return { mood: "guiding", title: "카드와 근거를 함께 살펴봐요", body: "문구나 사진을 고친 뒤에는 다시 검수해 주세요. 네 번째 카드는 상상 이야기로 구분돼요.", action: "review", actionLabel: "카드 검수 보기" };
   if (context.view === "studio") return { mood: "guiding", title: `${context.draftPlace.name}의 이야기`, body: "대상과 제작 목적을 정해 주세요. 제작하기는 내용을 확인한 뒤 직접 눌러 주세요.", action: "editor", actionLabel: "제작 입력 보기" };
+  if (context.view === "agent") return { mood: "guiding", title: "이야기를 만드는 과정을 살펴봐요", body: "에이전트는 공식 자료를 찾고 문구를 작성·검수해요. 저는 이용 방법과 다음 확인 위치를 안내해 드려요.", action: "explore", actionLabel: "소개할 장소 고르기" };
   return { mood: "idle", title: "어떤 성남을 만나볼까요?", body: "관광 탐색에서 마음에 드는 장소를 골라 주세요. 사진과 공식 정보가 있는 장소부터 시작해 볼 수 있어요.", action: "explore", actionLabel: "관광 탐색 열기" };
 }

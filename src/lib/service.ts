@@ -18,6 +18,7 @@ const briefSchema = z
     place: z.string().trim().min(1).max(100),
     placeId: z.string().max(100).optional(),
     purpose: z.enum(["place_intro", "visit_guide", "youth_story"]).optional(),
+    readingStyle: z.enum(["standard", "easy"]).default("standard"),
     audience: z.string().trim().min(1).max(40),
     goal: z.string().trim().min(5).max(1000),
     cardCount: z.literal(4),
@@ -123,6 +124,7 @@ export class RunService {
     if (!run.revisions.some(item => item.version === run.version))
       run.revisions.push({version:run.version,createdAt:run.updatedAt,cards:structuredClone(run.cards),claims:structuredClone(run.claims),reason:"이미지 변경 전 저장"});
     card.image = structuredClone(image);
+    if (run.readingStyleChange?.status === "requested") delete run.readingStyleChange;
     run.version += 1;
     run.reviewVersion = null;
     run.approval = null;
@@ -231,6 +233,7 @@ export class RunService {
         existing.brief.place !== parsed.brief.place ||
         (existing.brief.placeId ?? getPlace(existing.brief.place)?.id) !== parsed.brief.placeId ||
         existing.brief.purpose !== parsed.brief.purpose ||
+        (existing.submittedReadingStyle ?? existing.brief.readingStyle ?? "standard") !== parsed.brief.readingStyle ||
         existing.brief.audience !== parsed.brief.audience ||
         existing.brief.goal !== parsed.brief.goal ||
         existing.brief.cardCount !== parsed.brief.cardCount ||
@@ -380,6 +383,7 @@ export class RunService {
       });
     run.version += 1;
     card.title = parsed.title;
+    delete run.readingStyleChange;
     card.body = parsed.body;
     card.script = parsed.body;
     const oldClaims = run.claims.filter((c) => c.cardId === card.id);
@@ -489,6 +493,39 @@ export class RunService {
     run.reviewVersion = null;
     run.approval = null;
     run.artifacts = [];
+    this.start(run);
+    return this.require(id);
+  }
+  simplify(id: string, input: unknown): Run {
+    const { version } = versionSchema.parse(input);
+    const run = this.require(id);
+    this.idleOnly(run);
+    this.version(run, version);
+    if (run.status === "cancelled" || run.cards.length !== 4)
+      throw new AppError("완성된 카드가 있는 작업에서 쉬운 설명을 만들 수 있습니다.", 409);
+    if (run.brief.readingStyle === "easy")
+      throw new AppError("이미 쉬운 설명으로 제작한 버전입니다.", 409);
+    const targetCardIds = run.cards.filter(card => !run.protectedCardIds?.includes(card.id)).map(card => card.id);
+    if (!targetCardIds.length)
+      throw new AppError("모든 카드가 담당자 편집으로 보호되어 있습니다. 문구를 직접 수정해 주세요.", 409);
+    if (!run.evidence.length)
+      throw new AppError("기존 문장의 공식 근거를 먼저 확인해 주세요.", 409);
+    if (run.usage.toolCalls >= run.limits.maxToolCalls || run.usage.modelCalls >= run.limits.maxModelCalls ||
+        run.usage.costUsd >= run.limits.maxCostUsd || (run.automaticRevisions ?? 0) >= run.limits.maxRevisions ||
+        (run.usage.elapsedMs ?? 0) >= run.limits.maxDurationMs)
+      throw new AppError("누적 실행 상한에 도달했습니다. 새 제작을 시작하세요.", 409);
+    if (run.mode === "live" && !this.deps.liveAvailable?.())
+      throw new AppError("실제 API 연결과 비용 상한 설정을 확인해 주세요.", 503);
+    if (this.jobs.size >= 2) throw new AppError("동시 제작 상한에 도달했습니다.", 429);
+    if (!run.revisions.some(revision => revision.version === version))
+      run.revisions.push({ version, createdAt: run.updatedAt, cards: structuredClone(run.cards), claims: structuredClone(run.claims), reason: "쉬운 설명 변경 전 저장" });
+    run.submittedReadingStyle ??= run.brief.readingStyle ?? "standard";
+    run.readingStyleChange = { expectedVersion: version, targetCardIds, status: "requested" };
+    run.reviewVersion = null;
+    run.approval = null;
+    run.artifacts = [];
+    run.assessments = [];
+    run.proposedChanges = [];
     this.start(run);
     return this.require(id);
   }

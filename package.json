@@ -26,6 +26,7 @@
     "playwright": "1.63.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "three": "0.186.0",
     "zod": "4.6.1"
   },
   "devDependencies": {
@@ -33,6 +34,7 @@
     "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/three": "0.186.0",
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
     "tsx": "^4",

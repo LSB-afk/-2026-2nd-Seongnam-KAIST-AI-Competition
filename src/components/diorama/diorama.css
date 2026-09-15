@@ -1,0 +1,217 @@
+.diorama-page {
+  --journey-ink: #264b40;
+  --journey-muted: #718171;
+  --journey-paper: #fffef3ed;
+  --journey-border: #cbd6bd99;
+  --journey-shadow: 0 8px 36px #344a3114, 0 1px 4px #344a3108;
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  color: var(--journey-ink);
+  background: #edf2e6;
+}
+.diorama-page *, .diorama-page *::before, .diorama-page *::after { box-sizing: border-box; }
+.diorama-page [hidden] { display: none !important; }
+.diorama-page button, .diorama-page select, .diorama-page input { font-family: inherit; }
+.diorama-page button { cursor: pointer; }
+.diorama-page button:disabled { opacity: .45; cursor: not-allowed; }
+.diorama-page :is(button, a, select, input, summary, canvas):focus-visible { outline: 2px solid #557746; outline-offset: 3px; }
+.diorama-page button:not(:disabled):hover { filter: brightness(.965); }
+.diorama-experience, .diorama-scene-column { display: contents; }
+.diorama-stage-wrap, .diorama-canvas, .diorama-webgl { position: absolute; inset: 0; width: 100%; height: 100%; }
+.diorama-stage-wrap { z-index: 0; }
+.diorama-webgl { outline: 0; }
+.diorama-webgl canvas { display: block; touch-action: none; outline-offset: -4px; }
+.diorama-label-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.diorama-pin {
+  position: absolute; top: 0; left: 0; pointer-events: auto;
+  border: 1px solid #cbd6bd; border-radius: 5px; padding: 7px 11px;
+  background: #fffef5ed; box-shadow: 0 3px 12px #3d49391a;
+  color: #36573b; font-size: 11px; font-weight: 600; white-space: nowrap;
+}
+.diorama-pin::after { content: ""; position: absolute; left: 50%; bottom: -7px; width: 1px; height: 6px; background: #6b855f; }
+.diorama-pin[aria-pressed=true] { background: #335b43; color: white; border-color: #335b43; }
+.diorama-urban-pin { max-width: 150px; overflow: hidden; text-overflow: ellipsis; padding: 5px 8px; font-size: 10px; color: #6e5731; border-color: #d4bc87; background: #fff8e8f2; }
+.diorama-heading, .diorama-districts, .diorama-detail, .diorama-player, .diorama-settings-panel, .diorama-camera-controls {
+  background: var(--journey-paper);
+  border: 1px solid var(--journey-border);
+  box-shadow: var(--journey-shadow);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.diorama-heading { position: absolute; z-index: 10; left: 88px; top: 20px; padding: 12px 18px; border-radius: 12px; }
+.diorama-eyebrow { display: block; font-size: 8px; letter-spacing: .15em; font-weight: 700; color: #829278; }
+.diorama-heading h1 { font-size: 22px; letter-spacing: -.9px; line-height: 1.35; margin: 3px 0; }
+.diorama-heading h1 > span { color: #c2a25b; }
+.diorama-heading-note { display: block; font-size: 10px; color: #7c8b74; }
+.diorama-districts { position: absolute; z-index: 10; left: 20px; top: 122px; display: flex; gap: 3px; padding: 5px; border-radius: 10px; }
+.diorama-districts > button { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 8px 14px; border: 0; border-radius: 6px; background: transparent; color: #607453; font-size: 11px; white-space: nowrap; }
+.diorama-districts > button[aria-pressed=true] { background: #355b43; color: #fffdf3; }
+.diorama-district-dot { display: inline-block; width: 8px; height: 8px; flex-shrink: 0; border-radius: 50%; border: 1px solid #355b4326; }
+.diorama-camera-controls { position: fixed; z-index: 15; left: 20px; bottom: 122px; display: flex; flex-direction: column; border-radius: 9px; overflow: hidden; }
+.diorama-camera-controls button { width: 44px; height: 44px; border: 0; border-bottom: 1px solid #dce4d6; background: transparent; font-size: 25px; color: #4e6748; }
+.diorama-camera-controls button:last-child { border-bottom: 0; }
+.diorama-stage-footer { position: fixed; left: 20px; right: 20px; bottom: 5px; z-index: 5; display: flex; gap: 14px; pointer-events: none; font-size: 9px; line-height: 1.2; color: #6b7a60; text-shadow: 0 1px #fff9; }
+
+.diorama-stage-footer a { margin-left: auto; color: #526b44; pointer-events: auto; text-underline-offset: 2px; }
+
+/* Panels float above the scene; only their bodies scroll. */
+.diorama-detail { position: absolute; z-index: 20; top: 20px; right: 20px; width: 320px; max-height: calc(100dvh - 40px); display: flex; flex-direction: column; border-radius: 14px; overflow: hidden; }
+.diorama-panel-toggle { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-shrink: 0; width: 100%; min-height: 70px; padding: 14px 18px; text-align: left; color: inherit; background: transparent; border: 0; }
+.diorama-panel-toggle > span:first-child { min-width: 0; }
+.diorama-panel-toggle small { display: block; margin-bottom: 4px; font-size: 9px; color: #859078; }
+.diorama-panel-toggle strong { display: block; font-size: 14px; line-height: 1.4; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.diorama-panel-chevron { display: grid; place-items: center; width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%; background: #edf1e4; color: #648253; font-size: 20px; }
+.diorama-detail-body { position: relative; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #bdcab0 transparent; padding: 0 18px 20px; border-top: 1px solid #dce4d6; }
+.diorama-city-overview { padding-top: 16px; }
+.diorama-detail-kicker { font-size: 9px; letter-spacing: .07em; color: #7c8b73; }
+.diorama-detail h2 { font-size: 23px; letter-spacing: -.8px; line-height: 1.4; margin: 10px 0; }
+.diorama-place-intro { font-size: 11px; line-height: 1.9; color: #74816a; margin: 0 0 18px; }
+.diorama-city-counts { display: grid; grid-template-columns: 1fr 1fr; border-block: 1px solid #dce4d6; padding: 15px 0; margin: 16px 0; }
+.diorama-city-counts > div { display: flex; flex-direction: column; gap: 6px; }
+.diorama-city-counts > div + div { border-left: 1px solid #dce4d6; padding-left: 20px; }
+.diorama-city-counts strong { font-size: 28px; line-height: 1; font-weight: 500; letter-spacing: -1px; }
+.diorama-city-counts span { font-size: 10px; color: #7b896f; }
+.diorama-city-tip { font-size: 10px; line-height: 1.9; color: #738368; margin: 0 0 18px; }
+.diorama-landmarks { margin: 0 0 22px; padding-top: 17px; }
+.diorama-landmarks-heading { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; }
+.diorama-landmarks-heading h3 { font-size: 12px; font-weight: 600; margin: 0; }
+.diorama-landmarks-heading > span { font-size: 8px; letter-spacing: .12em; color: #8b987f; }
+.diorama-landmarks-heading > button { min-height: 36px; border: 0; background: transparent; color: #687f57; font-size: 10px; padding: 5px 0 5px 8px; }
+.diorama-directory-modes { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin-top: 14px; background: #e9eedf; border-radius: 7px; }
+.diorama-directory-modes button { min-height: 40px; border: 0; border-radius: 5px; background: transparent; color: #6f8065; font-size: 11px; }
+.diorama-directory-modes button[aria-pressed=true] { background: #fffdf3; color: #335b43; box-shadow: 0 1px 4px #314d3512; }
+.diorama-directory-modes button span { font-size: 9px; color: #849475; margin-left: 3px; }
+.diorama-directory-search { display: flex; gap: 5px; align-items: center; border: 1px solid #cfdcc3; background: #fffef7; border-radius: 6px; margin-bottom: 10px; }
+.diorama-directory-search input { display: block; width: 100%; min-width: 0; min-height: 42px; padding: 10px; border: 0; border-radius: 6px; background: transparent; font-size: 11px; color: #355b43; }
+.diorama-directory-search input::placeholder { color: #87977d; }
+.diorama-directory-search input::-webkit-search-cancel-button { display: none; }
+.diorama-directory-search button { width: 36px; min-height: 40px; flex-shrink: 0; border: 0; background: transparent; color: #74856a; font-size: 20px; }
+.diorama-directory-pagination { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 12px; }
+.diorama-directory-pagination button { width: 38px; min-height: 36px; border: 1px solid #d2ddc8; border-radius: 5px; color: #537349; background: #f7f9ef; }
+.diorama-directory-pagination span, .diorama-directory-result-count { font-size: 10px; color: #829176; }
+.diorama-directory-note { font-size: 10px; line-height: 1.8; color: #72816a; margin: 12px 0 8px; }
+.diorama-urban-directory { padding-top: 17px; }
+.diorama-urban-selection { padding: 13px; background: #f4f0df; border: 1px solid #e0d7b9; border-radius: 7px; }
+.diorama-urban-selection h2 { font-size: 19px; overflow-wrap: anywhere; margin: 7px 0; }
+.diorama-urban-selection .diorama-address { margin: 5px 0 12px; }
+.diorama-urban-selection > a { display: inline-block; padding-top: 12px; font-size: 10px; }
+.diorama-urban-focus { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 42px; width: 100%; border: 1px solid #b5c6a7; border-radius: 5px; background: #e5edda; color: #46613a; padding: 8px 10px; font-size: 11px; }
+.diorama-urban-results { display: grid; gap: 4px; }
+.diorama-urban-results > button { display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 9px; border: 1px solid transparent; border-radius: 5px; background: #eef2e6; color: #506c46; text-align: left; }
+.diorama-urban-results > button[aria-pressed=true] { background: #f1e8cc; border-color: #c9b783; }
+.diorama-urban-results strong { display: block; font-size: 11px; font-weight: 500; overflow-wrap: anywhere; }
+.diorama-urban-results small { display: block; margin-top: 4px; color: #879278; font-size: 9px; }
+.diorama-landmark-group { margin-top: 12px; }
+.diorama-landmark-group h4 { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 500; color: #8a967f; margin: 0 0 5px; }
+.diorama-landmark-group[data-selected=true] h4 { color: #3e6346; }
+.diorama-landmark-group > div { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.diorama-landmark-group button { display: flex; justify-content: space-between; align-items: center; text-align: left; gap: 6px; min-width: 0; min-height: 40px; padding: 7px 8px; border: 1px solid transparent; border-radius: 5px; background: #edf1e7; color: #5c7251; font-size: 11px; }
+.diorama-landmark-group button > span:first-child { overflow-wrap: anywhere; }
+.diorama-landmark-group button > span:last-child { font-size: 13px; color: #8b9b7e; flex-shrink: 0; }
+.diorama-landmark-group button[aria-pressed=true] { background: #dfe9d7; border-color: #8fa580; color: #30572e; }
+.diorama-detail-heading { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding-top: 14px; border-top: 1px solid #dce4d6; font-size: 10px; color: #78886f; }
+.diorama-detail-heading button { border: 0; background: transparent; color: #667c58; min-height: 36px; padding: 5px 0; }
+.diorama-observe { padding-top: 14px; border-top: 1px solid #dfe5d8; }
+.diorama-observe > span { font-size: 10px; color: #87917c; }
+.diorama-observe > div { display: flex; gap: 7px; margin-top: 9px; flex-wrap: wrap; }
+.diorama-observe button { display: flex; align-items: center; gap: 9px; min-height: 40px; padding: 8px 10px; border: 1px solid #d6dfca; border-radius: 5px; background: #fafbf5; color: #5d704e; font-size: 11px; }
+.diorama-observe button[aria-pressed=true] { border-color: #799664; background: #eaf1e1; color: #35532b; }
+.diorama-spot-story { margin: 16px 0 18px; }
+.diorama-spot-story strong { font-size: 12px; font-weight: 600; }
+.diorama-spot-story p { font-size: 11px; line-height: 1.9; color: #718168; margin: 7px 0 0; }
+.diorama-create { width: 100%; min-height: 44px; border: 0; display: flex; justify-content: space-between; gap: 8px; align-items: center; background: #e8bd6d; color: #3a4d2f; border-radius: 6px; padding: 12px; font-size: 11px; font-weight: 600; }
+.diorama-real-info { margin-top: 20px; border-top: 1px solid #dee5d5; padding-top: 10px; }
+.diorama-real-info summary, .diorama-credits summary { min-height: 40px; font-size: 11px; color: #687f57; cursor: pointer; padding: 8px 0; }
+.diorama-real-info .place-photo { height: 145px; border-radius: 5px; margin-top: 2px; }
+.diorama-real-info .place-photo img { object-fit: cover; }
+.diorama-photo-caption { font-size: 9px; color: #839078; margin: 7px 0 13px; }
+.diorama-address { font-size: 11px; line-height: 1.7; color: #637a54; }
+.diorama-real-info iframe { display: block; width: 100%; height: 140px; border: 1px solid #dce4d3; border-radius: 5px; background: #ecf0e7; }
+.diorama-source-links { display: flex; justify-content: space-between; gap: 8px; margin-top: 9px; font-size: 10px; }
+.diorama-detail a { color: #537944; text-underline-offset: 3px; }
+.diorama-map-note, .diorama-city-attribution { font-size: 9px; line-height: 1.8; color: #839078; margin: 14px 0 0; }
+.diorama-credits { border-top: 1px solid #dfe5d8; margin-top: 15px; padding-top: 6px; }
+.diorama-credits p { font-size: 10px; line-height: 1.8; color: #7a876e; }
+
+/* Playback stays available while either information panel is open. */
+.diorama-player { position: absolute; z-index: 20; left: max(20px, calc((100vw - 1000px) / 2)); bottom: 24px; width: min(660px, calc(100vw - 380px)); display: flex; gap: 12px; align-items: center; padding: 10px; border-radius: 12px; }
+.diorama-play { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; flex-shrink: 0; padding: 10px 16px; color: #fffef4; background: #365d43; border: 0; border-radius: 7px; font-size: 12px; font-weight: 600; }
+.diorama-play > span { font-size: 11px; }
+.diorama-play-status { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 0; }
+.diorama-play-status strong { font-size: 11px; font-weight: 500; line-height: 1.5; }
+.diorama-play-status > span { font-size: 9px; color: #7f8c78; line-height: 1.5; }
+.diorama-small-control { min-height: 44px; flex-shrink: 0; background: transparent; border: 0; color: #486442; font-size: 11px; padding: 8px 4px; }
+.diorama-settings-toggle { display: flex; align-items: center; justify-content: center; gap: 5px; flex-shrink: 0; min-height: 44px; padding: 8px 10px; border: 1px solid #d8e1cd; border-radius: 7px; background: #f2f5e9; color: #5d764f; font-size: 11px; }
+.diorama-settings-toggle > span:first-child { font-size: 17px; }
+.diorama-settings-toggle[aria-expanded=true] { background: #e0e9d5; border-color: #9aae89; }
+.diorama-settings-panel { position: absolute; z-index: 30; left: max(20px, calc((100vw - 1000px) / 2)); bottom: 102px; width: min(440px, calc(100vw - 380px)); max-height: calc(100dvh - 240px); overflow-y: auto; overscroll-behavior: contain; padding: 16px; border-radius: 12px; }
+.diorama-settings-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.diorama-settings-heading h2 { font-size: 14px; font-weight: 600; margin: 0; }
+.diorama-settings-heading button { width: 36px; height: 36px; border: 0; background: #eef2e5; border-radius: 50%; font-size: 23px; color: #6b815d; }
+.diorama-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; padding: 0 0 12px; }
+.diorama-page .diorama-options label { display: flex; flex-direction: row; align-items: center; gap: 7px; min-height: 40px; white-space: nowrap; color: #687c63; font-size: 11px; }
+.diorama-options label:last-child { grid-column: 1 / -1; }
+.diorama-options select { flex: 1; width: auto; max-width: 86px; font-size: inherit; min-height: 36px; min-width: 0; color: #345536; border: 1px solid #d4dfcc; background: #fffef7; border-radius: 4px; padding: 5px; }
+.diorama-options input { width: 16px; height: 16px; accent-color: #527553; }
+.diorama-preference-note { font-size: 10px; color: #74806c; margin: 0 0 9px; line-height: 1.7; }
+.diorama-keyboard-help { font-size: 10px; line-height: 1.8; color: #86917c; border-top: 1px solid #e0e6d7; margin: 6px 0 0; padding-top: 12px; }
+.diorama-retry { position: absolute; z-index: 15; left: 20px; top: 192px; min-height: 44px; border: 1px solid #9baf8e; background: #fffdf3; color: #3e5c37; font-size: 12px; border-radius: 7px; padding: 10px 14px; }
+.diorama-loading, .diorama-render-error { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 12px; padding: 45px; text-align: center; background: #eef2e8; color: #537345; }
+.diorama-loading strong, .diorama-render-error strong { font-size: 16px; font-weight: 500; }
+.diorama-loading > span:last-child, .diorama-render-error p { font-size: 12px; line-height: 1.8; color: #859177; max-width: 300px; }
+.diorama-loading-cube { width: 30px; height: 30px; transform: rotate(30deg) skew(-6deg, -6deg); background: #b8cbaa; border: 1px solid #a9bd9a; box-shadow: 5px 5px #d5dfca; }
+
+@media (max-width: 1050px) and (min-width: 701px) {
+  .diorama-detail { width: 300px; }
+  .diorama-player { left: 20px; width: calc(100vw - 360px); gap: 8px; }
+  .diorama-settings-panel { left: 20px; width: min(430px, calc(100vw - 360px)); }
+  .diorama-play { padding-inline: 12px; }
+}
+@media (max-width: 700px) {
+  .diorama-heading { left: 72px; right: 12px; top: 12px; padding: 8px 13px; min-height: 48px; border-radius: 10px; }
+  .diorama-eyebrow { font-size: 7px; letter-spacing: .12em; }
+  .diorama-heading h1 { font-size: 19px; line-height: 1.2; margin: 3px 0 0; }
+  .diorama-heading-note { display: none; }
+  .diorama-districts { left: 12px; right: 12px; top: 74px; padding: 4px; display: grid; grid-template-columns: 1.35fr repeat(3, 1fr); }
+  .diorama-districts > button { min-height: 40px; padding: 6px 3px; gap: 4px; font-size: 11px; }
+  .diorama-camera-controls { top: 140px; left: 12px; bottom: auto; }
+  .diorama-camera-controls button { width: 42px; height: 42px; }
+  .diorama-pin { font-size: 10px; padding: 6px 8px; }
+  .diorama-stage-footer { left: 12px; right: 12px; bottom: 108px; justify-content: flex-end; }
+  .diorama-stage-footer > span { display: none; }
+  .diorama-detail { top: auto; left: 12px; right: 12px; bottom: max(122px, calc(env(safe-area-inset-bottom) + 110px)); width: auto; max-height: min(34dvh, 320px); border-radius: 14px; }
+  .diorama-panel-toggle { min-height: 58px; padding: 10px 14px; }
+  .diorama-panel-toggle small { font-size: 8px; margin-bottom: 3px; }
+  .diorama-panel-toggle strong { font-size: 13px; }
+  .diorama-detail-body { padding: 0 14px 18px; }
+  .diorama-city-overview { display: none; }
+  .diorama-city-overview .diorama-city-counts, .diorama-city-tip { display: none; }
+  .diorama-detail h2 { font-size: 21px; }
+  .diorama-place-intro { font-size: 11px; margin-bottom: 12px; }
+  .diorama-landmark-group button, .diorama-observe button { min-height: 44px; }
+  .diorama-detail-heading button { min-height: 44px; }
+  .diorama-create { min-height: 46px; }
+  .diorama-real-info .place-photo { height: 175px; }
+  .diorama-player { left: 12px; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); width: auto; padding: 8px; display: grid; grid-template-columns: 94px minmax(0, 1fr) 40px 40px; gap: 5px; border-radius: 11px; }
+  .diorama-play { min-height: 44px; padding: 8px; gap: 5px; font-size: 10px; }
+  .diorama-play-status { gap: 3px; }
+  .diorama-play-status strong { font-size: 9px; line-height: 1.4; }
+  .diorama-play-status > span { font-size: 8px; line-height: 1.35; }
+  .diorama-small-control { font-size: 10px; padding: 6px 0; }
+  .diorama-stop { grid-row: 2; grid-column: 2 / 5; justify-self: end; min-height: 25px; padding: 2px 5px; }
+  .diorama-settings-toggle { grid-column: 4; grid-row: 1; padding: 4px; }
+  .diorama-settings-toggle > span:last-child { display: none; }
+  .diorama-settings-panel { left: 12px; right: 12px; bottom: 122px; width: auto; max-height: calc(100dvh - 270px); padding: 14px; }
+  .diorama-options { gap: 5px 10px; }
+  .diorama-page .diorama-options label { min-height: 44px; font-size: 10px; }
+  .diorama-options select { flex: 1; width: auto; max-width: 86px; font-size: inherit; min-height: 40px; padding: 4px; }
+  .diorama-retry { left: 68px; top: 142px; right: 12px; font-size: 11px; }
+  .diorama-loading, .diorama-render-error { padding: 60px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .diorama-page * { scroll-behavior: auto; transition: none; animation: none; }
+}

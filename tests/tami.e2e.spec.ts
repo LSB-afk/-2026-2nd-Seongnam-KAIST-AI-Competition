@@ -195,7 +195,7 @@ test("Tami restores a paused run, respects motion and keeps help available after
   await page.getByRole("button", { name: "이전", exact: true }).click();
   await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
   await step(page, 5);
-  await page.getByText("타미 설정", { exact: true }).click();
+  await page.getByTestId("tami-panel").getByText("타미 설정", { exact: true }).click();
   await page.getByLabel("움직임 끄기", { exact: true }).check();
   await page.getByLabel("캐릭터 최소화", { exact: true }).check();
   await page.getByRole("button", { name: "타미 안내 닫기" }).click();
@@ -204,7 +204,7 @@ test("Tami restores a paused run, respects motion and keeps help available after
   await expect(page.locator(".tami-character")).toHaveCount(0);
   await page.getByRole("button", { name: "타미 사용법 열기" }).click();
   await expect(page.getByRole("button", { name: "5단계부터 이어하기", exact: true })).toBeVisible();
-  await page.getByText("타미 설정", { exact: true }).click();
+  await page.getByTestId("tami-panel").getByText("타미 설정", { exact: true }).click();
   await expect(page.getByLabel("움직임 끄기", { exact: true })).toBeChecked();
   await expect(page.getByLabel("캐릭터 최소화", { exact: true })).toBeChecked();
   await page.getByRole("button", { name: "처음부터 다시 시작", exact: true }).click();

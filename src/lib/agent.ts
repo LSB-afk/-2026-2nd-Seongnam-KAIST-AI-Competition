@@ -9,6 +9,7 @@ import {
 } from "./provider";
 import { verifyContent } from "./verifier";
 import { applyStoryUpdate, mergeSearchResult, recordReview, searchIntent } from "./lifecycle";
+import { assertReadingStyleUpdate } from "./reading-style";
 import type { Action, AgentDeps, Decision, Run } from "./types";
 
 function packageIsValid(run: Run) {
@@ -184,8 +185,17 @@ export async function runAgent(run: Run, deps: AgentDeps): Promise<Run> {
     );
     while (run.status === "running") {
       check();
-      const chosen =
-        run.mode === "live" && run.strategy === "agent"
+      const styleChange = run.readingStyleChange?.status === "requested" ? run.readingStyleChange : undefined;
+      const chosen: Decision = styleChange
+        ? {
+            action: "compose_story", targetIds: styleChange.targetCardIds, evidenceIds: [],
+            expectedVersion: styleChange.expectedVersion,
+            reasonSummary: run.mode === "fixture"
+              ? "준비된 데모 용어 규칙으로 쉬운 설명을 만듭니다. 자유 입력의 의미를 이해하는 기능은 아니며, 담당자 편집 카드는 보존합니다."
+              : "날짜·수치·장소·조건과 근거를 보존해 쉬운 설명으로 바꿉니다. 담당자 편집 카드는 보존합니다.",
+            uncertainty: "변경한 문구는 새 버전에서 독립 검수와 담당자 승인이 필요합니다.",
+          }
+        : run.mode === "live" && run.strategy === "agent"
           ? await decideLive(run, signal, persist)
           : chooseFixture(run);
       check();
@@ -267,7 +277,13 @@ export async function runAgent(run: Run, deps: AgentDeps): Promise<Run> {
             ? await composeLive(run, signal, persist)
             : createFixtureStory(run);
         check();
-        applyStoryUpdate(run, story, chosen, stamp());
+        assertReadingStyleUpdate(run, story);
+        const applied = applyStoryUpdate(run, story, chosen, stamp());
+        if (applied && styleChange) {
+          run.brief.readingStyle = "easy";
+          styleChange.status = "applied";
+          styleChange.appliedVersion = run.version;
+        }
       } else if (chosen.action === "verify_content") {
         const rules = verifyContent(run);
         const modelIssues =

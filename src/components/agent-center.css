@@ -1,0 +1,76 @@
+.agent-center { --agent-accent: #176a59; min-width: 0; padding-top: 22px; }
+.agent-center h1, .agent-center h2, .agent-center h3 { word-break: keep-all; overflow-wrap: anywhere; }
+.agent-intro { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 40px; align-items: center; margin-bottom: 48px; }
+.agent-eyebrow { color: var(--agent-accent); font-size: 12px; font-weight: 700; letter-spacing: .03em; margin-bottom: 12px; }
+.agent-intro h1 { font-size: clamp(30px, 3.4vw, 46px); line-height: 1.27; letter-spacing: -.055em; }
+.agent-lead { color: var(--muted); font-size: 16px; line-height: 1.85; margin-top: 22px; word-break: keep-all; }
+.agent-intro-actions, .agent-empty>div { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; margin-top: 28px; }
+.agent-intro-actions .primary-button { display: inline-flex; align-items: center; gap: 22px; width: auto; min-height: 46px; padding: 12px 20px; border-radius: 28px; font-size: 14px; }
+.agent-text-button { background: transparent; color: var(--blue); min-height: 44px; padding: 8px 0; font-size: 13px; font-weight: 600; text-align: left; }
+.agent-role-note { padding: 26px; border: 1px solid #d9e6e1; border-radius: 22px; background: #edf3ef; }
+.agent-role-symbol { display: block; font-size: 34px; color: var(--agent-accent); margin-bottom: 15px; }
+.agent-role-note h2 { font-size: 20px; line-height: 1.5; letter-spacing: -.04em; }
+.agent-role-note p { color: #4c655e; font-size: 13px; line-height: 1.9; margin: 16px 0; word-break: keep-all; }
+.agent-role-note>span:last-child { display: block; color: #386658; font-size: 11px; border-top: 1px solid #ceded5; padding-top: 16px; }
+.agent-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+.agent-section-heading h2 { font-size: 24px; line-height: 1.4; letter-spacing: -.04em; }
+.agent-section-heading>p { color: var(--muted); font-size: 13px; }
+.agent-current { background: #fff; border: 1px solid var(--line); border-radius: 22px; padding: 30px; margin-bottom: 48px; }
+.agent-current .agent-section-heading { margin-bottom: 12px; }
+.agent-run-caption { font-size: 13px; color: var(--muted); line-height: 1.8; }
+.agent-mode-note { font-size: 12px; color: #626976; margin-top: 8px; line-height: 1.7; }
+.agent-metrics { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); margin: 24px 0; padding: 24px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); gap: 16px; }
+.agent-metrics dt { color: var(--muted); font-size: 12px; margin-bottom: 12px; }
+.agent-metrics dd { margin: 0; font-size: 30px; font-weight: 600; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+.agent-metrics dd small { font-size: 12px; font-weight: 400; color: var(--muted); margin-left: 6px; }
+.agent-metrics .agent-cost { font-size: 24px; }
+.agent-latest { display: flex; align-items: flex-start; gap: 12px; padding: 18px; background: #f5f7f9; border-radius: 12px; }
+.agent-latest .activity-dot { margin-top: 7px; flex-shrink: 0; }
+.agent-latest>div { flex: 1; min-width: 0; }
+.agent-latest strong { font-size: 14px; line-height: 1.8; }
+.agent-latest p, .agent-stop { font-size: 13px; line-height: 1.8; color: var(--muted); margin-top: 6px; }
+.agent-review-state { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; margin-top: 12px; font-size: 12px; color: var(--muted); }
+.agent-review-state strong { margin-left: 5px; color: var(--ink); font-weight: 600; }
+.agent-review-state>button { margin-left: auto; }
+.agent-stop { color: #865321; padding-top: 12px; }
+.agent-issues { margin-top: 24px; border-top: 1px solid var(--line); padding-top: 20px; }
+.agent-issues h3 { font-size: 16px; margin-bottom: 8px; }
+.agent-issues article { display: flex; align-items: center; gap: 16px; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.agent-issues article>div { min-width: 0; }
+.agent-issues article strong { font-size: 13px; line-height: 1.7; }
+.agent-issues article p { font-size: 12px; line-height: 1.8; color: var(--muted); margin-top: 5px; }
+.agent-issues article>button { flex-shrink: 0; }
+.agent-empty { padding: 14px 0 6px; }
+.agent-empty>p { max-width: 620px; font-size: 15px; color: var(--muted); line-height: 1.9; word-break: keep-all; }
+.agent-empty .secondary-button { width: auto; border-radius: 24px; padding: 12px 20px; }
+.agent-skills { margin-bottom: 48px; }
+.agent-skill-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; align-items: start; }
+.agent-skill { border: 1px solid var(--line); background: #fff; border-radius: 16px; overflow: hidden; }
+.agent-skill summary { padding: 24px; cursor: pointer; list-style: none; }
+.agent-skill summary::-webkit-details-marker { display: none; }
+.agent-skill-index { color: #44776b; font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.agent-skill h3 { font-size: 17px; letter-spacing: -.04em; line-height: 1.5; margin: 22px 0 12px; }
+.agent-skill summary>p { min-height: 70px; color: var(--muted); font-size: 13px; line-height: 1.85; word-break: keep-all; }
+.agent-skill-more { display: flex; justify-content: space-between; margin-top: 22px; font-size: 12px; color: var(--blue); }
+.agent-skill-more>span { font-size: 16px; }
+.agent-skill[open] { border-color: #aec7bd; }
+.agent-skill[open] .agent-skill-more>span { transform: rotate(45deg); }
+.agent-skill-detail { padding: 0 24px 24px; }
+.agent-skill-detail p { border-top: 1px solid var(--line); padding-top: 18px; color: var(--muted); font-size: 13px; line-height: 1.9; }
+.agent-skill-detail code { display: inline-block; background: #f4f5f7; border-radius: 5px; color: #53606a; font-size: 11px; padding: 5px 8px; margin-top: 14px; }
+.agent-event-list { list-style: none; padding: 0; margin: 0 0 24px; }
+.agent-event-list>li { display: grid; grid-template-columns: 104px minmax(0,1fr); padding: 20px 0; border-bottom: 1px solid var(--line); gap: 16px; }
+.agent-event-time { display: flex; flex-direction: column; gap: 9px; color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.agent-event-time>span { color: #737e8a; }
+.agent-event-list summary { cursor: pointer; }
+.agent-event-list summary>span { display: inline-block; color: var(--agent-accent); font-size: 11px; margin-right: 12px; }
+.agent-event-list summary>strong { font-size: 13px; line-height: 1.8; font-weight: 500; }
+.agent-event-detail { margin-top: 12px; font-size: 13px; color: var(--muted); line-height: 1.9; }
+.agent-log { margin-bottom: 24px; }
+.agent-center button, .agent-skill { transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease; }
+.agent-center button:active:not(:disabled) { transform: translateY(1px); }
+@media(hover:hover) { .agent-skill:hover { border-color: #b2c7be; } .agent-text-button:hover { text-decoration: underline; text-underline-offset: 4px; } }
+@media(max-width:1100px) { .agent-intro { grid-template-columns: minmax(0,1fr) 220px; gap: 22px; } .agent-role-note { padding: 20px; } .agent-skill-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media(max-width:760px) { .agent-intro { grid-template-columns: 1fr; gap: 24px; margin-bottom: 28px; } .agent-role-note { padding: 18px 22px; } .agent-role-symbol { display: none; } .agent-role-note h2 { font-size: 17px; } .agent-role-note h2 br { display: none; } .agent-role-note p { margin: 8px 0 0; } .agent-role-note>span:last-child { display: none; } .agent-section-heading { align-items: flex-start; flex-direction: column; gap: 12px; } .agent-current { padding: 22px; } }
+@media(max-width:600px) { .agent-center { padding-top: 8px; } .agent-intro h1 { font-size: 32px; } .agent-lead { font-size: 14px; margin-top: 16px; } .agent-desktop-break { display:none; } .agent-intro-actions { margin-top: 20px; gap: 8px 18px; } .agent-section-heading h2 { font-size: 22px; } .agent-current { padding: 20px; border-radius: 16px; margin-bottom: 32px; } .agent-metrics { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px 12px; } .agent-metrics dd { font-size: 27px; } .agent-latest { flex-wrap: wrap; padding: 14px; } .agent-latest>div { flex-basis: calc(100% - 26px); } .agent-latest>button { margin-left: 20px; } .agent-review-state { gap: 8px 12px; } .agent-review-state>button { margin-left: 0; width:100%; } .agent-skill-grid { grid-template-columns: 1fr; gap: 10px; } .agent-skill summary { padding: 20px; } .agent-skill h3 { margin-top: 12px; } .agent-skill summary>p { min-height: 0; } .agent-skill-more { margin-top: 14px; } .agent-skill-detail { padding: 0 20px 20px; } .agent-event-list>li { grid-template-columns: 65px minmax(0,1fr); gap: 12px; } .agent-event-list summary>span { display:block; margin-bottom: 4px; } .agent-empty>div { gap: 8px; } .agent-issues article { align-items: flex-start; flex-direction: column; gap: 0; } }
+@media(prefers-reduced-motion:reduce) { .agent-center button, .agent-skill { transition: none; } .agent-center button:active:not(:disabled) { transform:none; } }

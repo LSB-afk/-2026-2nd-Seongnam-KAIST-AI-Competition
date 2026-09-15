@@ -7,6 +7,7 @@ export const DEFAULT_BRIEF: Brief = {
   placeId: "pangyo-museum",
   place: "판교박물관",
   audience: "청소년",
+  readingStyle: "standard",
   goal: "청소년에게 판교박물관을 소개할 카드뉴스 4장을 만들어줘. 마지막 장에는 성남의 미래 문화공간을 상상하는 내용을 넣어줘.",
   cardCount: 4,
   includeFuture: true,
@@ -19,6 +20,8 @@ export function newRun(options: {
 }): Run {
   const at = new Date().toISOString();
   const brief = { ...(options.brief ?? DEFAULT_BRIEF) };
+  brief.readingStyle ??= "standard";
+  if (!["standard", "easy"].includes(brief.readingStyle)) throw new Error("지원하지 않는 설명 방식입니다.");
   if (brief.purpose !== undefined && !PURPOSES.some(purpose => purpose.id === brief.purpose)) throw new Error("등록되지 않은 제작 목적입니다.");
   const place = getPlace(brief.placeId ?? brief.place);
   if (!place || (brief.place && getPlace(brief.place)?.id !== place.id)) throw new Error("등록된 관광지 ID와 장소명이 일치해야 합니다.");
@@ -27,6 +30,7 @@ export function newRun(options: {
   return {
     id: randomUUID(),
     brief,
+    submittedReadingStyle: brief.readingStyle,
     mode: options.mode,
     strategy: options.strategy ?? "agent",
     scenario: options.scenario ?? "normal",

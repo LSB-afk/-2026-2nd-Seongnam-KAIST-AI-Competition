@@ -90,7 +90,7 @@ test("Tami touch drag supports cancellation, minimized help and smaller viewport
   expect(await page.evaluate((key) => localStorage.getItem(key), TAMI_POSITION_KEY)).toBe(saved);
   const help = page.getByRole("button", { name: "타미 사용법 열기", exact: true });
   await help.click();
-  await page.getByText("타미 설정", { exact: true }).click();
+  await page.getByTestId("tami-panel").getByText("타미 설정", { exact: true }).click();
   await page.getByLabel("캐릭터 최소화", { exact: true }).check();
   await page.getByRole("button", { name: "타미 안내 닫기" }).click();
   await expect(character).toHaveCount(0);
@@ -128,7 +128,7 @@ test("Tami keyboard movement and reset preserve access and idle motion respects 
   await page.keyboard.press("Home");
   expect(await page.evaluate((key) => localStorage.getItem(key), TAMI_POSITION_KEY)).toBeNull();
   await page.keyboard.press("Enter");
-  await page.getByText("타미 설정", { exact: true }).click();
+  await page.getByTestId("tami-panel").getByText("타미 설정", { exact: true }).click();
   await page.getByRole("button", { name: "타미 위로 이동", exact: true }).click();
   expect(await page.evaluate((key) => localStorage.getItem(key), TAMI_POSITION_KEY)).not.toBeNull();
   await page.getByRole("button", { name: "위치 초기화", exact: true }).click();

@@ -10,7 +10,7 @@ import {
   type GuideStorage, type TamiMood,
 } from "../lib/guide";
 import "./tami-guide.css";
-import { anchorForPosition, clampDockPosition, hasDragged, positionForAnchor, restoreTamiPosition, TAMI_POSITION_KEY, type Point, type Viewport } from "../lib/tami-position";
+import { anchorForPosition, clampDockPosition, hasDragged, resolveDockPosition, restoreTamiPosition, TAMI_POSITION_KEY, type Point, type Viewport } from "../lib/tami-position";
 
 export type { GuideContext, GuideActions } from "../lib/guide";
 const TAMI_SPRITE_SRC = getImageProps({ src: "/tami/tami-sprites.png", alt: "", width: 216, height: 144 }).props.src;
@@ -29,8 +29,8 @@ function reducer(state: UiState, event: UiEvent): UiState {
   return tutorial === state.tutorial ? state : { ...state, tutorial };
 }
 type Rect = { top: number; left: number; width: number; height: number; bottom: number; right: number };
-type Geometry = { host: Element | null; target: Rect | null; found: boolean; width: number; height: number; panelWidth: number; panelHeight: number; modal: boolean; viewport: Viewport; dockWidth: number; dockHeight: number; invitationHeight: number; mapAttribution: Rect | null };
-const EMPTY_GEOMETRY: Geometry = { host: null, target: null, found: false, width: 0, height: 0, panelWidth: 344, panelHeight: 350, modal: false, viewport: { left: 0, top: 0, width: 0, height: 0 }, dockWidth: 172, dockHeight: 72, invitationHeight: 180, mapAttribution: null };
+type Geometry = { host: Element | null; target: Rect | null; found: boolean; width: number; height: number; panelWidth: number; panelHeight: number; modal: boolean; viewport: Viewport; dockWidth: number; dockHeight: number; invitationHeight: number; mapAttribution: Rect | null; protectedRects: Rect[] };
+const EMPTY_GEOMETRY: Geometry = { host: null, target: null, found: false, width: 0, height: 0, panelWidth: 344, panelHeight: 350, modal: false, viewport: { left: 0, top: 0, width: 0, height: 0 }, dockWidth: 172, dockHeight: 72, invitationHeight: 180, mapAttribution: null, protectedRects: [] };
 
 function currentViewport(): Viewport {
   const viewport = window.visualViewport;
@@ -146,8 +146,17 @@ export default function TamiGuide({ context, actions }: { context: GuideContext;
   }, []);
 
   useEffect(() => {
+    let frame = 0;
+    const openSettings = () => {
+      openPanel();
+      frame = requestAnimationFrame(() => {
+        const settings = panelRef.current?.querySelector<HTMLDetailsElement>(".tami-settings");
+        if (settings) { settings.open = true; settings.querySelector("summary")?.focus(); }
+      });
+    };
     window.addEventListener("tami:open-guide", openPanel);
-    return () => window.removeEventListener("tami:open-guide", openPanel);
+    window.addEventListener("tami:open-settings", openSettings);
+    return () => { window.removeEventListener("tami:open-guide", openPanel); window.removeEventListener("tami:open-settings", openSettings); cancelAnimationFrame(frame); };
   }, [openPanel]);
 
   useEffect(() => {
@@ -199,7 +208,7 @@ export default function TamiGuide({ context, actions }: { context: GuideContext;
       const dock = dockRef.current?.getBoundingClientRect();
       const invitationHeight = rootRef.current?.querySelector(".tami-invitation")?.getBoundingClientRect().height ?? 0;
       const viewport = currentViewport();
-      const osm = document.querySelector<HTMLIFrameElement>(".osm-map-viewport iframe");
+      const osm = document.querySelector<HTMLIFrameElement>(".osm-map-viewport iframe, .diorama-real-info iframe");
       let mapAttribution: Rect | null = null;
       if (osm && shown(osm)) {
         const map = osm.getBoundingClientRect();
@@ -207,7 +216,8 @@ export default function TamiGuide({ context, actions }: { context: GuideContext;
         const left = Math.max(map.left, viewport.left), right = Math.min(map.right, viewport.left + viewport.width);
         if (bottom > top && right > left) mapAttribution = { top, bottom, left, right, width: right - left, height: bottom - top };
       }
-      const next: Geometry = { host, target: target ? visibleRect(target, width, height) : null, found: !!target, width, height, panelWidth: panel?.width ?? Math.min(344, width - 24), panelHeight: panel?.height ?? 350, modal: !!modal, viewport, dockWidth: dock?.width ?? (width <= 600 ? 140 : 172), dockHeight: dock?.height ?? (width <= 600 ? 56 : 72), invitationHeight: invitationHeight || 180, mapAttribution };
+      const protectedRects = Array.from(document.querySelectorAll<HTMLElement>('[data-tami-avoid]')).filter(shown).map(element => visibleRect(element, width, height)).filter((rect): rect is Rect => rect !== null);
+      const next: Geometry = { host, target: target ? visibleRect(target, width, height) : null, found: !!target, width, height, panelWidth: panel?.width ?? Math.min(344, width - 24), panelHeight: panel?.height ?? 350, modal: !!modal, viewport, dockWidth: dock?.width ?? (width <= 600 ? 140 : 172), dockHeight: dock?.height ?? (width <= 600 ? 56 : 72), invitationHeight: invitationHeight || 180, mapAttribution, protectedRects };
       setGeometry((current) => current.host === next.host && JSON.stringify({ ...current, host: null }) === JSON.stringify({ ...next, host: null }) ? current : next);
       const reserved = width <= 600 && state.panelOpen ? (panel?.height ?? 350) + 24 : invitation ? invitationHeight + 104 : width <= 600 ? 88 : 104;
       document.documentElement.style.setProperty("--tami-reserved-space", `${Math.ceil(reserved)}px`);
@@ -353,12 +363,9 @@ export default function TamiGuide({ context, actions }: { context: GuideContext;
   const guard = getStepGuard(state.tutorial, snapshot);
   const missingTarget = active && !geometry.target;
   const dockSize = { width: geometry.dockWidth, height: geometry.dockHeight };
-  let dockPosition = dockAnchor ? positionForAnchor(dockAnchor, dockSize, geometry.viewport) : clampDockPosition({ x: geometry.viewport.left + geometry.viewport.width - dockSize.width - (geometry.width <= 600 ? 12 : 20), y: geometry.viewport.top + geometry.viewport.height - dockSize.height - (geometry.width <= 600 ? 12 : 16) }, dockSize, geometry.viewport);
-  const attribution = geometry.mapAttribution;
-  // Keep the default dock clear of the public map's two-line credit; explicit user placement wins.
-  if (!dockAnchor && attribution && dockPosition.x < attribution.right && dockPosition.x + dockSize.width > attribution.left && dockPosition.y < attribution.bottom && dockPosition.y + dockSize.height > attribution.top) {
-    dockPosition = clampDockPosition({ x: dockPosition.x, y: attribution.top - dockSize.height - 12 }, dockSize, geometry.viewport);
-  }
+  const preferredDock = { x: geometry.viewport.left + geometry.viewport.width - dockSize.width - (geometry.width <= 600 ? 12 : 20), y: geometry.viewport.top + geometry.viewport.height - dockSize.height - (geometry.width <= 600 ? 12 : 16) };
+  const obstacles = [...geometry.protectedRects, ...(geometry.mapAttribution ? [geometry.mapAttribution] : [])];
+  const dockPosition = resolveDockPosition(preferredDock, dockSize, geometry.viewport, obstacles, dockAnchor);
   const besideDock = (width: number, height: number) => {
     const viewport = geometry.viewport;
     let x = dockPosition.x + dockSize.width - width, y = dockPosition.y - height - 12;

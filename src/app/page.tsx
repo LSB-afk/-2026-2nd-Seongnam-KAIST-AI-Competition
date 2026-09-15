@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import type { Brief, Card, Mode, Run, Scenario, Strategy } from "@/lib/types";
 import { AtomicReview, EvidenceLinks, ProtectedChanges, RunTrace, safeSourceUrl } from "@/components/review-trace";
@@ -11,9 +12,16 @@ import PlaceExplorer, { PlacePhoto } from "@/components/place-explorer";
 import ImageEditor, { CardPhoto } from "@/components/image-editor";
 import PlatformHome, { RunHistory } from "@/components/platform-home";
 import TamiGuide from "@/components/tami-guide";
+import AgentCenter from "@/components/agent-center";
+import WorkspaceNavIcon from "@/components/workspace-nav-icon";
+import ReadingTransform from "@/components/reading-transform";
+import "@/components/workspace-refinements.css";
+import "@/components/diorama/diorama-shell.css";
 import { useWorkspace } from "@/hooks/use-workspace";
 import { defaultExplore, matchingEditDraft, normaliseExplore, shouldAcceptRun, toggleSavedPlace, upsertEditDraft, type DraftState, type WorkspaceView, type ExploreState, type ReviewTab } from "@/lib/workspace-state";
 import { PURPOSES, goalForPurpose, type CreationPurpose } from "@/lib/purposes";
+
+const DioramaPage = dynamic(() => import("@/components/diorama/diorama-page"), { ssr: false, loading: () => <p role="status" className="loading-note">성남 3D 여행을 준비하고 있어요.</p> });
 
 type Config = {
   image?: { configured: boolean; reason?: string; model?: string };
@@ -61,7 +69,7 @@ const sampleCards = [
   },
   {
     title: "기록에서 찾은 이야기",
-    body: "박물관의 공식 자료에서 이야기의 실마리를 찾아요.",
+    body: "장소의 공식 자료에서 이야기의 실마리를 찾아요.",
     tag: "자료로 살펴보기",
     shape: "stones",
   },
@@ -73,7 +81,7 @@ const sampleCards = [
   },
   {
     title: "내일의 문화공간",
-    body: "만약 우리가 미래의 박물관을 만든다면?",
+    body: "만약 우리가 미래의 문화공간을 만든다면?",
     tag: "상상 장면",
     shape: "orbit",
   },
@@ -107,7 +115,38 @@ const initialDraft: DraftState = { brief: example, mode: "fixture", strategy: "a
 export default function Studio() {
   const { state: workspace, ready: workspaceReady, update: updateWorkspace, storageError, getSnapshot } = useWorkspace(initialDraft);
   const view = workspace.view;
-  const setView = (next: WorkspaceView) => updateWorkspace({ view: next }, "push");
+  const immersive = view === "diorama";
+  const [dioramaMenuOpen, setDioramaMenuOpen] = useState(false);
+  const navigationPanel = useRef<HTMLElement>(null);
+  const navigationToggle = useRef<HTMLButtonElement>(null);
+  const setView = (next: WorkspaceView) => {
+    setDioramaMenuOpen(false);
+    updateWorkspace({ view: next }, "push");
+  };
+  useEffect(() => {
+    if (!immersive || !dioramaMenuOpen) return;
+    const frame = requestAnimationFrame(() => navigationPanel.current?.querySelector<HTMLButtonElement>('nav button[aria-current="page"]')?.focus());
+    const escape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      event.stopPropagation();
+      setDioramaMenuOpen(false);
+      navigationToggle.current?.focus();
+    };
+    const outside = (event: Event) => {
+      const target = event.target;
+      if (target instanceof Node && !navigationPanel.current?.contains(target) && !navigationToggle.current?.contains(target)) setDioramaMenuOpen(false);
+    };
+    document.addEventListener("keydown", escape, true);
+    document.addEventListener("pointerdown", outside);
+    document.addEventListener("focusin", outside);
+    return () => {
+      cancelAnimationFrame(frame);
+      document.removeEventListener("keydown", escape, true);
+      document.removeEventListener("pointerdown", outside);
+      document.removeEventListener("focusin", outside);
+    };
+  }, [immersive, dioramaMenuOpen]);
   const explore = workspace.explore;
   const savedIds = workspace.savedIds;
   const [recordsLoaded, setRecordsLoaded] = useState(false);
@@ -301,7 +340,7 @@ export default function Studio() {
   }
 
   async function mutate(
-    action: "cancel" | "approve" | "edit" | "retry",
+    action: "cancel" | "approve" | "edit" | "retry" | "simplify",
     body: object,
   ) {
     if (!run || mutationPending.current || busy) return;
@@ -352,15 +391,16 @@ export default function Studio() {
       if(element){if(!element.matches("button,a,input,select,textarea"))element.tabIndex=-1;element.focus({preventScroll:true});}
     });
   }
-  const menu = [{ id: "dashboard", label: "홈·대시보드", icon: "◫" }, { id: "explore", label: "성남 둘러보기", icon: "◎" }, { id: "saved", label: "저장한 장소", icon: "♡" }, { id: "studio", label: "카드뉴스 작업실", icon: "▧" }, { id: "history", label: "제작 기록", icon: "◷" }] as const;
+  const menu = [{ id: "dashboard", label: "홈·대시보드", icon: "◫" }, { id: "explore", label: "성남 둘러보기", icon: "◎" }, { id: "diorama", label: "성남 3D 여행", icon: "" }, { id: "saved", label: "저장한 장소", icon: "♡" }, { id: "studio", label: "카드뉴스 작업실", icon: "▧" }, { id: "history", label: "제작 기록", icon: "◷" }, { id: "agent", label: "AI 에이전트", icon: "" }] as const;
 
   function fileUrl(name: string) {
     return `/api/runs/${run?.id}/files/${encodeURIComponent(name)}`;
   }
 
   return (
-    <div className="platform-shell">
-      <aside className="platform-sidebar"><Link href="/" className="brand" onClick={(event) => { event.preventDefault(); setView("dashboard"); }}><Mark /><span>성남 타임스토리<small>도시를 발견하는 새로운 방법</small></span></Link><span className="sidebar-caption">나의 콘텐츠 공간</span><nav aria-label="주 메뉴">{menu.map((item) => <button type="button" data-tour={item.id === "explore" ? "nav-explore" : undefined} key={item.id} className={view === item.id ? "selected" : ""} aria-current={view === item.id ? "page" : undefined} onClick={() => setView(item.id)}><span aria-hidden="true">{item.icon}</span>{item.label}{item.id === "history" && recordsLoaded && <small>{history.length}</small>}</button>)}</nav><div className="sidebar-foot"><Mark small /><strong>도시의 이야기를 함께.</strong><p>공식 자료로 사실을 확인하고<br />상상으로 내일을 연결합니다.</p></div></aside>
+    <div className={`platform-shell${immersive ? " platform-shell--immersive" : ""}`}>
+      {immersive && <button type="button" className="diorama-app-menu" ref={navigationToggle} data-tami-avoid="" aria-label={dioramaMenuOpen ? "주 메뉴 닫기" : "주 메뉴 열기"} aria-expanded={dioramaMenuOpen} aria-controls="platform-navigation-panel" onClick={() => setDioramaMenuOpen(value => !value)}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true">{dioramaMenuOpen ? <path d="m6 6 12 12M18 6 6 18" /> : <path d="M4 6h16M4 12h16M4 18h16" />}</svg></button>}
+      <aside className="platform-sidebar" id="platform-navigation-panel" ref={navigationPanel} hidden={immersive && !dioramaMenuOpen} data-tami-avoid={immersive && dioramaMenuOpen ? "" : undefined}><Link href="/" className="brand" onClick={(event) => { event.preventDefault(); setView("dashboard"); }}><Mark /><span>성남 타임스토리<small>도시를 발견하는 새로운 방법</small></span></Link><span className="sidebar-caption">나의 콘텐츠 공간</span><nav aria-label="주 메뉴">{menu.map((item) => <button type="button" data-tour={item.id === "explore" ? "nav-explore" : undefined} key={item.id} className={view === item.id ? "selected" : ""} aria-current={view === item.id ? "page" : undefined} onClick={() => setView(item.id)}><span><WorkspaceNavIcon view={item.id} /></span>{item.label}{item.id === "history" && recordsLoaded && <small>{history.length}</small>}</button>)}</nav><div className="sidebar-foot"><Mark small /><strong>도시의 이야기를 함께.</strong><p>공식 자료로 사실을 확인하고<br />상상으로 내일을 연결합니다.</p><div className="sidebar-help"><button type="button" onClick={() => window.dispatchEvent(new Event("tami:open-guide"))}>사용법 보기</button><button type="button" onClick={() => window.dispatchEvent(new Event("tami:open-settings"))}>타미 설정</button></div></div></aside>
       <div className="platform-main">
       <header className="topbar">
         <div className="topbar-location"><span>성남 타임스토리</span><span aria-hidden="true">/</span><strong>{menu.find((item) => item.id === view)?.label}</strong></div>
@@ -386,6 +426,7 @@ export default function Studio() {
         </div>
       </header>
       <main className="workspace" aria-busy={!workspaceReady || historyLoading}>
+        <div className={immersive ? "diorama-shell-notices" : undefined}>
         {storageError && <p role="status" className="error-banner">{storageError}</p>}
         {historyLoading && <p role="status" className="field-note">저장된 작업을 불러오는 중입니다.</p>}
         {loadError && <div className="error-banner initial-load-error" role="alert"><span>{loadError} 입력한 내용은 유지됩니다.</span><button type="button" className="text-button" disabled={initialLoading} onClick={() => void refreshInitial()}>설정과 기록 다시 불러오기</button></div>}
@@ -403,9 +444,13 @@ export default function Studio() {
           </div>
         )}
 
+        </div>
+
         {view === "dashboard" && <PlatformHome runs={history} loaded={recordsLoaded} failed={!recordsLoaded && Boolean(loadError)} busy={active || busy} onExplore={openExplore} savedIds={savedIds} onSaved={() => setView("saved")} onHelp={() => window.dispatchEvent(new Event("tami:open-guide"))} onCreate={choosePlace} onOpen={(id) => void loadRun(id)} />}
         <PlaceExplorer visible={view === "explore" || view === "saved"} savedOnly={view === "saved"} state={explore} onStateChange={(next,push)=>updateWorkspace({explore:next},push?"push":"replace")} savedIds={savedIds} onToggleSaved={id=>updateWorkspace(previous=>({...previous,savedIds:toggleSavedPlace(previous.savedIds,id)}))} onCreate={choosePlace} />
+        {view === "diorama" && workspaceReady && <DioramaPage selection={workspace.diorama} onSelectionChange={(diorama,push)=>updateWorkspace({diorama},push?"push":"replace")} savedIds={savedIds} onToggleSaved={id=>updateWorkspace(previous=>({...previous,savedIds:toggleSavedPlace(previous.savedIds,id)}))} onCreate={choosePlace} busy={active || busy} />}
         {view === "history" && <RunHistory runs={history} loaded={recordsLoaded} failed={!recordsLoaded && Boolean(loadError)} busy={active || busy} onOpen={(id) => void loadRun(id)} query={workspace.historyQuery} statusFilter={workspace.historyStatus} onFiltersChange={({query,status})=>updateWorkspace({historyQuery:query,historyStatus:status})} full />}
+        {view === "agent" && <AgentCenter run={run} duration={duration} loading={historyLoading || !workspaceReady} failed={Boolean(error || loadError)} onStudio={() => setView("studio")} onExplore={() => openExplore()} onHelp={() => window.dispatchEvent(new Event("tami:open-guide"))} onReview={(cardId) => { updateWorkspace(previous => ({...previous, view: "studio", tab: "evidence", selectedCardId: cardId || previous.selectedCardId}), "push"); requestAnimationFrame(() => document.querySelector('[data-tour="review-panel"]')?.scrollIntoView({block:"start"})); }} onHistory={() => setView("history")} />}
         <div hidden={view !== "studio"}>
         <section className="intro">
           <div>
@@ -490,8 +535,9 @@ export default function Studio() {
                   <span aria-hidden="true">✳</span> 마지막 장은 미래 문화공간을
                   상상해요.
                 </p>
-                <label>카드 이미지<select value={imageChoice} onChange={(event) => setImageChoice(event.target.value as "photo" | "ai")}><option value="photo">장소의 실제 사진으로 시작</option><option value="ai">제작 후 AI 이미지로 바꾸기</option></select></label>
-                <p className="field-note">{imageChoice === "ai" ? "먼저 카드 문구를 완성한 뒤 사진 편집에서 원하는 장면을 생성합니다." : "확인된 장소 사진을 사용하고, 장별로 구도를 조정할 수 있어요."}</p>
+                <label className="reading-style-field">설명 방식<select aria-label="설명 방식" aria-describedby="reading-style-help" value={brief.readingStyle || "standard"} onChange={event => setBrief({...brief, readingStyle: event.target.value as "standard" | "easy"})}><option value="standard">기본 설명</option><option value="easy">쉬운 설명 · 짧은 문장과 풀어 쓴 용어</option></select><span id="reading-style-help">선택한 독자에 맞춰 설명합니다. 쉬운 설명에서도 날짜·장소와 사실관계를 유지합니다.</span></label>
+                <label>카드 이미지<select value={imageChoice} onChange={(event) => setImageChoice(event.target.value as "photo" | "ai")}><option value="photo">{draftPlace.photo ? "장소의 실제 사진으로 시작" : "글 중심 카드로 시작"}</option><option value="ai">제작 후 AI 이미지로 바꾸기</option></select></label>
+                <p className="field-note">{imageChoice === "ai" ? "먼저 카드 문구를 완성한 뒤 사진 편집에서 원하는 장면을 생성합니다." : draftPlace.photo ? "확인된 장소 사진을 사용하고, 장별로 구도를 조정할 수 있어요." : "등록된 사진이 없어 글 중심 카드로 만듭니다. 제작 후 사진 편집에서 내 사진을 추가할 수 있어요."}</p>
                 <div className="mode-field">
                   <span className="form-label">실행 모드</span>
                   <div className="segmented" role="group" aria-label="실행 모드 선택">
@@ -722,7 +768,7 @@ export default function Studio() {
                         <span className="card-select-label">
                           {index + 1}장{" "}
                           <span>
-                            {card?.id === item.id ? "선택됨" : "근거 확인"}
+                            {card?.id === item.id ? "선택됨" : "근거 보기"}
                           </span>
                         </span>
                       </button>
@@ -752,7 +798,7 @@ export default function Studio() {
             {!run && (
               <div className="example-notice">
                 <span aria-hidden="true">ⓘ</span> 위 카드는 구성 예시이며, 아직
-                조사·검수된 결과물이 아닙니다. 사진은 실제 장소를 보여줍니다.
+                조사·검수된 결과물이 아닙니다.{draftPlace.photo ? " 사진은 실제 장소를 보여줍니다." : " 등록된 사진이 없어 장소 이름으로 표시합니다."}
               </div>
             )}
             {run && (
@@ -783,7 +829,7 @@ export default function Studio() {
                 </ol>
               </details>
             )}
-            {run && <RunTrace run={run} duration={duration} />}
+            {run && <><div className="workspace-agent-link"><button type="button" onClick={() => setView("agent")}>AI 에이전트의 작업과 스킬 보기 →</button></div><RunTrace run={run} duration={duration} /></>}
           </section>
           <aside data-tour="review-panel" className="review-panel" aria-label="근거와 담당자 검토">
             <div className="panel-heading">
@@ -873,7 +919,7 @@ export default function Studio() {
                       </div>
                       {claim && (
                         <div className="evidence-detail">
-                          <h3>{supportLabels[claim.support]}</h3>
+                          <h3>{run.reviewVersion === run.version ? supportLabels[claim.support] : "현재 버전 재검수 필요"}</h3>
                           {claim.evidenceIds.length === 0 ? (
                             <p className="field-note">
                               {claim.kind === "fact"
@@ -931,7 +977,11 @@ export default function Studio() {
                           문장별 근거를 준비하고 있습니다.
                         </p>
                       )}
-                      {card && <AtomicReview run={run} cardId={card.id} />}
+                      {card && <AtomicReview run={run} cardId={card.id} onSelectField={field => {
+                        if (field === "script") return;
+                        setTab("edit");
+                        requestAnimationFrame(() => document.querySelector<HTMLElement>(field === "title" ? '.edit-form input' : '.edit-form textarea')?.focus());
+                      }} />}
                       {card?.script && (
                         <details className="script-detail">
                           <summary>이 장의 대본</summary>
@@ -995,6 +1045,8 @@ export default function Studio() {
                   )}
                   {tab === "image" && card && <ImageEditor key={`${run.id}-${card.id}-${run.version}`} run={run} card={card} config={config?.image} locked={active || busy} onRun={receiveRun} onBusy={setBusy} />}
                   {tab === "edit" && (
+                    <>
+                    <ReadingTransform run={run} busy={!!active || busy} liveConfigured={Boolean(config?.live.configured)} unsaved={workspace.editDrafts.some(d => d.runId === run.id && d.version === run.version)} onTransform={() => void mutate("simplify", {version: run.version})} />
                     <form
                       className="edit-form"
                       onSubmit={(event) => {
@@ -1042,6 +1094,7 @@ export default function Studio() {
                         수정 저장
                       </button>
                     </form>
+                    </>
                   )}
                 </>
               )}
@@ -1157,7 +1210,7 @@ export default function Studio() {
         </footer>
       </main>
       </div>
-      {workspaceReady && (!workspace.runId || run?.id===workspace.runId || !!error) && <TamiGuide context={{view,selectedPlace:getPlace(explore.selectedId || "") || null,draftPlace,run,busy:busy || !!active || historyLoading,error,tab,selectedCardId:card?.id || ""}} actions={{navigate:setView,openStudio:()=>{const selected=getPlace(explore.selectedId || "");if(selected && selected.id!==draftPlace.id)choosePlace(selected);else setView("studio");},openReview:(id)=>{if(id)setSelectedCardId(id);setTab("evidence");focusTour("review-panel");},openEditor:()=>{setTab("edit");focusTour("review-panel");},resumeRun:()=>{if(run)setView("studio");else if(history[0])loadRun(history[0].id);else setView("history");},showApprove:()=>focusTour("approve-panel"),showDownload:()=>focusTour("download")}} />}
+      {workspaceReady && (!workspace.runId || run?.id===workspace.runId || !!error) && <TamiGuide context={{view,selectedPlace:getPlace(view === "diorama" ? workspace.diorama.placeId : explore.selectedId || "") || null,draftPlace,run,busy:busy || !!active || historyLoading,error,tab,selectedCardId:card?.id || ""}} actions={{navigate:setView,openStudio:()=>{const selected=getPlace(view === "diorama" ? workspace.diorama.placeId : explore.selectedId || "");if(selected && selected.id!==draftPlace.id)choosePlace(selected);else setView("studio");},openReview:(id)=>{if(id)setSelectedCardId(id);setTab("evidence");focusTour("review-panel");},openEditor:()=>{setTab("edit");focusTour("review-panel");},resumeRun:()=>{if(run)setView("studio");else if(history[0])loadRun(history[0].id);else setView("history");},showApprove:()=>focusTour("approve-panel"),showDownload:()=>focusTour("download")}} />}
     </div>
   );
 }

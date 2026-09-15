@@ -5,6 +5,7 @@ export default defineConfig([
   ...nextVitals,
   ...nextTypescript,
   globalIgnores([
+    ".worktrees/**",
     ".next/**",
     ".next-e2e/**",
     "outputs/**",

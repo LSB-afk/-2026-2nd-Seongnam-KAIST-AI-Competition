@@ -20,6 +20,34 @@ export function positionForAnchor(anchor: Point, dock: DockSize, viewport: Viewp
   const box = bounds(dock, viewport);
   return clampDockPosition({ x: box.left + anchor.x * box.width, y: box.top + anchor.y * box.height }, dock, viewport);
 }
+export type DockObstacle = { left: number; top: number; right: number; bottom: number };
+
+/** Automatic placement avoids controls; an explicit user anchor always takes precedence. */
+export function resolveDockPosition(preferred: Point, dock: DockSize, viewport: Viewport, obstacles: readonly DockObstacle[], anchor: Point | null = null): Point {
+  if (anchor) return positionForAnchor(anchor, dock, viewport);
+  let position = clampDockPosition(preferred, dock, viewport);
+  const overlaps = (point: Point, obstacle: DockObstacle) => point.x < obstacle.right && point.x + dock.width > obstacle.left && point.y < obstacle.bottom && point.y + dock.height > obstacle.top;
+  for (const obstacle of [...obstacles].sort((a, b) => b.top - a.top)) {
+    if (overlaps(position, obstacle)) position = clampDockPosition({ x: position.x, y: obstacle.top - dock.height - 12 }, dock, viewport);
+  }
+  if (!obstacles.some(obstacle => overlaps(position, obstacle))) return position;
+
+  // A tall panel can leave no room above it. Try viewport and obstacle edges on
+  // both axes, retaining the closest clear location to the normal dock position.
+  const origin = clampDockPosition(preferred, dock, viewport);
+  const box = bounds(dock, viewport);
+  const xs = new Set([origin.x, box.left, box.left + box.width, ...obstacles.flatMap(obstacle => [obstacle.left - dock.width - 12, obstacle.right + 12])].map(x => clampDockPosition({ x, y: origin.y }, dock, viewport).x));
+  const ys = new Set([origin.y, box.top, box.top + box.height, ...obstacles.flatMap(obstacle => [obstacle.top - dock.height - 12, obstacle.bottom + 12])].map(y => clampDockPosition({ x: origin.x, y }, dock, viewport).y));
+  let closestDistance = Infinity;
+  for (const x of xs) for (const y of ys) {
+    const candidate = { x, y };
+    if (obstacles.some(obstacle => overlaps(candidate, obstacle))) continue;
+    const distance = (x - origin.x) ** 2 + (y - origin.y) ** 2;
+    if (distance < closestDistance) { position = candidate; closestDistance = distance; }
+  }
+  return position;
+}
+
 export function restoreTamiPosition(raw: string | null): Point | null {
   try {
     const value: unknown = JSON.parse(raw ?? "null");

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { getPlace, PLACES } from "./places";
 import { assertOfficialUrl } from "./sources";
 import { REVIEW_RULES_VERSION } from "./prompts";
+import { fixtureEasyText } from "./reading-style";
 import type { Claim, ClaimAssessment, Evidence, ReviewIssue, Run } from "./types";
 
 function compact(text: string) {
@@ -82,8 +83,6 @@ export function verifyContent(run: Run): ReviewIssue[] {
   }
   const claimMap = new Map(run.claims.map((claim) => [claim.id, claim]));
   for (const card of run.cards) {
-    if (place && PLACES.some(other => other.id !== place.id && `${card.title} ${card.body} ${card.script}`.includes(other.name)))
-      add(card.id, "place_mismatch", "선택한 관광지와 다른 장소의 내용이 섞여 있습니다.");
     if (!card.title.trim() || !card.body.trim() || !card.script.trim())
       add(card.id, "empty_content", "제목·본문·대본이 필요합니다.");
     if (card.title.length > 44 || card.body.length > 220)
@@ -97,6 +96,44 @@ export function verifyContent(run: Run): ReviewIssue[] {
     const claims = card.claimIds
       .map((id) => claimMap.get(id))
       .filter((claim): claim is Claim => !!claim);
+    // A valid quote from a shared official page may still describe another place.
+    // Exempt only occurrences anchored in this place's curated references.
+    const curated = place ? [...(place.officialQuotes ?? []).map(quote => quote.text), place.address]
+      .flatMap(text => [compact(text), compact(fixtureEasyText(text))]).filter(Boolean) : [];
+    const grounded = claims.filter(claim => claim.cardId === card.id && claim.kind === "fact")
+      .map(claim => ({ text: compact(claim.text), quotes: claim.evidenceIds
+        .filter(id => evidenceIsValid(run, id) && !issues.some(issue => issue.targetId === id))
+        .map(id => evidenceMap.get(id)!.quote) }))
+      .filter(({ text, quotes }) => text.length > 0 && quotes.some(quote =>
+        compact(quote).includes(text) || compact(fixtureEasyText(quote)) === text));
+    if (place && (["title", "body", "script"] as const).some(field => {
+      const text = compact(card[field]);
+      const allowed: [number, number][] = [];
+      const spans = (fragment: string, within: string, base = 0) => {
+        const found: [number, number][] = [];
+        for (let at = within.indexOf(fragment); at >= 0; at = within.indexOf(fragment, at + 1))
+          found.push([base + at, base + at + fragment.length]);
+        return found;
+      };
+      allowed.push(...spans(compact(place.name), text));
+      if (field !== "title") {
+        for (const claim of grounded)
+          for (const [start] of spans(claim.text, text))
+            for (const context of curated)
+              allowed.push(...spans(context, claim.text, start));
+      }
+      return PLACES.some(other => {
+        if (other.id === place.id) return false;
+        const name = compact(other.name);
+        const titleGrounded = field === "title" && text.length > 0
+          && grounded.some(claim => claim.quotes.some(quote => compact(quote).includes(text)))
+          && curated.some(context => context.includes(text)
+            // A bare park name is not the street address containing that name.
+            && (!context.includes(`${name}로`) && !context.includes(`${name}길`) || text.includes(`${name}로`) || text.includes(`${name}길`)));
+        return spans(name, text).some(([start, end]) => !titleGrounded
+          && !allowed.some(([from, to]) => start >= from && end <= to));
+      });
+    })) add(card.id, "place_mismatch", "선택한 관광지와 다른 장소의 내용이 섞여 있습니다.");
     if (
       !card.claimIds.length ||
       claims.length !== card.claimIds.length ||
@@ -207,14 +244,14 @@ export function verifyContent(run: Run): ReviewIssue[] {
         [
           "판교박물관은 2013년 4월 2일에 문을 열었어요.",
           "판교박물관은 2013년 4월 2일 개관했어요.",
-        ].includes(claim.text) &&
+        ].some(text => text === claim.text || fixtureEasyText(text) === claim.text) &&
         /2013/.test(quotes) &&
         /4월\s*2일|04[.-]02|4[.-]2/.test(quotes);
       const exhibit =
         [
           "백제·고구려 시대 석실분과 판교 전역에서 출토된 유물 일부를 만날 수 있어요.",
           "백제·고구려 석실분과 판교 출토 유물 일부를 전시해요.",
-        ].includes(claim.text) &&
+        ].some(text => text === claim.text || fixtureEasyText(text) === claim.text) &&
         /백제/.test(quotes) &&
         /고구려/.test(quotes) &&
         /석실분/.test(quotes);
@@ -222,12 +259,12 @@ export function verifyContent(run: Run): ReviewIssue[] {
         [
           "판교 지역에서는 2003년부터 2008년까지 발굴조사가 진행됐어요.",
           "2003~2008년 판교에서 발굴조사가 진행됐어요.",
-        ].includes(claim.text) &&
+        ].some(text => text === claim.text || fixtureEasyText(text) === claim.text) &&
         /2003/.test(quotes) &&
         /2008/.test(quotes) &&
         /발굴/.test(quotes);
       const exact = cited.some((evidence) =>
-        compact(evidence!.quote).includes(compact(claim.text)),
+        compact(evidence!.quote).includes(compact(claim.text)) || compact(fixtureEasyText(evidence!.quote)) === compact(claim.text),
       );
       if (!opening && !exhibit && !excavation && !exact)
         add(

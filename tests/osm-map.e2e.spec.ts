@@ -15,7 +15,7 @@ test("missing NAVER credentials show a real-provider embed contract with filtere
   page.on("request", request => { if (request.url().includes("maps.js")) sdk.push(request.url()); if (request.method() === "POST") writes.push(request.url()); });
   await page.goto("/?view=explore");
   await expect(embed(page)).toBeVisible();
-  await expect(page.locator(".place-result")).toHaveCount(8);
+  await expect(page.locator(".place-result")).toHaveCount(PLACES.length);
   await expect(page.frameLocator(".osm-map-viewport iframe").getByText("OpenStreetMap 임베드 모의 응답")).toBeVisible();
   await page.getByRole("combobox", { name: "지도에 표시할 장소" }).selectOption(PLACES[0].id);
   await expect(page.locator(".place-detail h2")).toHaveText(PLACES[0].name);
@@ -23,8 +23,8 @@ test("missing NAVER credentials show a real-provider embed contract with filtere
   await page.reload();
   await expect(page.getByRole("combobox", { name: "지도에 표시할 장소" })).toHaveValue(PLACES[0].id);
   await page.getByRole("textbox", { name: "관광지 검색", exact: true }).fill("율동");
-  await expect(page.locator(".place-result")).toHaveCount(1);
-  await expect(page.getByRole("combobox", { name: "지도에 표시할 장소" }).locator("option")).toHaveCount(2);
+  await expect(page.locator(".place-result h2")).toHaveText(["율동공원", "책테마파크도서관"]);
+  await expect(page.getByRole("combobox", { name: "지도에 표시할 장소" }).locator("option")).toHaveCount(3);
   await expect.poll(async () => new URL((await embed(page).getAttribute("src"))!).searchParams.has("marker")).toBe(false);
   expect(sdk).toEqual([]); expect(writes).toEqual([]);
 });
@@ -49,7 +49,7 @@ test("failed public-map documents can be retried while the list remains usable",
     requests++; return fail ? route.abort() : route.fulfill({ contentType: "text/html; charset=utf-8", body: "<p>다시 열린 지도 문서</p>" });
   });
   await page.goto("/?view=explore"); await expect.poll(() => requests).toBe(1);
-  await expect(page.locator(".place-result")).toHaveCount(8);
+  await expect(page.locator(".place-result")).toHaveCount(PLACES.length);
   await expect(page.getByRole("link", { name: "큰 지도 열기" })).toHaveAttribute("href", /^https:\/\/www.openstreetmap.org\//);
   // iframe load events do not prove that its tiles rendered; the UI must not claim success.
   await expect(page.locator(".osm-tourism-map")).not.toContainText("지도가 준비됐어요");
@@ -91,5 +91,5 @@ test("fatal NAVER rendering errors dispose the session and ignore late tile call
   await page.evaluate("window.__lateTileCallback()");
   await expect(embed(page)).toBeVisible();
   await expect(page.locator(".naver-map-stage")).toHaveCount(0);
-  await expect(page.locator(".place-result")).toHaveCount(8);
+  await expect(page.locator(".place-result")).toHaveCount(PLACES.length);
 });

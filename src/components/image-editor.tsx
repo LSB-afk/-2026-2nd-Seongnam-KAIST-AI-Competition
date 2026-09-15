@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import Image from "next/image";
+import { getPlace } from "@/lib/places";
 import type { Card, ImageAsset, Run } from "@/lib/types";
 
 type ImageConfig = { configured: boolean; reason?: string; model?: string };
@@ -9,7 +10,7 @@ export function CardPhoto({ card, retryable = false }: { card: Card; retryable?:
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const image = card.image;
-  if (!image) return <div className="card-photo-empty">사진을 선택해 주세요.</div>;
+  if (!image) return <div className="card-photo-empty">글로 만나는 장소 · 사진 없이 만든 카드</div>;
   if (failed) return <div className="card-photo-empty" role={retryable ? "status" : undefined}>
     <p>사진을 불러오지 못했습니다.</p>
     {retryable && <button type="button" className="secondary-button" onClick={() => { setAttempt(value => value + 1); setFailed(false); }}>사진 다시 불러오기</button>}
@@ -33,6 +34,7 @@ export default function ImageEditor({ run, card, config, locked, onRun, onBusy }
   const [error, setError] = useState("");
   const file = useRef<HTMLInputElement>(null);
   const imageRunning = run.imageJob?.status === "running";
+  const hasPlacePhoto = !!getPlace(run.brief.placeId ?? run.brief.place)?.photo;
   const preview: Card = card.image ? { ...card, image: { ...card.image, crop } } : card;
   async function edit(body: object, cancel = false) {
     setPending(true); onBusy(true); setError("");
@@ -64,7 +66,7 @@ export default function ImageEditor({ run, card, config, locked, onRun, onBusy }
       <label>세로 초점 <output>{Math.round(crop.y * 100)}%</output><input aria-label="사진 세로 초점" type="range" min={0} max={1} step={0.01} value={crop.y} onChange={(event) => setCrop({ ...crop, y: Number(event.target.value) })} /></label>
       <label>사진 확대 <output>{crop.zoom.toFixed(2)}배</output><input aria-label="사진 확대 비율" type="range" min={1} max={3} step={0.05} value={crop.zoom} onChange={(event) => setCrop({ ...crop, zoom: Number(event.target.value) })} /></label>
       <button className="secondary-button" type="button" disabled={!card.image} onClick={() => void edit({ operation: "crop", crop })}>사진 구도 저장</button>
-      <details className="image-options"><summary>사진 바꾸기</summary><button className="secondary-button" type="button" onClick={() => void edit({ operation: "replace", usePlacePhoto: true })}>장소의 기본 사진 사용</button><label>사진 촬영자<input value={author} maxLength={100} placeholder="촬영자 또는 제공자" onChange={(event) => setAuthor(event.target.value)} /></label><label className="rights-check"><input type="checkbox" checked={rights} onChange={(event) => setRights(event.target.checked)} /><span>이 사진의 사용·수정 권한을 확인했습니다.</span></label><input ref={file} className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" aria-label="직접 사진 업로드" disabled={!rights || locked || pending} onChange={(event) => void upload(event.target.files?.[0])} /><button className="secondary-button" type="button" disabled={!rights} onClick={() => file.current?.click()}>내 사진 업로드</button><p className="field-note">JPG, PNG, WebP · 최대 8MB</p></details>
+      <details className="image-options"><summary>사진 바꾸기</summary><button className="secondary-button" type="button" disabled={!hasPlacePhoto} onClick={() => void edit({ operation: "replace", usePlacePhoto: true })}>장소의 기본 사진 사용</button>{!hasPlacePhoto && <p className="field-note">이 장소에는 등록된 기본 사진이 없습니다. 사용 권한이 있는 내 사진을 추가할 수 있어요.</p>}<label>사진 촬영자<input value={author} maxLength={100} placeholder="촬영자 또는 제공자" onChange={(event) => setAuthor(event.target.value)} /></label><label className="rights-check"><input type="checkbox" checked={rights} onChange={(event) => setRights(event.target.checked)} /><span>이 사진의 사용·수정 권한을 확인했습니다.</span></label><input ref={file} className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" aria-label="직접 사진 업로드" disabled={!rights || locked || pending} onChange={(event) => void upload(event.target.files?.[0])} /><button className="secondary-button" type="button" disabled={!rights} onClick={() => file.current?.click()}>내 사진 업로드</button><p className="field-note">JPG, PNG, WebP · 최대 8MB</p></details>
       <details className="image-options"><summary>AI 이미지로 새롭게 표현하기</summary><p className="field-note">장소·주제·구도·색감을 함께 반영합니다. 생성된 이미지는 실제 사진과 구분해 표시합니다.</p><label>이미지에 담을 장면<textarea value={subject} maxLength={500} rows={3} placeholder={card.imagination ? "시민이 함께 즐기는 미래 문화공간" : `${run.brief.place}의 특징이 드러나는 장면`} onChange={(event) => setSubject(event.target.value)} /></label><button className="primary-button" type="button" disabled={!config?.configured} onClick={() => void edit({ operation: "generate", subject: subject.trim() || undefined })}>이 카드 이미지 생성</button>{!config?.configured && <p className="field-note">AI 이미지 연결 설정 후 사용할 수 있습니다.</p>}{config?.reason && <details className="script-detail"><summary>연결 설정 안내</summary><p>{config.reason}</p></details>}</details>
     </fieldset>
     {card.image && <details className="image-options"><summary>현재 이미지 출처</summary><p>{card.image.author} · {card.image.license}</p><p>{card.image.width} × {card.image.height}px</p>{(card.image.width < 1080 || card.image.height < 430) && <p className="image-resolution-note">원본 사진의 해상도가 출력 크기보다 작아 확대 시 선명도가 낮아질 수 있습니다.</p>}{card.image.sourceUrl && <a href={card.image.sourceUrl} target="_blank" rel="noreferrer">출처 보기 ↗</a>}</details>}

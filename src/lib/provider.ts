@@ -230,7 +230,11 @@ function context(run: Run) {
       };
     });
   return {
-    brief: run.brief,
+    brief: { ...run.brief, readingStyle: run.readingStyleChange?.status === "requested" ? "easy" : run.brief.readingStyle ?? "standard" },
+    readingStyleChange: run.readingStyleChange,
+    readingStyleOriginal: run.readingStyleChange?.status === "applied"
+      ? run.revisions.find(revision => revision.version === run.readingStyleChange!.expectedVersion)
+      : undefined,
     selectedPlace: getPlace(run.brief.placeId ?? run.brief.place ?? ""),
     goal: run.brief?.goal,
     searches: run.searches ?? [],

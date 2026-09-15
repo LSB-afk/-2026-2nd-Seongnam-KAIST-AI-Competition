@@ -5,6 +5,25 @@ import { PLACES } from '../src/lib/places';
 
 const draft: DraftState = { brief: DEFAULT_BRIEF, mode: 'fixture', strategy: 'agent', scenario: 'normal', imageChoice: 'photo' };
 describe('browser workspace persistence', () => {
+  it('restores the agent page and preserves the selected run and unfinished text across navigation', () => {
+    const state = createWorkspace(draft);
+    state.runId = '33333333-3333-4333-8333-333333333333';
+    state.draft.brief.goal = '아직 쓰고 있는 소개';
+    const restored = workspaceFromSearch(state, `?view=agent&run=${state.runId}`);
+    expect(restored.view).toBe('agent');
+    expect(restored.runId).toBe(state.runId);
+    expect(restored.draft.brief.goal).toBe('아직 쓰고 있는 소개');
+    expect(decodeWorkspace(JSON.stringify(restored), draft).view).toBe('agent');
+    expect(workspaceSearch(restored)).toContain('view=agent');
+  });
+  it('restores easy-reading preferences locally without including the brief in the URL', () => {
+    const raw = { ...createWorkspace(draft), draft: { ...draft, brief: { ...DEFAULT_BRIEF, readingStyle: 'easy' } } };
+    const restored = decodeWorkspace(JSON.stringify(raw), draft);
+    expect(restored.draft.brief).toHaveProperty('readingStyle', 'easy');
+    expect(workspaceSearch(restored)).not.toContain('readingStyle');
+    raw.draft.brief.readingStyle = 'forged';
+    expect(decodeWorkspace(JSON.stringify(raw), draft).draft.brief).toHaveProperty('readingStyle', 'standard');
+  });
   it('restores valid local drafts and favourites, without trusting unknown place IDs', () => {
     const restored = decodeWorkspace(JSON.stringify({ ...createWorkspace(draft), savedIds: ['yuldong-park','wrong','yuldong-park'], draft: {...draft,brief:{...DEFAULT_BRIEF,goal:'작성 중인 소개 문구',placeId:'yuldong-park',place:'wrong'}} }), draft);
     expect(restored.savedIds).toEqual(['yuldong-park']);
@@ -37,7 +56,7 @@ describe('browser workspace persistence', () => {
     const value=createWorkspace(draft);value.explore.theme='history';
     const result=filterPlaces(value.explore);expect(result.length).toBeGreaterThan(1);expect(result.every(p=>p.type==='박물관'||p.type==='문화유산')).toBe(true);
     value.explore.theme='all';value.explore.district='분당구';expect(filterPlaces(value.explore,['yuldong-park','bongguksa']).map(p=>p.id)).toEqual(['yuldong-park']);
-    expect(toggleSavedPlace(['yuldong-park'],'yuldong-park')).toEqual([]);expect(toggleSavedPlace([],'forged')).toEqual([]);expect(PLACES.length).toBe(8);
+    expect(toggleSavedPlace(['yuldong-park'],'yuldong-park')).toEqual([]);expect(toggleSavedPlace([],'forged')).toEqual([]);expect(PLACES.length).toBeGreaterThanOrEqual(39);
   });
   it('every offered theme contains registered places',()=>{for(const theme of PLACE_THEMES){const value=createWorkspace(draft);value.explore.theme=theme.id;expect(filterPlaces(value.explore).length).toBeGreaterThan(0);}});
   it('binds unsaved edits to the exact server version and keeps other card drafts',()=>{

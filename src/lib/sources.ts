@@ -53,7 +53,9 @@ export function assertOfficialUrl(value: string, placeId?: string): void {
     && [...u.searchParams].every(([key, val]) => allowedQuery[key]?.test(val));
   const selected = placeId ? [getPlace(placeId)].filter(place => !!place) : PLACES;
   const registered = selected.some(place => registeredUrls(place.id).includes(normalizedUrl(value)));
-  if (u.protocol !== "https:" || u.username || u.password || (u.port && u.port !== "443") || (!museum && !registered))
+  // Some city facilities publish HTTPS on a dedicated port. Only an exact
+  // registered endpoint may use it; museum discovery still requires port 443.
+  if (u.protocol !== "https:" || u.username || u.password || (u.port && u.port !== "443" && !registered) || (!museum && !registered))
     throw new Error("선택한 관광지의 등록된 공식 HTTPS 읽기 전용 주소만 수집할 수 있습니다.");
 }
 function canonicalUrl(value: string, base?: string, placeId?: string): string {

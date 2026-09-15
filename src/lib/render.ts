@@ -5,6 +5,7 @@ import { chromium, type Browser } from "playwright";
 import { zipSync } from "fflate";
 import type { Artifact, Card, Run } from "./types";
 import { defaultPlaceImage, imageDataUri } from "./images";
+import { getPlace } from "./places";
 
 let fontPromise: Promise<string> | undefined;
 const escapeHtml = (value: string) =>
@@ -61,15 +62,15 @@ export function cardHtml(
   const color = card.imagination ? "#7854AF" : "#244CC5";
   const sourceNames = [...new Set(run.sources.filter(source => source.status === "ok").map(source => source.publisher))].join(" · ");
   const modeLabel = run.mode === "fixture" ? "fixture · 준비된 응답 시연" : "live · 실제 API 실행";
-  const imageLabel = card.image?.kind === 'ai'
+  const imageLabel = !card.image ? '글로 만나는 장소' : card.image.kind === 'ai'
     ? (card.imagination || card.image.prompt?.imagination ? 'AI 생성 이미지 · 상상 이미지' : 'AI 생성 이미지 · 실제 사진 아님')
     : card.image?.kind === 'photo' ? '실제 장소 사진' : '사용자 업로드 이미지';
   const storyLabel = card.imagination ? (card.image?.kind === 'photo' ? '상상 장면 · 사진은 실제 모습' : '상상 장면 · 실제 사업 계획 아님') : '지역문화 이야기';
-  const credit = card.image ? `${card.image.author} · ${card.image.license}` : '사진을 선택해 주세요';
+  const credit = card.image ? `이미지: ${card.image.author} · ${card.image.license} · 크롭 적용` : '이미지 없음 · 공식 자료를 글로 소개합니다.';
   const cropStyle = `object-position:${crop.x * 100}% ${crop.y * 100}%;transform:scale(${crop.zoom});transform-origin:${crop.x * 100}% ${crop.y * 100}%`;
   return `<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; font-src data:; img-src data:"><style>${fontCss}
-*{box-sizing:border-box}html,body{margin:0;width:1080px;height:1080px}body{font-family:'Noto Sans KR',sans-serif;color:#182236}.card{width:1080px;height:1080px;background:#FCFCFD;display:grid;grid-template-rows:70px 430px 170px 212px 1fr;overflow:hidden}header{display:flex;justify-content:space-between;align-items:center;padding:0 54px;font-size:20px;color:${color};font-weight:700}.series{letter-spacing:3px}.number{font-size:19px}.photo{margin:0;width:1080px;height:430px;position:relative;overflow:hidden;background:#E8EDF3}.photo img{display:block;width:100%;height:100%;object-fit:cover}.photo figcaption{position:absolute;left:54px;bottom:22px;padding:8px 12px;background:rgba(255,255,255,.95);font-size:16px;font-weight:700;color:#182236;border-radius:4px}.title{padding:23px 54px 4px;min-height:0}.chapter{font-size:17px;line-height:1.5;color:${color};margin:0 0 9px;letter-spacing:2px}h1{font-size:46px;line-height:1.25;letter-spacing:-1.8px;font-weight:700;margin:0;word-break:keep-all;overflow-wrap:anywhere}.body{font-size:28px;line-height:1.6;letter-spacing:-.55px;margin:0;padding:8px 54px 20px;white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere}footer{margin:0 54px;padding:18px 0 24px;border-top:1px solid #D8DEE8;display:flex;flex-direction:column;justify-content:space-between;font-size:14px;line-height:1.5;min-height:0}.foot-row{display:flex;justify-content:space-between;gap:18px}.badge{font-size:16px;font-weight:700;color:${color}}.note{color:#465066}.credit{font-size:15px;margin:7px 0;overflow-wrap:anywhere}.sources{max-width:630px}.mode{white-space:nowrap}[data-fit]{min-width:0;min-height:0}
-</style></head><body><main class="card"><header><span class="series">성남 타임스토리</span><span class="number">0${index + 1} / 04</span></header><figure class="photo">${photoDataUri ? `<img src="${photoDataUri}" alt="${escapeHtml(run.brief.place)} · ${imageLabel}" style="${cropStyle}">` : ''}<figcaption>${imageLabel}</figcaption></figure><section class="title" data-fit="title"><p class="chapter">${chapter} · ${escapeHtml(run.brief.place)}</p><h1>${escapeHtml(card.title)}</h1></section><p class="body" data-fit="body">${escapeHtml(card.body)}</p><footer data-fit="footer"><div><span class="badge">${storyLabel}</span><p class="credit">이미지: ${escapeHtml(credit)} · 크롭 적용</p></div><div class="foot-row note"><span class="sources">자료: ${escapeHtml(sourceNames || '별첨 출처 목록 확인')} · 출처와 이미지 권리는 sources.json</span><span class="mode">${modeLabel} · v${run.version}</span></div></footer></main></body></html>`;
+*{box-sizing:border-box}html,body{margin:0;width:1080px;height:1080px}body{font-family:'Noto Sans KR',sans-serif;color:#182236}.card{width:1080px;height:1080px;background:#FCFCFD;display:grid;grid-template-rows:70px 430px 170px 212px 1fr;overflow:hidden}header{display:flex;justify-content:space-between;align-items:center;padding:0 54px;font-size:20px;color:${color};font-weight:700}.series{letter-spacing:3px}.number{font-size:19px}.photo{margin:0;width:1080px;height:430px;position:relative;overflow:hidden;background:#E8EDF3}.text-place{height:340px;padding:60px 80px;display:flex;flex-direction:column;justify-content:center;gap:24px;color:${color};background:linear-gradient(135deg,#E8EDF3,#F4F1FA)}.text-place:before{content:"";display:block;width:72px;height:8px;background:${color};border-radius:4px;flex-shrink:0}.text-place strong{font-size:62px;line-height:1.3;word-break:keep-all;overflow-wrap:anywhere}.photo img{display:block;width:100%;height:100%;object-fit:cover}.photo figcaption{position:absolute;left:54px;bottom:22px;padding:8px 12px;background:rgba(255,255,255,.95);font-size:16px;font-weight:700;color:#182236;border-radius:4px}.title{padding:23px 54px 4px;min-height:0}.chapter{font-size:17px;line-height:1.5;color:${color};margin:0 0 9px;letter-spacing:2px}h1{font-size:46px;line-height:1.25;letter-spacing:-1.8px;font-weight:700;margin:0;word-break:keep-all;overflow-wrap:anywhere}.body{font-size:28px;line-height:1.6;letter-spacing:-.55px;margin:0;padding:8px 54px 20px;white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere}footer{margin:0 54px;padding:18px 0 24px;border-top:1px solid #D8DEE8;display:flex;flex-direction:column;justify-content:space-between;font-size:14px;line-height:1.5;min-height:0}.foot-row{display:flex;justify-content:space-between;gap:18px}.badge{font-size:16px;font-weight:700;color:${color}}.note{color:#465066}.credit{font-size:15px;margin:7px 0;overflow-wrap:anywhere}.sources{max-width:630px}.mode{white-space:nowrap}[data-fit]{min-width:0;min-height:0}
+</style></head><body><main class="card"><header><span class="series">성남 타임스토리</span><span class="number">0${index + 1} / 04</span></header><figure class="photo">${photoDataUri ? `<img src="${photoDataUri}" alt="${escapeHtml(run.brief.place)} · ${imageLabel}" style="${cropStyle}">` : `<div class="text-place" data-fit="place-name"><strong>${escapeHtml(run.brief.place)}</strong></div>`}<figcaption>${imageLabel}</figcaption></figure><section class="title" data-fit="title"><p class="chapter">${chapter} · ${escapeHtml(run.brief.place)}</p><h1>${escapeHtml(card.title)}</h1></section><p class="body" data-fit="body">${escapeHtml(card.body)}</p><footer data-fit="footer"><div><span class="badge">${storyLabel}</span><p class="credit">${escapeHtml(credit)}</p></div><div class="foot-row note"><span class="sources">자료: ${escapeHtml(sourceNames || '별첨 출처 목록 확인')} · ${card.image ? '출처와 이미지 권리는' : '출처는'} sources.json</span><span class="mode">${modeLabel} · v${run.version}</span></div></footer></main></body></html>`;
 }
 
 export async function renderCards(
@@ -106,11 +107,17 @@ export async function renderCards(
     const fonts = await embeddedFonts();
     const imageUris = new Map<string, string>();
     const fallback = run.cards.some(card => !card.image) ? await defaultPlaceImage(run.brief.placeId ?? run.brief.place) : undefined;
-    const expectedPlaceId = run.brief.placeId ?? fallback?.placeId;
+    const place = getPlace(run.brief.placeId ?? run.brief.place);
+    const expectedPlaceId = place?.id ?? run.brief.placeId ?? fallback?.placeId;
+    const textOnlyAllowed = !!place && place.photo === null && getPlace(run.brief.place)?.id === place.id;
+    const imageChecks: { cardId: string; expectedImageCount: number; imagesChecked: number; imagesLoaded: boolean }[] = [];
     for (const card of run.cards) {
       signal.throwIfAborted();
       card.image ??= fallback ? structuredClone(fallback) : undefined;
-      if (!card.image) throw new Error("카드에 사용할 장소 사진을 선택해야 합니다.");
+      if (!card.image) {
+        if (!textOnlyAllowed) throw new Error("카드에 사용할 장소 사진을 선택해야 합니다.");
+        continue;
+      }
       if (expectedPlaceId && card.image.placeId !== expectedPlaceId) throw new Error("카드 이미지의 장소가 제작 요청과 다릅니다.");
       const key = `${card.image.id}:${card.image.sha256}`;
       if (!imageUris.has(key)) imageUris.set(key, await imageDataUri(card.image));
@@ -127,14 +134,16 @@ export async function renderCards(
     await page.route("**/*", (route) => route.abort());
     for (const [index, card] of run.cards.entries()) {
       signal.throwIfAborted();
-      await page.setContent(cardHtml(run, card, index, fonts, imageUris.get(`${card.image!.id}:${card.image!.sha256}`)), {
+      const expectedImageCount = card.image ? 1 : 0;
+      const imageUri = card.image ? imageUris.get(`${card.image.id}:${card.image.sha256}`) : undefined;
+      await page.setContent(cardHtml(run, card, index, fonts, imageUri), {
         waitUntil: "load",
       });
-      const output = await page.evaluate(async () => {
+      const output = await page.evaluate(async (expectedImageCount) => {
         await document.fonts.ready;
         const images = [...document.images];
         await Promise.all(images.map(image => image.decode()));
-        const imagesLoaded = images.length === 1 && images.every(image => image.complete && image.naturalWidth > 0 && image.naturalHeight > 0);
+        const imagesLoaded = images.length === expectedImageCount && images.every(image => image.complete && image.naturalWidth > 0 && image.naturalHeight > 0);
         const text = document.body.textContent ?? "";
         const normal = await document.fonts.load(
           '400 29px "Noto Sans KR"',
@@ -152,6 +161,7 @@ export async function renderCards(
           .map((element) => element.dataset.fit);
         return {
           imagesLoaded,
+          imagesChecked: images.length,
           fontsLoaded:
             normal.length > 0 &&
             bold.length > 0 &&
@@ -159,7 +169,8 @@ export async function renderCards(
             document.fonts.check('700 53px "Noto Sans KR"', text),
           overflow,
         };
-      });
+      }, expectedImageCount);
+      imageChecks.push({ cardId: card.id, expectedImageCount, imagesChecked: output.imagesChecked, imagesLoaded: output.imagesLoaded });
       if (!output.imagesLoaded) throw new Error("카드 사진을 불러오지 못했습니다.");
       if (!output.fontsLoaded)
         throw new Error("한글 글꼴을 불러오지 못했습니다.");
@@ -194,7 +205,9 @@ export async function renderCards(
           evidence: run.evidence,
           claims: run.claims,
           searches: run.searches ?? [],
-          images: run.cards.map(card => ({ cardId: card.id, ...card.image })),
+          images: run.cards.map(card => card.image
+            ? { cardId: card.id, ...card.image }
+            : { cardId: card.id, image: null, label: "글로 만나는 장소" }),
         },
         null,
         2,
@@ -218,6 +231,8 @@ export async function renderCards(
             height: 1080,
             fontsLoaded: true,
             imagesLoaded: true,
+            imagesChecked: imageChecks.reduce((total, check) => total + check.imagesChecked, 0),
+            imageChecks,
             overflow: false,
           },
         },

@@ -1,5 +1,6 @@
 import {test,expect,type Page} from '@playwright/test';
 import {newRun} from '../src/lib/run';
+import {PLACES} from '../src/lib/places';
 import type {Run} from '../src/lib/types';
 import {mockOsmEmbed} from './helpers/mock-osm';
 
@@ -18,7 +19,7 @@ const nav=(page:Page,name:string)=>page.getByRole('navigation',{name:'주 메뉴
 test('filters, selected place, saved places and incomplete draft survive reload and browser back',async({page})=>{
  await setup(page);await page.goto('/');await nav(page,'성남 둘러보기').click();
  await page.getByRole('textbox',{name:'관광지 검색',exact:true}).fill('율동');
- await page.locator('.place-result').click();await page.getByRole('button',{name:'♡ 이 장소 저장',exact:true}).click();
+ await page.locator('.place-result').filter({has:page.getByRole('heading',{name:'율동공원',exact:true})}).click();await page.getByRole('button',{name:'♡ 이 장소 저장',exact:true}).click();
  await page.reload();await expect(page.locator('.place-detail h2')).toHaveText('율동공원');
  await expect(page.getByRole('textbox',{name:'관광지 검색',exact:true})).toHaveValue('율동');
  await expect(page.getByRole('button',{name:'♥ 저장한 장소에서 해제',exact:true})).toBeVisible();
@@ -27,7 +28,7 @@ test('filters, selected place, saved places and incomplete draft survive reload 
  await page.getByRole('button',{name:/이 장소로 카드뉴스 만들기/}).click();
  const goal=page.getByRole('textbox',{name:'어떤 이야기를 만들까요?',exact:true});await goal.fill('작성 중');
  await page.reload();await expect(goal).toHaveValue('작성 중');await expect(page.getByRole('textbox',{name:'소개할 장소',exact:true})).toHaveValue('율동공원');
- await nav(page,'성남 둘러보기').click();await page.getByRole('button',{name:'검색 조건 초기화',exact:true}).first().click();await expect(page.locator('.place-result')).toHaveCount(8);
+ await nav(page,'성남 둘러보기').click();await page.getByRole('button',{name:'검색 조건 초기화',exact:true}).first().click();await expect(page.locator('.place-result')).toHaveCount(PLACES.length);
  await nav(page,'저장한 장소').click();await page.getByRole('button',{name:'율동공원 저장 해제',exact:true}).click();await expect(page.locator('.place-result')).toHaveCount(0);await page.reload();await expect(page.getByRole('heading',{name:'저장한 장소가 아직 없어요.'})).toBeVisible();
 });
 
@@ -59,7 +60,7 @@ test('history filters persist and missing map configuration keeps the list usabl
  await nav(page,'제작 기록').click();await page.getByRole('searchbox').fill('검색 대상');
  await expect(page.locator('.history-row')).toHaveCount(1);
  await page.reload();await expect(page.getByRole('searchbox')).toHaveValue('검색 대상');
- await nav(page,'성남 둘러보기').click();await expect(page.locator('.map-frame')).toContainText('OpenStreetMap · 기본 지도');await expect(page.locator('.place-result')).toHaveCount(8);
+ await nav(page,'성남 둘러보기').click();await expect(page.locator('.map-frame')).toContainText('OpenStreetMap · 기본 지도');await expect(page.locator('.place-result')).toHaveCount(PLACES.length);
  await page.locator('.place-result').first().click();await expect(page.locator('.place-detail')).toBeVisible();
 });
 

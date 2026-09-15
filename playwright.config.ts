@@ -9,6 +9,10 @@ export default defineConfig({
   reporter: "list",
   use: {
     baseURL: "http://127.0.0.1:43187",
+    // Full Chromium can exercise the system GPU instead of forcing the shell's
+    // software renderer; unavailable hardware still uses Chromium's fallback.
+    channel: "chromium",
+    launchOptions: { args: ["--enable-gpu"] },
     viewport: { width: 1440, height: 1100 },
     trace: "retain-on-failure",
   },

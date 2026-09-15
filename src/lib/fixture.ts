@@ -1,12 +1,24 @@
 import type { Card, Claim, Run } from "./types";
 import { getPlace } from "./places";
 import { fixtureSources } from "./sources";
+import { fixtureEasyText } from "./reading-style";
 
 /** Deliberate, labelled test doubles. These templates are never used by live mode. */
 export function createFixtureStory(run: Run): {
   cards: Card[];
   claims: Claim[];
 } {
+  if (run.readingStyleChange?.status === "requested") {
+    const targets = new Set(run.readingStyleChange.targetCardIds);
+    return {
+      cards: run.cards.map(card => targets.has(card.id)
+        ? { ...structuredClone(card), title: fixtureEasyText(card.title), body: fixtureEasyText(card.body), script: fixtureEasyText(card.script) }
+        : structuredClone(card)),
+      claims: run.claims.map(claim => targets.has(claim.cardId)
+        ? { ...structuredClone(claim), text: fixtureEasyText(claim.text), support: claim.kind === "fact" ? "insufficient" : claim.support }
+        : structuredClone(claim)),
+    };
+  }
   const place = getPlace(run.brief.placeId ?? run.brief.place);
   if (!place) throw new Error("등록되지 않은 관광지입니다.");
   const museum = place.id === "pangyo-museum";
@@ -122,6 +134,10 @@ export function createFixtureStory(run: Run): {
         i
       ];
     }
+  if (run.brief.readingStyle === "easy") {
+    claims.forEach(claim => { claim.text = fixtureEasyText(claim.text); });
+    titles.forEach((title, i) => { titles[i] = fixtureEasyText(title); });
+  }
   const cards: Card[] = claims.map((claim, i) => ({
     id: claim.cardId,
     title: titles[i],

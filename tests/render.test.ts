@@ -1,5 +1,5 @@
 import { randomUUID, createHash } from "node:crypto";
-import { readFile, rm, access, mkdtemp } from "node:fs/promises";
+import { readFile, writeFile, rm, access, mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -8,6 +8,11 @@ import type { Run } from "../src/lib/types";
 import { cardHtml, renderCards } from "../src/lib/render";
 import { imageDataUri, readImage, storeImage } from "../src/lib/images";
 import { chromium } from "playwright";
+import { createFixtureStory } from "../src/lib/fixture";
+import { getPlace } from "../src/lib/places";
+import { DEFAULT_BRIEF, newRun } from "../src/lib/run";
+import { fixtureSources } from "../src/lib/sources";
+import { verifyContent } from "../src/lib/verifier";
 
 const paths: string[] = [];
 let previousImageRoot: string | undefined;
@@ -114,6 +119,59 @@ afterEach(async () => {
 });
 
 describe("card export boundary", () => {
+  it("exports reviewed text-only cards for a registered place without a licensed photo", async () => {
+    const place = getPlace("korea-jobworld")!;
+    expect(place.photo).toBeNull();
+    const run = newRun({ mode: "fixture", brief: { ...DEFAULT_BRIEF, placeId: place.id, place: place.name } });
+    paths.push(resolve("outputs", run.id));
+    Object.assign(run, fixtureSources(place.id), createFixtureStory(run));
+    run.version = run.reviewVersion = 1;
+    expect(verifyContent(run)).toEqual([]);
+    const html = cardHtml(run, run.cards[0], 0);
+    expect(html).toContain("글로 만나는 장소");
+    expect(html).toContain(place.name);
+    expect(html).not.toMatch(/<img |사용자 업로드 이미지|실제 장소 사진|AI 생성 이미지|크롭 적용/);
+    const artifacts = await renderCards(run, new AbortController().signal);
+    expect(run.cards.every(card => card.image === undefined)).toBe(true);
+    const pngs = artifacts.filter(file => file.kind === "png");
+    expect(pngs).toHaveLength(4);
+    for (const png of pngs) {
+      const bytes = await readFile(png.path);
+      expect(bytes.readUInt32BE(16)).toBe(1080);
+      expect(bytes.readUInt32BE(20)).toBe(1080);
+      expect(createHash("sha256").update(bytes).digest("hex")).toBe(png.sha256);
+    }
+    const zip = unzipSync(await readFile(artifacts.find(file => file.kind === "zip")!.path));
+    expect(Object.keys(zip).filter(name => name.endsWith(".png"))).toHaveLength(4);
+    const sources = JSON.parse(strFromU8(zip["sources.json"]));
+    expect(sources.evidence).toEqual(run.evidence);
+    expect(sources.images).toEqual(run.cards.map(card => ({ cardId: card.id, image: null, label: "글로 만나는 장소" })));
+    expect(JSON.stringify(sources.images)).not.toMatch(/author|license|upload|photo|ai/);
+    expect(JSON.parse(strFromU8(zip["review.json"])).outputChecks).toMatchObject({
+      cardCount: 4, imagesLoaded: true, imagesChecked: 0, fontsLoaded: true, overflow: false,
+      imageChecks: run.cards.map(card => ({ cardId: card.id, expectedImageCount: 0, imagesChecked: 0, imagesLoaded: true })),
+    });
+  }, 60000);
+
+  it("rejects image-less output for an unregistered place", async () => {
+    const run = runFixture();
+    run.brief.place = "등록되지 않은 장소";
+    run.brief.placeId = "unknown-place";
+    await expect(renderCards(run, new AbortController().signal)).rejects.toThrow(/등록|사진/);
+  });
+
+  it.each(["missing", "corrupt"])("does not hide a %s referenced image behind text-only output", async fault => {
+    const run = runFixture();
+    await attachPhoto(run);
+    run.brief.placeId = "korea-jobworld";
+    run.brief.place = getPlace("korea-jobworld")!.name;
+    for (const card of run.cards) card.image!.placeId = "korea-jobworld";
+    if (fault === "missing") await rm(resolve(process.env.TIMESTORY_IMAGE_DIR!, `${run.cards[0].image!.id}.png`));
+    else await writeFile(resolve(process.env.TIMESTORY_IMAGE_DIR!, `${run.cards[0].image!.id}.png`), "corrupt referenced image bytes");
+    await expect(renderCards(run, new AbortController().signal)).rejects.toThrow();
+    await expect(access(resolve("outputs", run.id, "v2"))).rejects.toThrow();
+  }, 60000);
+
   it("escapes untrusted text and does not turn source URLs into executable markup", () => {
     const run = runFixture();
     run.cards[0].title = '<script>alert("x")</script>';
@@ -188,6 +246,7 @@ describe("card export boundary", () => {
       assessments: [],
       reviews: [],
       modelCallLog: [],
+      outputChecks: { imagesChecked: 4, imagesLoaded: true },
     });
     expect(JSON.parse(strFromU8(zip["sources.json"]))).toMatchObject({
       mode: "fixture",

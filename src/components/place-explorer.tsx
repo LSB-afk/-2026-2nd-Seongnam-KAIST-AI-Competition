@@ -11,7 +11,7 @@ export function PlacePhoto({ place, className = '', priority = false, retryable 
   const [retry,setRetry]=useState(0);
   const sizes=requestedSizes ?? (place.photo&&place.photo.width/place.photo.height>3?'(max-width:600px) 1200px, 1600px':'(max-width:600px) 100vw, 750px');
   return <div className={`place-photo ${className}`}>
-    {place.photo&&!failed?<Image key={retry} src={`${place.photo.src}${retry?`?retry=${retry}`:''}`} alt={`${place.name} 실제 사진`} fill sizes={sizes} priority={priority} onError={()=>setFailed(true)} />:<div className="photo-unavailable"><span>{failed?'사진을 불러오지 못했어요':'사진 준비 중'}</span><small>{place.name}</small>{failed&&retryable&&<button type="button" className="text-button" onClick={()=>{setFailed(false);setRetry(v=>v+1);}}>사진 다시 불러오기</button>}</div>}
+    {place.photo&&!failed?<Image key={retry} src={`${place.photo.src}${retry?`?retry=${retry}`:''}`} alt={`${place.name} 실제 사진`} fill sizes={sizes} priority={priority} onError={()=>setFailed(true)} />:<div className="photo-unavailable"><span>{failed?'사진을 불러오지 못했어요':'등록된 사진 없음'}</span><small>{place.name}</small>{failed&&retryable&&<button type="button" className="text-button" onClick={()=>{setFailed(false);setRetry(v=>v+1);}}>사진 다시 불러오기</button>}</div>}
   </div>;
 }
 
