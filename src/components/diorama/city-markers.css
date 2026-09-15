@@ -1,0 +1,29 @@
+.diorama-pin.diorama-landmark-pin {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 220px;
+  min-height: 39px;
+  padding: 5px 9px 5px 5px;
+  border-radius: 9px;
+  text-align: left;
+}
+.diorama-landmark-pin[hidden], .diorama-landmark-pin [hidden] { display: none; }
+.diorama-landmark-photo { width: 42px; height: 34px; border-radius: 5px; object-fit: cover; flex: none; }
+.diorama-landmark-icon { width: 27px; flex: none; text-align: center; font-size: 21px; }
+.diorama-landmark-copy { display: grid; gap: 2px; min-width: 0; }
+.diorama-landmark-copy strong { overflow: hidden; text-overflow: ellipsis; font-size: 11px; }
+.diorama-landmark-type { font-size: 9px; font-weight: 400; opacity: .78; }
+.diorama-landmark-pin[data-selected-place=true] { border-color: #527957; box-shadow: 0 3px 15px #224c3433; }
+.diorama-story-order { display: grid; place-items: center; position: absolute; top: -9px; right: -7px; width: 20px; height: 20px; border: 2px solid #fffef5; border-radius: 50%; color: #fff; background: #986327; font-size: 11px; font-weight: 700; }
+.diorama-pin.diorama-food-pin { border-radius: 18px; background: #fff1df; border-color: #b47a49; color: #75411f; padding: 6px 10px; font-size: 10px; }
+.diorama-pin[data-food-category=cafe] { color: #684535; background: #f7eee6; border-color: #bea68c; }
+.diorama-pin[data-food-category=restaurant] { color: #824424; background: #fff0dc; border-color: #d5aa79; }
+.diorama-pin[data-food-category=bar] { color: #724963; background: #f7edf3; border-color: #c7a4bd; }
+.diorama-pin:focus-visible { outline: 3px solid #bc8f45; outline-offset: 3px; }
+@media (max-width: 600px) {
+  .diorama-pin.diorama-landmark-pin { max-width: 176px; gap: 5px; min-height: 35px; padding: 4px 7px 4px 4px; }
+  .diorama-landmark-photo { width: 34px; height: 29px; }
+  .diorama-landmark-copy strong { font-size: 10px; }
+  .diorama-landmark-type { font-size: 8px; }
+}

@@ -1,3 +1,4 @@
+import { cityStoryBriefSchema } from "./city-story";
 import { randomUUID } from "node:crypto";
 import { getPlace } from "./places";
 import { PURPOSES } from "./purposes";
@@ -19,7 +20,11 @@ export function newRun(options: {
   brief?: Brief;
 }): Run {
   const at = new Date().toISOString();
-  const brief = { ...(options.brief ?? DEFAULT_BRIEF) };
+  const brief = structuredClone(options.brief ?? DEFAULT_BRIEF);
+  if (brief.story) {
+    brief.story = cityStoryBriefSchema.parse(brief.story);
+    if (getPlace(brief.placeId ?? brief.place)?.id !== brief.story.stops[0].placeId) throw new Error("대표 장소는 이야기의 첫 장소여야 합니다.");
+  }
   brief.readingStyle ??= "standard";
   if (!["standard", "easy"].includes(brief.readingStyle)) throw new Error("지원하지 않는 설명 방식입니다.");
   if (brief.purpose !== undefined && !PURPOSES.some(purpose => purpose.id === brief.purpose)) throw new Error("등록되지 않은 제작 목적입니다.");
@@ -79,4 +84,22 @@ export function newRun(options: {
       apiCalls: 0,
     },
   };
+}
+
+/** The immutable brief, never model output, determines each card's source and photo scope. */
+export function storyStopForCard(run: Run, cardId: string) {
+  const index = ["card-1", "card-2", "card-3", "card-4"].indexOf(cardId);
+  const story = run.brief.story;
+  return story && index >= 0 ? story.stops.find(stop => stop.id === story.cardStopIds[index]) : undefined;
+}
+export function cardPlace(run: Run, cardId: string) {
+  const stop = storyStopForCard(run, cardId);
+  if (run.brief.story && !stop) throw new Error("이야기 카드의 장소 배정이 없습니다.");
+  const place = getPlace(stop?.placeId ?? run.brief.placeId ?? run.brief.place);
+  if (!place) throw new Error("등록되지 않은 관광지입니다.");
+  return place;
+}
+export function missingStoryStops(run: Run) {
+  return run.brief.story?.stops.filter(stop => !run.evidence.some(evidence =>
+    run.sources.some(source => source.id === evidence.sourceId && source.placeId === stop.placeId && source.status === "ok"))) ?? [];
 }

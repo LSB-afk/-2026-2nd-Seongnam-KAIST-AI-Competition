@@ -1,11 +1,12 @@
+import { officialStoryUrls } from "../src/lib/city-story";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   assertOfficialUrl,
   fixtureSources,
   searchSources,
 } from "../src/lib/sources";
-import { newRun } from "../src/lib/run";
-import { getPlace } from "../src/lib/places";
+import { DEFAULT_BRIEF, newRun } from "../src/lib/run";
+import { getPlace, PLACES } from "../src/lib/places";
 import type { Decision } from "../src/lib/types";
 
 afterEach(() => vi.unstubAllGlobals());
@@ -257,4 +258,36 @@ describe("official sources boundary", () => {
     expect(result.sources[0].publishedAt).toBe("2026-07-15");
     expect(result.sources[0].modifiedAt).toBe("2026-09-09");
   });
+});
+
+
+it.each(PLACES)("accepts every offered official material for $name without allowing unregistered neighboring pages", place => {
+  for (const offered of officialStoryUrls(place)) {
+    expect(() => assertOfficialUrl(offered, place.id)).not.toThrow();
+    const changed = new URL(offered); changed.searchParams.set("unregistered_material", "1");
+    expect(() => assertOfficialUrl(changed.href, place.id)).toThrow();
+  }
+});
+
+it.each([
+  ["pangyo-museum", "https://korean.visitkorea.or.kr/detail/ms_detail.do?cotid=d73a3a50-2f94-4a12-bed8-34c5ca1536ab"],
+  ["seongnam-arts-center", "https://english.visitkorea.or.kr/svc/whereToGo/locIntrdn/rgnContentsView.do?vcontsId=100191"],
+])("collects the single selected description/operations page for %s with its own story provenance", async (placeId, selectedUrl) => {
+  const place = getPlace(placeId)!;
+  const run = newRun({ mode: "live", brief: { ...DEFAULT_BRIEF, placeId, place: place.name, story: {
+    title: "선택한 공식 자료 확인", stops: [{ id: "selected", placeId, photoChoice: "none", officialUrls: [selectedUrl] }, { id: "park", placeId: "yuldong-park", photoChoice: "none" }], cardStopIds: ["selected", "park", "selected", "park"],
+  } } });
+  const requested: string[] = [];
+  vi.stubGlobal("fetch", async (url: string) => {
+    requested.push(url);
+    // Synthetic page exercises collection and linkage, not an assertion about the attraction.
+    return htmlResponse(`<main><p>${place.name} 공식 자료의 수집 연결을 확인하는 테스트 문장입니다.</p><a href="${place.sourceUrl}">다른 공식 자료</a></main>`);
+  });
+  const result = await searchSources(run, { action: "search_sources", targetIds: [], evidenceIds: [], reasonSummary: "선택 자료 수집", uncertainty: "", search: { placeId, query: "공식 소개 자료", targetClaimIds: [], missingInformation: [], reason: "선택 자료 수집" } }, new AbortController().signal);
+  expect(requested).toEqual([selectedUrl]);
+  expect(result.sources).toHaveLength(1);
+  expect(result.sources[0]).toMatchObject({ placeId, url: selectedUrl, status: "ok" });
+  expect(result.evidence).toHaveLength(1);
+  expect(result.evidence[0].sourceId).toBe(result.sources[0].id);
+  expect(result.search).toMatchObject({ placeId, visitedPages: 1, newEvidenceCount: 1 });
 });

@@ -15,6 +15,8 @@ import TamiGuide from "@/components/tami-guide";
 import AgentCenter from "@/components/agent-center";
 import WorkspaceNavIcon from "@/components/workspace-nav-icon";
 import ReadingTransform from "@/components/reading-transform";
+import { CityStoryShare } from "@/components/city-story-share";
+import type { CityStoryBrief } from "@/lib/city-story";
 import "@/components/workspace-refinements.css";
 import "@/components/diorama/diorama-shell.css";
 import { useWorkspace } from "@/hooks/use-workspace";
@@ -116,12 +118,13 @@ export default function Studio() {
   const { state: workspace, ready: workspaceReady, update: updateWorkspace, storageError, getSnapshot } = useWorkspace(initialDraft);
   const view = workspace.view;
   const immersive = view === "diorama";
+  const [previewStoryRunId, setPreviewStoryRunId] = useState<string | null>(null);
   const [dioramaMenuOpen, setDioramaMenuOpen] = useState(false);
   const navigationPanel = useRef<HTMLElement>(null);
   const navigationToggle = useRef<HTMLButtonElement>(null);
   const setView = (next: WorkspaceView) => {
     setDioramaMenuOpen(false);
-    updateWorkspace({ view: next }, "push");
+    updateWorkspace({ view: next, ...(next !== "diorama" ? { storyId: null } : {}) }, "push");
   };
   useEffect(() => {
     if (!immersive || !dioramaMenuOpen) return;
@@ -238,6 +241,8 @@ export default function Studio() {
 
   useEffect(() => {
     let mounted = true;
+    const sharedId = new URLSearchParams(location.search).get('story');
+    if (sharedId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sharedId)) { location.replace(`/stories/${sharedId}`); return; }
     void Promise.resolve().then(() => { if (mounted) void refreshInitial(); });
     return () => { mounted = false; };
   }, [refreshInitial]);
@@ -377,8 +382,20 @@ export default function Studio() {
   function choosePlace(place: Place, purpose?: CreationPurpose) {
     if (active || busy) { setError("진행 중인 제작이 끝나면 새 장소로 시작할 수 있습니다."); setView("studio"); return; }
     const selectedPurpose=purpose ?? brief.purpose ?? "youth_story";
-    updateWorkspace(previous=>({...previous,view:"studio",runId:null,selectedCardId:"",tab:"evidence",draft:{...previous.draft,brief:{...previous.draft.brief,place:place.name,placeId:place.id,purpose:selectedPurpose,...(purpose?{audience:PURPOSES.find(p=>p.id===purpose)!.audience}:{}),goal:goalForPurpose(place,selectedPurpose)}}}),"push");
+    updateWorkspace(previous=>({...previous,view:"studio",storyId:null,runId:null,selectedCardId:"",tab:"evidence",draft:{...previous.draft,brief:{...previous.draft.brief,story:undefined,place:place.name,placeId:place.id,purpose:selectedPurpose,...(purpose?{audience:PURPOSES.find(p=>p.id===purpose)!.audience}:{}),goal:goalForPurpose(place,selectedPurpose)}}}),"push");
     runRef.current=null;setRun(null);setSelectedClaimId("");
+  }
+  function createCityStory(story: CityStoryBrief, audience: string) {
+    if (active || busy) { setError("진행 중인 제작이 끝나면 이야기를 만들 수 있습니다."); return; }
+    const anchor = getPlace(story.stops[0].placeId);
+    if (!anchor) return;
+    updateWorkspace(previous => ({...previous,view:"studio",storyId:null,runId:null,selectedCardId:"",tab:"evidence",draft:{...previous.draft,brief:{...previous.draft.brief,place:anchor.name,placeId:anchor.id,story,audience,purpose:"youth_story",goal:`${audience}에게 '${story.title}'라는 주제로 ${story.stops.map(stop=>getPlace(stop.placeId)?.name).join(' · ')}을 연결해 소개하는 카드뉴스 4장을 만들어 주세요. 장소별 공식 근거와 메모를 구분하고, 마지막 장은 미래의 문화공간을 상상해 주세요.`}}}),"push");
+    runRef.current=null;setRun(null);setSelectedClaimId("");setPreviewStoryRunId(null);
+  }
+  function imaginePlace(place: Place, prompt: string) {
+    if (active || busy) { setError("진행 중인 제작이 끝나면 상상 카드를 만들 수 있습니다."); return; }
+    choosePlace(place);
+    updateWorkspace(previous=>({...previous,draft:{...previous.draft,imageChoice:"ai",brief:{...previous.draft.brief,goal:`${place.name}의 공식 기록을 바탕으로 소개 카드 3장과 마지막 미래 상상 카드 1장을 만들어 주세요. 마지막 카드의 상상 주제: ${prompt.slice(0,500)}. 미래는 확정된 계획이 아닌 상상으로 명확히 표시해 주세요.`}}}));
   }
   function openExplore(filters?: Partial<ExploreState>) {
     updateWorkspace({view:"explore",explore:normaliseExplore({...defaultExplore(),...filters})},"push");
@@ -448,7 +465,7 @@ export default function Studio() {
 
         {view === "dashboard" && <PlatformHome runs={history} loaded={recordsLoaded} failed={!recordsLoaded && Boolean(loadError)} busy={active || busy} onExplore={openExplore} savedIds={savedIds} onSaved={() => setView("saved")} onHelp={() => window.dispatchEvent(new Event("tami:open-guide"))} onCreate={choosePlace} onOpen={(id) => void loadRun(id)} />}
         <PlaceExplorer visible={view === "explore" || view === "saved"} savedOnly={view === "saved"} state={explore} onStateChange={(next,push)=>updateWorkspace({explore:next},push?"push":"replace")} savedIds={savedIds} onToggleSaved={id=>updateWorkspace(previous=>({...previous,savedIds:toggleSavedPlace(previous.savedIds,id)}))} onCreate={choosePlace} />
-        {view === "diorama" && workspaceReady && <DioramaPage selection={workspace.diorama} onSelectionChange={(diorama,push)=>updateWorkspace({diorama},push?"push":"replace")} savedIds={savedIds} onToggleSaved={id=>updateWorkspace(previous=>({...previous,savedIds:toggleSavedPlace(previous.savedIds,id)}))} onCreate={choosePlace} busy={active || busy} />}
+        {view === "diorama" && workspaceReady && <DioramaPage selection={workspace.diorama} onSelectionChange={(diorama,push)=>updateWorkspace({diorama},push?"push":"replace")} savedIds={savedIds} onToggleSaved={id=>updateWorkspace(previous=>({...previous,savedIds:toggleSavedPlace(previous.savedIds,id)}))} onCreate={choosePlace} onCreateStory={createCityStory} onImagine={imaginePlace} playbackRun={run?.id===previewStoryRunId?run:null} storyId={workspace.storyId} onCloseStory={()=>{setPreviewStoryRunId(null);updateWorkspace({storyId:null});}} busy={active || busy} />}
         {view === "history" && <RunHistory runs={history} loaded={recordsLoaded} failed={!recordsLoaded && Boolean(loadError)} busy={active || busy} onOpen={(id) => void loadRun(id)} query={workspace.historyQuery} statusFilter={workspace.historyStatus} onFiltersChange={({query,status})=>updateWorkspace({historyQuery:query,historyStatus:status})} full />}
         {view === "agent" && <AgentCenter run={run} duration={duration} loading={historyLoading || !workspaceReady} failed={Boolean(error || loadError)} onStudio={() => setView("studio")} onExplore={() => openExplore()} onHelp={() => window.dispatchEvent(new Event("tami:open-guide"))} onReview={(cardId) => { updateWorkspace(previous => ({...previous, view: "studio", tab: "evidence", selectedCardId: cardId || previous.selectedCardId}), "push"); requestAnimationFrame(() => document.querySelector('[data-tour="review-panel"]')?.scrollIntoView({block:"start"})); }} onHistory={() => setView("history")} />}
         <div hidden={view !== "studio"}>
@@ -491,14 +508,15 @@ export default function Studio() {
               <fieldset disabled={active || busy || !workspaceReady} className="brief-fields" data-tour="brief-fields">
                 {run && <p className="field-note">이 입력은 다음 제작 요청으로 보관됩니다. 아래 결과는 선택한 작업의 내용입니다.</p>}
                 <label>
-                  소개할 장소
+                  {brief.story ? "이야기로 연결할 장소" : "소개할 장소"}
                   <input
-                    value={brief.place}
+                    value={brief.story ? brief.story.stops.map(stop=>getPlace(stop.placeId)?.name).join(' · ') : brief.place}
                     readOnly
                     aria-describedby="place-note"
                   />
                 </label>
                 <p id="place-note" className="field-note">{draftPlace.district} · {draftPlace.type} <button type="button" className="text-button" onClick={() => setView("explore")}>장소 변경</button></p>
+                {brief.story && <div className="city-story-studio-note"><strong>{brief.story.title}</strong><p>{brief.story.stops.length}곳의 사진·공식 자료·메모와 지도 구도를 연결했어요. 카드 1~3은 장소별 사실, 카드 4는 상상입니다.</p><button type="button" className="text-button" onClick={()=>{setPreviewStoryRunId(null);setView("diorama");}}>지도에서 이야기 다듬기 ↗</button></div>}
                 <label>제작 목적<select value={brief.purpose || "youth_story"} onChange={event=>{const purpose=event.target.value as CreationPurpose;setBrief({...brief,purpose,audience:PURPOSES.find(p=>p.id===purpose)!.audience,goal:goalForPurpose(draftPlace,purpose)});}}>{PURPOSES.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}</select></label>
                 <label>
                   누구에게 전할까요?
@@ -645,7 +663,7 @@ export default function Studio() {
               <div>
                 <h2>
                   {run
-                    ? `${run.brief.place} 이야기`
+                    ? run.brief.story?.title ?? `${run.brief.place} 이야기`
                     : "이렇게 이야기가 만들어져요"}
                 </h2>
                 <p>
@@ -760,7 +778,7 @@ export default function Studio() {
                             <CardPhoto key={item.image?.src} card={item} />
                             <p>{item.body}</p>
                             <div className="card-bottomline">
-                              <span>{run.brief.place}</span>
+                              <span>{getPlace(item.placeId ?? run.brief.placeId ?? '')?.name ?? run.brief.place}</span>
                               <span>제작 초안</span>
                             </div>
                           </div>
@@ -1167,6 +1185,7 @@ export default function Studio() {
                     </p>
                   </div>
                 )}
+                {run.brief.story && run.cards.length === 4 && <CityStoryShare key={`${run.id}:${run.version}`} run={run} onPreview={()=>{setPreviewStoryRunId(run.id);updateWorkspace({view:"diorama",storyId:null,diorama:{placeId:run.brief.story!.stops[0].placeId,hotspotId:null}},"push");}} />}
                 {zip && (
                   <a
                     className={

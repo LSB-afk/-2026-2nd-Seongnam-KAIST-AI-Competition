@@ -1,3 +1,4 @@
+import { cardPlace } from "./run";
 import type { Card, Claim, Run } from "./types";
 
 /** Prepared demo vocabulary only; this is not a natural-language model. */
@@ -28,12 +29,13 @@ export function assertReadingStyleUpdate(run: Run, story: { cards: Card[]; claim
   if (change?.status !== "requested") return;
   const numbers = (text: string) => (text.match(/\d+(?:[.,]\d+)?(?:\s*(?:년|월|일|시|분|초|원|명|개|km|m|평|%|층|장|세))?/g) ?? []).map(value => value.replace(/\s/g, ""));
   const qualifiers = (text: string) => text.match(/일부|이상|이하|미만|초과|까지|부터|제외|매주|매월|무료|유료|휴관|휴무|예약|사전|경우|한해|아니|않|없/g) ?? [];
-  const requiredNames = (text: string) => [run.brief.place, "백제", "고구려", "판교", "성남"].filter(name => text.includes(name));
-  const retains = (before: string, after: string) =>
+  const requiredNames = (text: string, placeName: string) => [placeName, "백제", "고구려", "판교", "성남"].filter(name => text.includes(name));
+  const retains = (before: string, after: string, placeName: string) =>
     JSON.stringify(numbers(before)) === JSON.stringify(numbers(after)) &&
     qualifiers(before).every(term => qualifiers(after).filter(value => value === term).length >= qualifiers(before).filter(value => value === term).length) &&
-    requiredNames(before).every(name => after.includes(name));
+    requiredNames(before, placeName).every(name => after.includes(name));
   for (const cardId of change.targetCardIds) {
+    const placeName = run.brief.story ? cardPlace(run, cardId).name : run.brief.place;
     const before = run.cards.find(card => card.id === cardId)!;
     const after = story.cards.find(card => card.id === cardId);
     if (!after || after.imagination !== before.imagination || JSON.stringify(after.claimIds) !== JSON.stringify(before.claimIds))
@@ -44,11 +46,11 @@ export function assertReadingStyleUpdate(run: Run, story: { cards: Card[]; claim
       throw new Error("쉬운 설명 변경에서 기존 사실 문장을 추가하거나 삭제할 수 없습니다.");
     for (const claim of prior) {
       const next = incoming.find(candidate => candidate.id === claim.id);
-      if (!next || next.kind !== claim.kind || JSON.stringify(next.evidenceIds) !== JSON.stringify(claim.evidenceIds) || !retains(claim.text, next.text))
+      if (!next || next.kind !== claim.kind || JSON.stringify(next.evidenceIds) !== JSON.stringify(claim.evidenceIds) || !retains(claim.text, next.text, placeName))
         throw new Error("쉬운 설명 변경에서 기존 날짜·수치·장소·조건·근거를 보존하지 못했습니다. 기존 문구를 유지합니다.");
     }
     for (const field of ["title", "body", "script"] as const) {
-      if (!retains(before[field], after[field]))
+      if (!retains(before[field], after[field], placeName))
         throw new Error("쉬운 설명 변경에서 제목·본문·대본의 날짜·수치·장소·조건을 보존하지 못했습니다. 기존 문구를 유지합니다.");
     }
   }

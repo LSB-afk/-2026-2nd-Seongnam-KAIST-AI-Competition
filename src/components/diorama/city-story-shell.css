@@ -1,0 +1,42 @@
+.city-experience-modes { display:grid; grid-template-columns:repeat(4,1fr); gap:3px; padding:12px 0; position:sticky; top:0; background:#fffef6; z-index:2; }
+.city-experience-modes button { min-height:40px; padding:5px 2px; border:0; border-radius:8px; background:#eff2e7; color:#546a4c; font-size:11px; white-space:nowrap; }
+.city-experience-modes button[aria-pressed=true] { background:#284f40; color:#fffef0; }
+.city-story-add-place { width:100%; border:1px solid #acbc90; border-radius:9px; padding:12px; background:#eaf0d6; color:#294b35; font-weight:600; }
+.city-story-notice { padding:12px; background:#f5eedb; border-radius:8px; font-size:12px; line-height:1.7; overflow-wrap:anywhere; }
+.city-story-meta { color:#63745e; font-size:10px!important; line-height:1.7!important; overflow-wrap:anywhere; }
+.city-playback-wrap { border-bottom:1px solid #d8dfc9; padding:14px 0; }
+.city-story-citations { font-size:11px; line-height:1.7; padding-bottom:10px; }
+.city-story-citations summary { cursor:pointer; }
+.city-story-citations p { overflow-wrap:anywhere; }
+.city-food-panel h2 { margin:8px 0; font-size:19px; line-height:1.5; }
+.city-food-panel > p { font-size:12px; line-height:1.8; }
+.city-food-panel h3 { font-size:13px; margin:22px 0 10px; }
+.city-food-panel h3 small { font-weight:400; color:#6e7e66; }
+.city-food-filters { display:flex; gap:6px; margin:10px 0; }
+.city-food-filters button { padding:7px 12px; min-height:36px; border:1px solid #d6dec9; border-radius:20px; background:#fcfdf4; color:#546a4c; font-size:11px; }
+.city-food-filters button[aria-pressed=true] { background:#e4edcf; border-color:#a4b28a; }
+.city-food-list { display:grid; gap:12px; }
+.city-food-list article { padding:14px; background:#fffaf1; border:1px solid #e4ddc9; border-radius:10px; }
+.city-food-list article[data-selected=true] { outline:2px solid #ad703a; outline-offset:1px; }
+.city-food-kind { font-size:10px; color:#9b552e; }.city-food-kind.cafe { color:#77553d; }
+.city-food-list h4 { margin:6px 0; font-size:15px; }
+.city-food-list p { font-size:11px; line-height:1.8; margin:8px 0; }
+.city-food-badge { display:inline-block; border-radius:4px; padding:3px 6px; background:#f3e7cd; color:#7b5a2f; font-size:9px; }
+.city-food-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; font-size:10px; }
+.city-food-actions button { min-height:34px; border:1px solid #d6c5a5; background:#fffdf7; border-radius:7px; padding:6px 9px; color:#785533; }
+.city-food-actions a { color:#566f46; }
+.city-story-studio-note { margin:10px 0; padding:14px; border:1px solid #b7c4a9; border-radius:10px; background:#f1f5e8; font-size:12px; line-height:1.8; }
+.city-story-share { margin-top:16px; display:grid; gap:10px; }
+.city-story-share input { width:100%; min-width:0; padding:9px; border:1px solid #d3dcc4; border-radius:7px; font-size:11px; }
+.city-story-share-qr { width:160px; height:160px; background:white; }
+.city-story-share-qr svg { width:100%; height:100%; }
+.city-story-share p { font-size:11px; line-height:1.7; margin:0; overflow-wrap:anywhere; }
+@media(max-width:700px) { .city-experience-modes button { min-height:44px; }.city-food-list article { padding:12px; } }
+
+.diorama-page .diorama-directory-modes { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.city-story-recovery { display:grid; gap:8px; padding:12px; border:1px solid #d7ba78; border-radius:8px; font-size:12px; line-height:1.7; }
+.city-story-recovery button { min-height:38px; border:1px solid #c5cead; background:#fffdf2; border-radius:6px; color:#375039; }
+.city-shared-home { position:fixed; top:20px; left:20px; z-index:50; width:48px; height:48px; display:grid; place-items:center; border-radius:14px; background:#fffef3; color:#315443; font-size:24px; text-decoration:none; }
+.city-shared-finished { margin:15vh auto; max-width:500px; padding:24px; display:grid; gap:20px; color:#315443; }
+.city-shared-finished h1 { font-size:24px; }
+.city-shared-finished button { min-height:44px; padding:12px; border:1px solid #b9c5a6; border-radius:8px; background:#edf2df; color:inherit; }

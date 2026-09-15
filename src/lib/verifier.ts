@@ -1,3 +1,4 @@
+import { cardPlace, storyStopForCard } from "./run";
 import { z } from "zod";
 import { getPlace, PLACES } from "./places";
 import { assertOfficialUrl } from "./sources";
@@ -18,7 +19,6 @@ function covered(text: string, claims: Claim[]) {
 /** Rule checks enforce structural integrity; live mode additionally requires a model evidence review. */
 export function verifyContent(run: Run): ReviewIssue[] {
   const issues: ReviewIssue[] = [];
-  const place = getPlace(run.brief.placeId ?? run.brief.place);
   const add = (
     targetId: string,
     type: string,
@@ -83,6 +83,12 @@ export function verifyContent(run: Run): ReviewIssue[] {
   }
   const claimMap = new Map(run.claims.map((claim) => [claim.id, claim]));
   for (const card of run.cards) {
+    const stop = storyStopForCard(run, card.id);
+    const place = run.brief.story ? (stop ? getPlace(stop.placeId) : undefined) : getPlace(run.brief.placeId ?? run.brief.place);
+    if (run.brief.story && (card.id !== `card-${run.cards.indexOf(card) + 1}` || !stop || card.stopId !== stop.id || card.placeId !== stop.placeId))
+      add(card.id, "place_mismatch", "카드의 장소가 이야기의 고정 배정과 일치하지 않습니다.");
+    if (run.brief.story && run.cards.indexOf(card) < 3 && (card.imagination || !run.claims.some(claim => claim.cardId === card.id && claim.kind === "fact")))
+      add(card.id, "missing_place_fact", "각 장소의 사실 카드에는 공식 근거가 있는 사실이 필요합니다.");
     if (!card.title.trim() || !card.body.trim() || !card.script.trim())
       add(card.id, "empty_content", "제목·본문·대본이 필요합니다.");
     if (card.title.length > 44 || card.body.length > 220)
@@ -102,7 +108,7 @@ export function verifyContent(run: Run): ReviewIssue[] {
       .flatMap(text => [compact(text), compact(fixtureEasyText(text))]).filter(Boolean) : [];
     const grounded = claims.filter(claim => claim.cardId === card.id && claim.kind === "fact")
       .map(claim => ({ text: compact(claim.text), quotes: claim.evidenceIds
-        .filter(id => evidenceIsValid(run, id) && !issues.some(issue => issue.targetId === id))
+        .filter(id => evidenceIsValid(run, id, place?.id) && !issues.some(issue => issue.targetId === id))
         .map(id => evidenceMap.get(id)!.quote) }))
       .filter(({ text, quotes }) => text.length > 0 && quotes.some(quote =>
         compact(quote).includes(text) || compact(fixtureEasyText(quote)) === text));
@@ -196,6 +202,7 @@ export function verifyContent(run: Run): ReviewIssue[] {
         (evidence) =>
           evidence &&
           sourceMap.get(evidence.sourceId)?.status === "ok" &&
+          evidenceIsValid(run, evidence.id, run.brief.story ? storyStopForCard(run, claim.cardId)?.placeId ?? "invalid" : undefined) &&
           !issues.some((issue) => issue.targetId === evidence.id),
       );
     if (claim.evidenceIds.some((id) => !evidenceMap.has(id)))
@@ -290,14 +297,22 @@ export function verifyContent(run: Run): ReviewIssue[] {
 }
 
 /** References are a code check, separate from the model's semantic entailment verdict. */
-export function evidenceIsValid(run: Run, evidenceId: string): boolean {
+export function evidenceIsValid(run: Run, evidenceId: string, expectedPlaceId?: string): boolean {
   const evidence = run.evidence.find((item) => item.id === evidenceId);
   if (!evidence || !evidence.quote.trim()) return false;
   const source = run.sources.find((item) => item.id === evidence.sourceId);
   if (!source || source.status !== "ok") return false;
-  const place = getPlace(run.brief.placeId ?? run.brief.place);
+  const stop = run.brief.story?.stops.find(stop => stop.placeId === source.placeId);
+  if (run.brief.story && (!stop || expectedPlaceId && source.placeId !== expectedPlaceId)) return false;
+  if (stop?.officialUrls) {
+    try {
+      const normalized = (value: string) => { const url = new URL(value); url.hash = ""; url.searchParams.sort(); return url.href; };
+      if (!stop.officialUrls.some(url => normalized(url) === normalized(source.url))) return false;
+    } catch { return false; }
+  }
+  const place = getPlace(stop?.placeId ?? run.brief.placeId ?? run.brief.place);
   // Legacy museum snapshots predate the registry; new destinations require their own allowlist.
-  if (place && place.id !== "pangyo-museum") {
+  if (place && (run.brief.story || place.id !== "pangyo-museum")) {
     try { assertOfficialUrl(source.url, place.id); } catch { return false; }
   }
   if (evidence.start !== undefined || evidence.end !== undefined) {
@@ -403,7 +418,7 @@ export function validateAtomicReview(run: Run, raw: unknown): { assessments: Cla
     if (new Set(atom.evidenceIds).size !== atom.evidenceIds.length || atom.citations.length !== atom.evidenceIds.length || new Set(atom.citations.map((citation) => citation.evidenceId)).size !== atom.citations.length) throw new Error("원자 검수의 근거 목록과 인용 목록이 일치하지 않습니다.");
     for (const citation of atom.citations) {
       const evidence = run.evidence.find((item) => item.id === citation.evidenceId);
-      if (!evidence || !atom.evidenceIds.includes(evidence.id) || !evidenceIsValid(run, evidence.id) || citation.sourceId !== evidence.sourceId || citation.quote !== evidence.quote) throw new Error("검수 인용이 실제 출처의 원문·ID·위치와 일치하지 않습니다.");
+      if (!evidence || !atom.evidenceIds.includes(evidence.id) || !evidenceIsValid(run, evidence.id, run.brief.story ? cardPlace(run, atom.cardId).id : undefined) || citation.sourceId !== evidence.sourceId || citation.quote !== evidence.quote) throw new Error("검수 인용이 실제 출처의 원문·ID·위치와 일치하지 않습니다.");
     }
     if (atom.freshness === "conflicting" && (atom.verdict !== "insufficient" || atom.action !== "human_review")) throw new Error("출처 충돌이 해소되지 않은 사실은 insufficient와 human_review로 남겨야 합니다.");
     if (atom.verdict === "supported") {
@@ -444,7 +459,7 @@ function fixtureAssessments(run: Run, issues: ReviewIssue[]): ClaimAssessment[] 
       for (const claim of related) {
         const pending = issues.filter((issue) => issue.targetId === claim.id || issue.targetId === card.id);
         const supported = claim.kind === "fact" && claim.support === "supported" && pending.length === 0;
-        assessments.push({ id: `fixture:${run.version}:${claim.id}:${field}`, claimId: claim.id, cardId: card.id, field, text: claim.text, start: card[field].indexOf(claim.text), end: card[field].indexOf(claim.text) + claim.text.length, freshness: supported ? "stable" : "unverified", verdict: supported ? "supported" : "insufficient", evidenceIds: claim.evidenceIds.filter((id) => evidenceIsValid(run, id)), rationale: `fixture 규칙 ${REVIEW_RULES_VERSION}: ${supported ? "저장한 공식 문구 또는 허용한 동일 의미 문구와 일치합니다. 실제 모델 판정이 아닙니다." : pending.map((issue) => issue.message).join(" ") || "저장된 규칙으로 지지 여부를 확인할 수 없습니다."}`, action: supported ? "keep" : "search" });
+        assessments.push({ id: `fixture:${run.version}:${claim.id}:${field}`, claimId: claim.id, cardId: card.id, field, text: claim.text, start: card[field].indexOf(claim.text), end: card[field].indexOf(claim.text) + claim.text.length, freshness: supported ? "stable" : "unverified", verdict: supported ? "supported" : "insufficient", evidenceIds: claim.evidenceIds.filter((id) => evidenceIsValid(run, id, run.brief.story ? cardPlace(run, card.id).id : undefined)), rationale: `fixture 규칙 ${REVIEW_RULES_VERSION}: ${supported ? "저장한 공식 문구 또는 허용한 동일 의미 문구와 일치합니다. 실제 모델 판정이 아닙니다." : pending.map((issue) => issue.message).join(" ") || "저장된 규칙으로 지지 여부를 확인할 수 없습니다."}`, action: supported ? "keep" : "search" });
       }
       if (!related.length && looksFactual(card[field])) assessments.push({ id: `fixture:${run.version}:${card.id}:${field}`, claimId: `unregistered:${card.id}:${field}:0`, cardId: card.id, field, text: card[field], start: 0, end: card[field].length, freshness: "unverified", verdict: "insufficient", evidenceIds: [], rationale: `fixture 규칙 ${REVIEW_RULES_VERSION}: 등록되지 않은 사실 표현의 근거를 확인할 수 없습니다.`, action: "human_review" });
     }

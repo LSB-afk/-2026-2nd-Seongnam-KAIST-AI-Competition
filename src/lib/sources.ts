@@ -1,3 +1,5 @@
+import { officialStoryUrls } from "./city-story";
+import { searchIntent } from "./lifecycle";
 import { createHash, randomUUID } from "node:crypto";
 import { getPlace, PLACES } from "./places";
 import type { Run, Decision, SourceResult, Source, SearchIntent, SearchRecord, Evidence } from "./types";
@@ -41,7 +43,7 @@ function normalizedUrl(value: string): string {
 function registeredUrls(placeId: string): string[] {
   const place = getPlace(placeId);
   if (!place) throw new Error("등록되지 않은 관광지입니다.");
-  return [...new Set([place.sourceUrl, ...(place.officialQuotes ?? []).map(quote => quote.sourceUrl)].map(normalizedUrl))];
+  return [...new Set(officialStoryUrls(place).map(normalizedUrl))];
 }
 export function assertOfficialUrl(value: string, placeId?: string): void {
   const u = new URL(value);
@@ -128,11 +130,12 @@ function contentSnapshot(html: string): string {
   return snapshot;
 }
 
-async function fetchDocument(url: string, signal: AbortSignal, placeId?: string): Promise<{ html: string; url: string }> {
+async function fetchDocument(url: string, signal: AbortSignal, placeId?: string, selectedUrls?: string[]): Promise<{ html: string; url: string }> {
   let current = canonicalUrl(url, undefined, placeId);
   for (let hop = 0; hop < 4; hop++) {
     signal.throwIfAborted();
     assertOfficialUrl(current, placeId);
+    if (selectedUrls && !selectedUrls.some(url => normalizedUrl(url) === current)) throw new Error("사용자가 선택한 공식 자료 밖으로 이동할 수 없습니다.");
     const response = await fetch(current, { redirect: "manual", signal, headers: { "user-agent": "SeongnamTimeStory/0.2 (official cultural content research)" } });
     if (response.status >= 300 && response.status < 400) {
       const next = response.headers.get("location");
@@ -262,14 +265,15 @@ function additions(run: Run, result: SourceResult, search: SearchRecord): Source
   search.evidenceIds = evidence.map(item => item.id);
   return { sources, evidence, search };
 }
-export async function searchSources(run: Run, decision: Decision, signal: AbortSignal): Promise<SourceResult> {
+async function searchSinglePlace(run: Run, decision: Decision, signal: AbortSignal, selectedUrls?: string[]): Promise<SourceResult> {
   signal.throwIfAborted();
   const place = getPlace(run.brief.placeId ?? run.brief.place);
   if (!place) throw new Error("등록되지 않은 관광지입니다.");
   const intent = intentFor(run, decision);
   const search: SearchRecord = { ...intent, id: `search-${randomUUID()}`, at: new Date().toISOString(), version: run.version, visitedPages: 0, newEvidenceCount: 0, evidenceIds: [], resolvedClaimIds: [], remainingInformation: intent.missingInformation.length ? [...intent.missingInformation] : ["수집 자료가 요청을 뒷받침하는지 검수 필요"], errors: [] };
   if (run.mode === "fixture") {
-    const captured = fixtureSources(place.id);
+    const all = fixtureSources(place.id);
+    const captured = selectedUrls ? { sources: all.sources.filter(source => selectedUrls.some(url => normalizedUrl(url) === normalizedUrl(source.url))), evidence: all.evidence.filter(item => all.sources.some(source => source.id === item.sourceId && selectedUrls.some(url => normalizedUrl(url) === normalizedUrl(source.url)))) } : all;
     const result = run.scenario === "unavailable" ? { sources: captured.sources.map(source => ({ ...source, status: "unavailable" as const, snapshot: "", hash: sha("") })), evidence: [] } : captured;
     if (run.scenario === "unavailable") search.errors.push("fixture: 공식 자료 접근 실패 시나리오");
     return additions(run, { sources: result.sources.map(source => ({ ...source, searchIds: [search.id] })), evidence: result.evidence.map(item => {
@@ -283,7 +287,7 @@ export async function searchSources(run: Run, decision: Decision, signal: AbortS
   const bounded = AbortSignal.any([signal, AbortSignal.timeout(remainingMs)]);
   const terms = searchTerms(intent, run);
   const broad = !intent.targetClaimIds.length && !intent.missingInformation.length && terms.length === 0;
-  const seeds = place.id === "pangyo-museum" ? CATALOG.map(entry => entry.url) : registeredUrls(place.id);
+  const seeds = selectedUrls ?? (place.id === "pangyo-museum" ? CATALOG.map(entry => entry.url) : registeredUrls(place.id));
   const queue = seeds.map(url => ({ url: canonicalUrl(url, undefined, place.id), depth: 0, score: 0 }));
   const visited = new Set<string>();
   const queued = new Set(queue.map(entry => entry.url));
@@ -294,7 +298,7 @@ export async function searchSources(run: Run, decision: Decision, signal: AbortS
     if (visited.has(entry.url)) continue;
     visited.add(entry.url); search.visitedPages++;
     try {
-      const page = await fetchDocument(entry.url, bounded, place.id);
+      const page = await fetchDocument(entry.url, bounded, place.id, selectedUrls);
       visited.add(page.url);
       const snapshot = contentSnapshot(page.html);
       const hash = sha(snapshot);
@@ -305,7 +309,7 @@ export async function searchSources(run: Run, decision: Decision, signal: AbortS
       result.evidence.push(...matchingEvidence(source, terms, broad, search));
       if (entry.depth < 2) {
         for (const link of linksFrom(page.html, page.url, terms, place.id)) {
-          if (!queued.has(link.url) && !visited.has(link.url)) { queued.add(link.url); queue.push({ ...link, depth: entry.depth + 1 }); }
+          if ((!selectedUrls || selectedUrls.some(url => normalizedUrl(url) === link.url)) && !queued.has(link.url) && !visited.has(link.url)) { queued.add(link.url); queue.push({ ...link, depth: entry.depth + 1 }); }
         }
         queue.sort((a, b) => b.score - a.score || a.depth - b.depth);
       }
@@ -319,4 +323,25 @@ export async function searchSources(run: Run, decision: Decision, signal: AbortS
   if (bounded.aborted) search.errors.push("검색 시간 상한에 도달했습니다. 수집된 자료만 검수에 전달합니다.");
   else if (queue.length) search.errors.push("검색 페이지/깊이 상한에 도달했습니다.");
   return additions(run, result, search);
+}
+
+/** One bounded search per stop. Shared pages remain separate immutable place snapshots. */
+export async function searchSources(run: Run, decision: Decision, signal: AbortSignal): Promise<SourceResult> {
+  if (!run.brief.story) return searchSinglePlace(run, decision, signal);
+  const intent = searchIntent(run, decision);
+  const stop = run.brief.story.stops.find(stop => stop.placeId === intent.placeId)!;
+  const place = getPlace(stop.placeId)!;
+  const scoped: Run = { ...run, brief: { ...run.brief, story: undefined, placeId: place.id, place: place.name },
+    sources: run.sources.filter(source => source.placeId === place.id),
+    evidence: run.evidence.filter(item => run.sources.some(source => source.id === item.sourceId && source.placeId === place.id)),
+  };
+  const result = await searchSinglePlace(scoped, { ...decision, search: intent }, signal, stop.officialUrls);
+  const sourceIds = new Map(result.sources.map(source => [source.id, `source-${sha(`${place.id}:${source.url}:${source.hash}:${source.status}`)}`]));
+  result.sources = result.sources.map(source => ({ ...source, id: sourceIds.get(source.id)!, placeId: place.id }));
+  result.evidence = result.evidence.map(item => {
+    const sourceId = sourceIds.get(item.sourceId) ?? item.sourceId;
+    return { ...item, sourceId, id: `evidence-${sha(`${place.id}:${sourceId}:${item.start}:${item.end}:${item.quote}`)}` };
+  });
+  if (result.search) { result.search.placeId = place.id; result.search.evidenceIds = result.evidence.map(item => item.id); }
+  return result;
 }

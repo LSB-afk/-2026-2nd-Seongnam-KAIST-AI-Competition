@@ -1,3 +1,4 @@
+import { cardPlace, storyStopForCard, missingStoryStops } from "./run";
 import { randomUUID } from "node:crypto";
 import type { Card, Claim, Decision, Run, SourceResult } from "./types";
 
@@ -5,12 +6,23 @@ export function searchIntent(run: Run, chosen: Decision) {
   const targets = run.claims.filter(
     (claim) => chosen.targetIds.includes(claim.id) || chosen.targetIds.includes(claim.cardId),
   );
-  return chosen.search ?? {
+  const intent = chosen.search ?? {
     query: targets.map((claim) => claim.text).join(" ") || run.brief.goal,
     targetClaimIds: targets.map((claim) => claim.id),
     missingInformation: run.issues.filter((issue) => !issue.resolved).map((issue) => issue.message),
     reason: chosen.reasonSummary,
   };
+  if (!run.brief.story) return intent;
+  const placeId = intent.placeId ?? (targets[0] ? cardPlace(run, targets[0].cardId).id : missingStoryStops(run)[0]?.placeId ?? run.brief.story.stops[0].placeId);
+  if (!run.brief.story.stops.some(stop => stop.placeId === placeId)) throw new Error("이야기에 없는 장소를 검색할 수 없습니다.");
+  if (chosen.search?.placeId && intent.targetClaimIds.some(id => {
+    const claim = run.claims.find(claim => claim.id === id);
+    return !claim || cardPlace(run, claim.cardId).id !== placeId;
+  })) throw new Error("검색 대상 문장과 선택 장소가 일치하지 않습니다.");
+  return { ...intent, placeId, targetClaimIds: intent.targetClaimIds.filter(id => {
+    const claim = run.claims.find(claim => claim.id === id);
+    return claim && cardPlace(run, claim.cardId).id === placeId;
+  }) };
 }
 
 /** Append immutable evidence. An ID collision must never rewrite an old review's source. */
@@ -19,14 +31,15 @@ export function mergeSearchResult(run: Run, result: SourceResult, chosen: Decisi
   const evidence = new Map(run.evidence.map((item) => [item.id, item]));
   for (const source of result.sources) {
     const existing = sources.get(source.id);
-    if (existing && (existing.hash !== source.hash || existing.snapshot !== source.snapshot || existing.url !== source.url)) {
+    if (existing && (existing.hash !== source.hash || existing.snapshot !== source.snapshot || existing.url !== source.url || existing.placeId !== source.placeId)) {
       throw new Error("동일한 출처 ID의 스냅샷을 덮어쓸 수 없습니다.");
     }
     if (!existing) sources.set(source.id, structuredClone(source));
   }
   const newIds: string[] = [];
   const normalized = (quote: string) => quote.normalize("NFKC").replace(/\s+/g, " ").trim();
-  const knownQuotes = new Set(run.evidence.map((item) => normalized(item.quote)));
+  const quoteKey = (item: Run["evidence"][number]) => `${sources.get(item.sourceId)?.placeId ?? ""}:${normalized(item.quote)}`;
+  const knownQuotes = new Set(run.evidence.map(quoteKey));
   for (const item of result.evidence) {
     const existing = evidence.get(item.id);
     if (existing && (existing.quote !== item.quote || existing.sourceId !== item.sourceId)) {
@@ -35,7 +48,7 @@ export function mergeSearchResult(run: Run, result: SourceResult, chosen: Decisi
     if (!sources.has(item.sourceId)) throw new Error("검색 근거의 출처 스냅샷이 없습니다.");
     if (!existing) {
       evidence.set(item.id, structuredClone(item));
-      const quote = normalized(item.quote);
+      const quote = quoteKey(item);
       if (!knownQuotes.has(quote)) newIds.push(item.id);
       knownQuotes.add(quote);
     }
@@ -159,6 +172,17 @@ export function applyStoryUpdate(
   const initial = run.cards.length === 0;
   let cards = structuredClone(story.cards);
   let claims = structuredClone(story.claims);
+  if (run.brief.story && cards.some((card, index) => card.id !== `card-${index + 1}`)) throw new Error("이야기 카드의 고정 순서를 바꿀 수 없습니다.");
+  if (run.brief.story) cards = cards.map(card => {
+    const stop = storyStopForCard(run, card.id);
+    if (!stop) throw new Error("이야기의 고정 카드 ID가 필요합니다.");
+    const next = { ...card, stopId: stop.id, placeId: stop.placeId };
+    // Text generation cannot introduce a photo or erase a later explicit user selection.
+    const old = run.cards.find(existing => existing.id === card.id);
+    if (old?.image) next.image = structuredClone(old.image);
+    else delete next.image;
+    return next;
+  });
   if (!initial) {
     const targetIds = new Set(chosen.targetIds);
     const targetCards = new Set(run.cards.filter((card) =>

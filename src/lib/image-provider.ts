@@ -1,3 +1,4 @@
+import { cardPlace } from "./run";
 import { randomUUID } from "node:crypto";
 import { readImage, storeImage } from "./images";
 import { AgentLimitError } from "./provider";
@@ -23,7 +24,7 @@ export function getImageConfig(): { configured: boolean; reason: string | null; 
 
 export function buildImagePrompt(run: Run, card: Card, subject?: string): ImagePrompt {
   return {
-    place: run.brief.place,
+    place: cardPlace(run, card.id).name,
     subject: subject?.trim() || `${card.title}. ${card.body}`,
     composition: "Professional editorial travel photograph, eye-level perspective, balanced foreground and background, natural detail, one clear focal point, square composition.",
     lighting: "Soft natural daylight, realistic shadows and restrained highlights; consistent lighting across the four-card series.",
@@ -87,7 +88,10 @@ export async function generateImage(
   if (signal.aborted) throw new Error("이미지 생성이 취소되었습니다.");
   const config = getImageConfig();
   if (!config.configured) throw new Error(config.reason!);
-  const placeId = getPlace(run.brief.placeId ?? run.brief.place)?.id ?? reference?.placeId;
+  const storyCardId = run.brief.story ? run.imageJob?.cardId : undefined;
+  if (run.brief.story && !storyCardId) throw new Error("이미지를 생성할 이야기 카드가 없습니다.");
+  const placeId = storyCardId ? cardPlace(run, storyCardId).id : getPlace(run.brief.placeId ?? run.brief.place)?.id ?? reference?.placeId;
+  if (run.brief.story && getPlace(prompt.place)?.id !== placeId) throw new Error("이미지 요청의 장소가 카드와 다릅니다.");
   if (!placeId) throw new Error("이미지를 생성할 장소를 먼저 선택해 주세요.");
   if (reference && reference.placeId !== placeId) throw new Error("참조 이미지의 장소가 현재 장소와 일치하지 않습니다.");
   const requestSignal = AbortSignal.any([signal, AbortSignal.timeout(Math.min(120_000, Math.max(1, run.limits.maxDurationMs)))]);

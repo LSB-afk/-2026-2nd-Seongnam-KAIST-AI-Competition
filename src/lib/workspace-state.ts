@@ -1,3 +1,4 @@
+import { cityStoryBriefSchema } from './city-story';
 import { normaliseDiorama, type DioramaSelection } from './diorama/data';
 import { getPlace, PLACES, type Place } from './places';
 import type { Brief, Mode, Run, Scenario, Strategy } from './types';
@@ -9,7 +10,7 @@ export type MapViewport = { lat: number; lng: number; zoom: number };
 export type ExploreState = { query: string; district: string; category: string; theme: PlaceTheme; selectedId: string | null; mobileView: 'list' | 'map'; mapView?: MapViewport };
 export type DraftState = { brief: Brief; mode: Mode; strategy: Strategy; scenario: Scenario; imageChoice: 'photo' | 'ai' };
 export type EditDraft = { runId: string; version: number; cardId: string; title: string; body: string };
-export type WorkspaceState = { version: 1; view: WorkspaceView; diorama: DioramaSelection; explore: ExploreState; savedIds: string[]; draft: DraftState; runId: string | null; selectedCardId: string; tab: ReviewTab; editDrafts: EditDraft[]; historyQuery: string; historyStatus: string };
+export type WorkspaceState = { version: 1; storyId: string | null; view: WorkspaceView; diorama: DioramaSelection; explore: ExploreState; savedIds: string[]; draft: DraftState; runId: string | null; selectedCardId: string; tab: ReviewTab; editDrafts: EditDraft[]; historyQuery: string; historyStatus: string };
 export const WORKSPACE_STORAGE_KEY = 'timestory.workspace.v1';
 export const PLACE_THEMES: { id: Exclude<PlaceTheme,'all'>; label: string; types: Place['type'][] }[] = [
   {id:'history',label:'역사·문화유산',types:['박물관','문화유산']},
@@ -25,7 +26,7 @@ const record = (value: unknown): Record<string,unknown> => value && typeof value
 const string = (value: unknown, fallback = '', max = 100) => typeof value==='string' && value.length<=max ? value : fallback;
 function oneOf<T extends string>(value:unknown, values: readonly T[], fallback:T):T { return values.includes(value as T) ? value as T : fallback; }
 export function defaultExplore(): ExploreState { return {query:'',district:'전체 지역',category:'전체 유형',theme:'all',selectedId:null,mobileView:'list'}; }
-export function createWorkspace(draft: DraftState): WorkspaceState { return {version:1,view:'dashboard',diorama:normaliseDiorama(null),explore:defaultExplore(),savedIds:[],draft:{...draft,brief:{...draft.brief}},runId:null,selectedCardId:'',tab:'evidence',editDrafts:[],historyQuery:'',historyStatus:'all'}; }
+export function createWorkspace(draft: DraftState): WorkspaceState { return {version:1,storyId:null,view:'dashboard',diorama:normaliseDiorama(null),explore:defaultExplore(),savedIds:[],draft:{...draft,brief:{...draft.brief}},runId:null,selectedCardId:'',tab:'evidence',editDrafts:[],historyQuery:'',historyStatus:'all'}; }
 export function filterPlaces(filters: ExploreState, savedIds?: string[]): Place[] {
   const theme = PLACE_THEMES.find(t=>t.id===filters.theme);
   const q=filters.query.trim().toLocaleLowerCase();
@@ -51,14 +52,17 @@ export function decodeWorkspace(raw:string|null,draft:DraftState):WorkspaceState
     const place=getPlace(string(brief.placeId)||string(brief.place))||getPlace(draft.brief.placeId||draft.brief.place)||PLACES[0];
     const purpose=oneOf(brief.purpose,['place_intro','visit_guide','youth_story'],'youth_story');
     const restoredBrief:Brief={place:place.name,placeId:place.id,audience:string(brief.audience,draft.brief.audience,40),goal:string(brief.goal,draft.brief.goal,1000),cardCount:4,includeFuture:true,readingStyle:oneOf(brief.readingStyle,['standard','easy'] as const,'standard'),...(brief.purpose?{purpose}:draft.brief.purpose?{purpose:draft.brief.purpose}:{})};
+    const story=cityStoryBriefSchema.safeParse(brief.story);
+    if(story.success&&story.data.stops[0].placeId===place.id)restoredBrief.story=story.data;
     const editDrafts:EditDraft[]=Array.isArray(value.editDrafts)?value.editDrafts.slice(-24).flatMap(v=>{const d=record(v);return UUID.test(string(d.runId))&&Number.isInteger(d.version)&&Number(d.version)>=0&&/^card-[1-4]$/.test(string(d.cardId))&&typeof d.title==='string'&&d.title.length<=80&&typeof d.body==='string'&&d.body.length<=500?[{runId:String(d.runId),version:Number(d.version),cardId:String(d.cardId),title:d.title,body:d.body}]:[];}):[];
-    return {...base,view:oneOf(value.view,VIEWS,'dashboard'),diorama:normaliseDiorama(value.diorama),explore:normaliseExplore(value.explore),savedIds:[...new Set(Array.isArray(value.savedIds)?value.savedIds.filter((id):id is string=>typeof id==='string'&&!!getPlace(id)):[])],draft:{brief:restoredBrief,mode:oneOf(savedDraft.mode,['fixture','live'],'fixture'),strategy:oneOf(savedDraft.strategy,['agent','baseline'],'agent'),scenario:oneOf(savedDraft.scenario,['normal','causal','future','mismatch','unavailable','persistent'],'normal'),imageChoice:oneOf(savedDraft.imageChoice,['photo','ai'],'photo')},runId:UUID.test(string(value.runId))?String(value.runId):null,selectedCardId:/^card-[1-4]$/.test(string(value.selectedCardId))?String(value.selectedCardId):'',tab:oneOf(value.tab,TABS,'evidence'),editDrafts,historyQuery:string(value.historyQuery,'',100),historyStatus:oneOf(value.historyStatus,STATUSES,'all')};
+    return {...base,storyId:UUID.test(string(value.storyId))?String(value.storyId):null,view:oneOf(value.view,VIEWS,'dashboard'),diorama:normaliseDiorama(value.diorama),explore:normaliseExplore(value.explore),savedIds:[...new Set(Array.isArray(value.savedIds)?value.savedIds.filter((id):id is string=>typeof id==='string'&&!!getPlace(id)):[])],draft:{brief:restoredBrief,mode:oneOf(savedDraft.mode,['fixture','live'],'fixture'),strategy:oneOf(savedDraft.strategy,['agent','baseline'],'agent'),scenario:oneOf(savedDraft.scenario,['normal','causal','future','mismatch','unavailable','persistent'],'normal'),imageChoice:oneOf(savedDraft.imageChoice,['photo','ai'],'photo')},runId:UUID.test(string(value.runId))?String(value.runId):null,selectedCardId:/^card-[1-4]$/.test(string(value.selectedCardId))?String(value.selectedCardId):'',tab:oneOf(value.tab,TABS,'evidence'),editDrafts,historyQuery:string(value.historyQuery,'',100),historyStatus:oneOf(value.historyStatus,STATUSES,'all')};
   } catch { return base; }
 }
-const ROUTE_KEYS=['view','place','district','category','theme','q','run','card','tab','lat','lng','zoom','display','scene','spot'];
+const ROUTE_KEYS=['view','place','district','category','theme','q','run','card','tab','lat','lng','zoom','display','scene','spot','story'];
 export function workspaceSearch(state:WorkspaceState):string {
   const p=new URLSearchParams();p.set('view',state.view);
   const f=state.explore;
+  if(state.view==='diorama'&&state.storyId)p.set('story',state.storyId);
   if(state.view==='diorama'){p.set('scene',state.diorama.placeId);if(state.diorama.hotspotId)p.set('spot',state.diorama.hotspotId);}
   if(f.selectedId)p.set('place',f.selectedId);
   if(f.query)p.set('q',f.query);
@@ -76,7 +80,7 @@ export function workspaceFromSearch(state:WorkspaceState,search:string,restoreWh
   const p=new URLSearchParams(search);
   if(!ROUTE_KEYS.some(k=>p.has(k))&&restoreWhenEmpty)return state;
   const mapView=p.has('lat')&&p.has('lng')&&p.has('zoom')?{lat:Number(p.get('lat')),lng:Number(p.get('lng')),zoom:Number(p.get('zoom'))}:undefined;
-  return {...state,view:oneOf(p.get('view'),VIEWS,'dashboard'),diorama:p.get('view')==='diorama'?normaliseDiorama({placeId:p.get('scene'),hotspotId:p.get('spot')}):state.diorama,explore:normaliseExplore({query:p.get('q')||'',district:p.get('district'),category:p.get('category'),theme:p.get('theme'),selectedId:p.get('place'),mobileView:p.get('display'),mapView}),runId:UUID.test(p.get('run')||'')?p.get('run'):null,selectedCardId:/^card-[1-4]$/.test(p.get('card')||'')?p.get('card')!:'',tab:oneOf(p.get('tab'),TABS,'evidence')};
+  return {...state,storyId:p.get('view')==='diorama'&&UUID.test(p.get('story')||'')?p.get('story'):null,view:oneOf(p.get('view'),VIEWS,'dashboard'),diorama:p.get('view')==='diorama'?normaliseDiorama({placeId:p.get('scene'),hotspotId:p.get('spot')}):state.diorama,explore:normaliseExplore({query:p.get('q')||'',district:p.get('district'),category:p.get('category'),theme:p.get('theme'),selectedId:p.get('place'),mobileView:p.get('display'),mapView}),runId:UUID.test(p.get('run')||'')?p.get('run'):null,selectedCardId:/^card-[1-4]$/.test(p.get('card')||'')?p.get('card')!:'',tab:oneOf(p.get('tab'),TABS,'evidence')};
 }
 export function shouldAcceptRun(current:Run|null,incoming:Run):boolean {
   if(!current)return true;

@@ -1,3 +1,4 @@
+import type { CityStoryBrief } from "./city-story";
 export type Mode = "fixture" | "live";
 export type CreationPurpose = "place_intro" | "visit_guide" | "youth_story";
 export type ReadingStyle = "standard" | "easy";
@@ -25,6 +26,7 @@ export type Action =
   | "finish"
   | "escalate";
 export interface Brief {
+  story?: CityStoryBrief;
   place: string;
   placeId?: string;
   purpose?: CreationPurpose;
@@ -35,6 +37,7 @@ export interface Brief {
   includeFuture: true;
 }
 export interface Source {
+  placeId?: string;
   id: string;
   url: string;
   title: string;
@@ -59,6 +62,7 @@ export interface Evidence {
   end?: number;
 }
 export interface SearchIntent {
+  placeId?: string;
   query: string;
   targetClaimIds: string[];
   missingInformation: string[];
@@ -133,6 +137,8 @@ export interface Claim {
   support: "supported" | "insufficient" | "contradicted" | "not_applicable";
 }
 export interface Card {
+  placeId?: string;
+  stopId?: string;
   id: string;
   title: string;
   body: string;

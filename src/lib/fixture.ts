@@ -19,6 +19,30 @@ export function createFixtureStory(run: Run): {
         : structuredClone(claim)),
     };
   }
+  if (run.brief.story) {
+    const story = run.brief.story;
+    const claims: Claim[] = [];
+    const cards: Card[] = story.cardStopIds.map((stopId, index) => {
+      const stop = story.stops.find(stop => stop.id === stopId)!;
+      const place = getPlace(stop.placeId)!;
+      const evidence = run.evidence.filter(item => run.sources.some(source => source.id === item.sourceId && source.placeId === place.id && source.status === "ok"));
+      if (!evidence.length) throw new Error(`${place.name}의 공식 근거가 없습니다.`);
+      const occurrence = story.cardStopIds.slice(0, index).filter(id => id === stopId).length;
+      const item = evidence[occurrence % evidence.length];
+      const cardId = `card-${index + 1}`;
+      const single = { ...run, cards: [], issues: [], brief: { ...run.brief, story: undefined, placeId: place.id, place: place.name } };
+      let text = index === 3 ? createFixtureStory(single).cards[3].body : item.quote;
+      if ((run.version === 0 && run.scenario === "causal" || run.scenario === "persistent") && index === 2) text = "이 장소의 기술이 오늘날 AI 산업으로 이어졌다.";
+      if (run.version === 0 && run.scenario === "mismatch" && index === 0) text = `${place.name}은 2015년에 개관했어요.`;
+      if (run.version === 0 && run.scenario === "future" && index === 3) text = "성남시는 미래 AI 문화공간 조성 사업을 확정했습니다.";
+      if (run.brief.readingStyle === "easy") text = fixtureEasyText(text);
+      const imagination = index === 3 && !(run.version === 0 && run.scenario === "future");
+      const claim: Claim = { id: `claim-story-${index + 1}`, cardId, text, kind: imagination ? "imagination" : "fact", evidenceIds: index === 3 ? [] : [item.id], support: imagination ? "not_applicable" : "insufficient" };
+      claims.push(claim);
+      return { id: cardId, placeId: place.id, stopId, title: index === 3 ? "우리가 상상하는 다음 장" : `${place.name}의 이야기`, body: text, script: text, claimIds: [claim.id], imagination };
+    });
+    return { cards, claims };
+  }
   const place = getPlace(run.brief.placeId ?? run.brief.place);
   if (!place) throw new Error("등록되지 않은 관광지입니다.");
   const museum = place.id === "pangyo-museum";

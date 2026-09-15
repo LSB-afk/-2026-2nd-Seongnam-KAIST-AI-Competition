@@ -1,3 +1,4 @@
+import { cardPlace, storyStopForCard } from "./run";
 import { randomUUID } from "node:crypto";
 import { getPlace } from "./places";
 import { z } from "zod";
@@ -165,7 +166,8 @@ export const decisionSchema = z
     uncertainty: z.string().max(1000),
     blockedReason: z.string().max(1000),
     expectedVersion: z.number().int().nonnegative(),
-    search: z.object({ query: short, targetClaimIds: ids, missingInformation: z.array(short).min(1).max(12), reason: short }).strict().nullable(),
+    search: z.object({
+    placeId: z.string().max(100).optional(), query: short, targetClaimIds: ids, missingInformation: z.array(short).min(1).max(12), reason: short }).strict().nullable(),
   })
   .strict();
 const claimSchema = z
@@ -235,6 +237,8 @@ function context(run: Run) {
     readingStyleOriginal: run.readingStyleChange?.status === "applied"
       ? run.revisions.find(revision => revision.version === run.readingStyleChange!.expectedVersion)
       : undefined,
+    selectedPlaces: run.brief.story?.stops.map(stop => getPlace(stop.placeId)),
+    cardPlan: run.brief.story ? ["card-1", "card-2", "card-3", "card-4"].map(id => ({ cardId: id, placeId: cardPlace(run, id).id, stopId: storyStopForCard(run, id)!.id, imagination: id === "card-4" })) : undefined,
     selectedPlace: getPlace(run.brief.placeId ?? run.brief.place ?? ""),
     goal: run.brief?.goal,
     searches: run.searches ?? [],
@@ -244,7 +248,8 @@ function context(run: Run) {
     version: run.version,
     reviewVersion: run.reviewVersion,
     evidence: run.evidence,
-    sources: run.sources.map(({ id, title, url, status, retrievedAt, publishedAt, modifiedAt }) => ({
+    sources: run.sources.map(({ id, placeId, title, url, status, retrievedAt, publishedAt, modifiedAt }) => ({
+      placeId,
       id,
       title,
       url,

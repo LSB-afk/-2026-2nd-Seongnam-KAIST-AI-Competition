@@ -1,3 +1,5 @@
+import { getPlace } from "./places";
+import { missingStoryStops } from "./run";
 import { randomUUID } from "node:crypto";
 import { createFixtureStory } from "./fixture";
 import {
@@ -186,7 +188,13 @@ export async function runAgent(run: Run, deps: AgentDeps): Promise<Run> {
     while (run.status === "running") {
       check();
       const styleChange = run.readingStyleChange?.status === "requested" ? run.readingStyleChange : undefined;
-      const chosen: Decision = styleChange
+      const missingStop = !run.cards.length ? missingStoryStops(run)[0] : undefined;
+      const preparation = missingStop ? decision(
+        run.searches?.some(search => search.placeId === missingStop.placeId) ? "escalate" : "search_sources",
+        `이야기의 ${getPlace(missingStop.placeId)!.name} 공식 근거가 필요합니다.`, run) : undefined;
+      if (preparation?.action === "search_sources") preparation.search = { placeId: missingStop!.placeId,
+        query: "공식 소개 자료", targetClaimIds: [], missingInformation: [], reason: preparation.reasonSummary };
+      const chosen: Decision = preparation ?? (styleChange
         ? {
             action: "compose_story", targetIds: styleChange.targetCardIds, evidenceIds: [],
             expectedVersion: styleChange.expectedVersion,
@@ -197,13 +205,13 @@ export async function runAgent(run: Run, deps: AgentDeps): Promise<Run> {
           }
         : run.mode === "live" && run.strategy === "agent"
           ? await decideLive(run, signal, persist)
-          : chooseFixture(run);
+          : chooseFixture(run));
       check();
       if (chosen.expectedVersion !== undefined && chosen.expectedVersion !== run.version)
         throw new AgentLimitError("판단 대상 버전이 변경되었습니다. 최신 버전으로 다시 검토하세요.");
       if (chosen.action === "search_sources") {
         chosen.search = searchIntent(run, chosen);
-        const repeated = (run.searches ?? []).filter(s => s.query.trim() === chosen.search!.query.trim() && s.newEvidenceCount === 0);
+        const repeated = (run.searches ?? []).filter(s => s.placeId === chosen.search!.placeId && s.query.trim() === chosen.search!.query.trim() && s.newEvidenceCount === 0);
         if (repeated.length >= 2)
           throw new AgentLimitError("같은 검색에서 새 근거를 확보하지 못했습니다. 다른 자료 또는 담당자 확인이 필요합니다.");
       }
@@ -246,7 +254,7 @@ export async function runAgent(run: Run, deps: AgentDeps): Promise<Run> {
         (run.automaticRevisions ?? Math.max(0, run.revisions.filter(r=>r.origin !== "human" && !r.reason.includes("담당자")).length - 1)) >= run.limits.maxRevisions
       )
         throw new AgentLimitError("콘텐츠 수정 횟수 상한에 도달했습니다.");
-      if (chosen.action === "compose_story" && !run.evidence.length)
+      if (chosen.action === "compose_story" && (!run.evidence.length || missingStoryStops(run).length))
         throw new AgentLimitError(
           "확인한 원문 근거가 없어 콘텐츠를 작성할 수 없습니다.",
         );

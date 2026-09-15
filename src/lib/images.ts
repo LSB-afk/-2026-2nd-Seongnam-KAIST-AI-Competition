@@ -1,9 +1,10 @@
+import { cardPlace, storyStopForCard } from "./run";
 import { createHash, randomUUID } from 'node:crypto';
 import { constants } from 'node:fs';
 import { mkdir, open, realpath, rm, writeFile } from 'node:fs/promises';
 import { resolve, sep } from 'node:path';
 import { chromium, type Browser } from 'playwright';
-import type { CardImage, ImageAsset, ImagePrompt } from './types';
+import type { CardImage, ImageAsset, ImagePrompt, Run } from './types';
 
 type Metadata = { placeId: string; kind: 'upload' | 'ai'; sourceUrl: string; author: string; license: string; licenseUrl: string; prompt?: ImagePrompt; reference?: ImageAsset['reference'] };
 const MAX_BYTES = 8 * 1024 * 1024;
@@ -177,4 +178,9 @@ export async function defaultPlaceImage(placeIdOrName: string): Promise<CardImag
   const bytes = await safeRead(resolve('public/places'), match[1]);
   const raster = inspect(bytes);
   return { id: `photo-${place.id}`, placeId: place.id, kind: 'photo', src: photo.src, sha256: digest(bytes), ...raster, sourceUrl: photo.sourceUrl, author: photo.author, license: photo.license, licenseUrl: photo.licenseUrl, createdAt: '2026-09-13T00:00:00.000Z', crop: { x: 0.5, y: 0.5, zoom: 1 } };
+}
+
+export async function defaultCardImage(run: Run, cardId: string): Promise<CardImage | undefined> {
+  if (storyStopForCard(run, cardId)?.photoChoice === "none") return undefined;
+  return defaultPlaceImage(cardPlace(run, cardId).id);
 }

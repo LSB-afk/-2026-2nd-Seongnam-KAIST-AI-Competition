@@ -1,8 +1,9 @@
+import { cityStoryBriefSchema } from "./city-story";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import type { Run, AgentDeps, Card, CardImage, ImageAsset, ImagePrompt } from "./types";
 import type { RunStore } from "./store";
-import { DEFAULT_BRIEF, newRun } from "./run";
+import { DEFAULT_BRIEF, newRun, cardPlace } from "./run";
 import { getPlace } from "./places";
 
 export class AppError extends Error {
@@ -15,6 +16,7 @@ export class AppError extends Error {
 }
 const briefSchema = z
   .object({
+    story: cityStoryBriefSchema.optional(),
     place: z.string().trim().min(1).max(100),
     placeId: z.string().max(100).optional(),
     purpose: z.enum(["place_intro", "visit_guide", "youth_story"]).optional(),
@@ -27,7 +29,7 @@ const briefSchema = z
   .strict()
   .refine(value => {
     const place = getPlace(value.placeId ?? value.place);
-    return !!place && place.name === value.place;
+    return !!place && place.name === value.place && (!value.story || value.story.stops[0].placeId === place.id);
   }, "등록된 관광지의 이름과 식별자가 일치해야 합니다.")
   .transform(value => ({...value,placeId:getPlace(value.placeId ?? value.place)!.id}));
 const createSchema = z
@@ -155,10 +157,10 @@ export class RunService {
     if (parsed.operation === "replace") {
       if (!!parsed.assetId === !!parsed.usePlacePhoto) throw new AppError("교체할 사진 하나를 선택하세요.");
       const asset = parsed.usePlacePhoto
-        ? await image.defaultImage(run.brief.placeId ?? run.brief.place)
+        ? await image.defaultImage(cardPlace(run, card.id).id)
         : await image.getAsset(parsed.assetId!);
       if (!asset) throw new AppError("이 장소의 사진을 찾을 수 없습니다.", 404);
-      const expected = getPlace(run.brief.placeId ?? run.brief.place)?.id;
+      const expected = cardPlace(run, card.id).id;
       if (expected && asset.placeId !== expected) throw new AppError("선택한 장소와 사진의 장소가 다릅니다.");
       const latest = this.require(id);
       this.idleOnly(latest);
@@ -194,7 +196,7 @@ export class RunService {
         const latest = this.require(id);
         if (latest.imageJob?.id !== jobId || latest.imageJob.status !== "running") return;
         this.version(latest,parsed.version);
-        if (run.brief.placeId && asset.placeId !== run.brief.placeId) throw new AppError("생성 이미지의 장소가 일치하지 않습니다.");
+        if (asset.placeId !== cardPlace(run, card.id).id) throw new AppError("생성 이미지의 장소가 일치하지 않습니다.");
         latest.imageJob.status = "succeeded";
         this.applyImage(latest,card.id,{...asset,crop:{x:.5,y:.5,zoom:1}},"요청한 카드의 AI 이미지 생성");
       } catch {
@@ -230,6 +232,7 @@ export class RunService {
     const existing = this.store.findRequest(parsed.requestId);
     if (existing) {
       if (
+        JSON.stringify(existing.brief.story) !== JSON.stringify(parsed.brief.story) ||
         existing.brief.place !== parsed.brief.place ||
         (existing.brief.placeId ?? getPlace(existing.brief.place)?.id) !== parsed.brief.placeId ||
         existing.brief.purpose !== parsed.brief.purpose ||

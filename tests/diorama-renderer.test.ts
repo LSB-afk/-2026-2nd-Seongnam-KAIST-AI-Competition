@@ -5,20 +5,26 @@ import * as cityData from '../src/lib/diorama/city-data';
 import { createDioramaRenderer, type DioramaRenderer, type RenderOptions } from '../src/lib/diorama/renderer';
 import { createTourState, defaultTourSettings, reduceTour } from '../src/lib/diorama/tour';
 import { selectionFromStop, type DioramaSelection } from '../src/lib/diorama/data';
+import { CITY_FOOD_PLACES } from '../src/lib/city-food';
 
 class ElementStub extends EventTarget {
   children: ElementStub[] = [];
   parent: ElementStub | null = null;
   style: { transform?: string } = {};
+  className = '';
+  textContent: string | null = '';
   hidden = false;
   attributes = new Map<string, string>();
   onclick: (() => void) | null = null;
+  focus() {}
+  click() { this.onclick?.(); }
   constructor(public width = 960, public height = 600) { super(); }
   get offsetWidth() { return this.hidden ? 0 : this.width; }
   get offsetHeight() { return this.hidden ? 0 : this.height; }
   appendChild(child: ElementStub) { this.children.push(child); child.parent = this; return child; }
   remove() { if (this.parent) this.parent.children = this.parent.children.filter(child => child !== this); }
   replaceChildren() { this.children = []; }
+  contains(child: EventTarget | null): boolean { return child === this || this.children.some(entry => entry.contains(child)); }
   setAttribute(name: string, value: string) { this.attributes.set(name, value); }
   getAttribute(name: string) { return this.attributes.get(name) ?? null; }
   getBoundingClientRect() { return { x: 0, y: 0, left: 0, top: 0, width: this.width, height: this.height }; }
@@ -33,7 +39,7 @@ const gpu = vi.hoisted(() => ({
   },
   observeFailure: false,
   disconnected: false,
-  controls: null as unknown as { autoRotate: boolean; minZoom: number; maxZoom: number; target: THREE.Vector3 },
+  controls: null as unknown as { autoRotate: boolean; minZoom: number; maxZoom: number; target: THREE.Vector3; mouseButtons: { LEFT: number; RIGHT: number }; touches: { ONE: number; TWO: number }; screenSpacePanning: boolean; zoomToCursor: boolean; enableDamping: boolean },
   resize: null as (() => void) | null,
 }));
 
@@ -52,14 +58,17 @@ vi.mock('three', async importOriginal => {
   } };
 });
 
-vi.mock('three/addons/controls/OrbitControls.js', async () => {
+vi.mock('three/addons/controls/MapControls.js', async () => {
   const actual = await vi.importActual<typeof THREE>('three');
-  return { OrbitControls: class extends actual.EventDispatcher {
+  return { MapControls: class extends actual.EventDispatcher {
     target = new actual.Vector3();
+    mouseButtons = { LEFT: actual.MOUSE.PAN, MIDDLE: actual.MOUSE.DOLLY, RIGHT: actual.MOUSE.ROTATE };
+    touches = { ONE: actual.TOUCH.PAN, TWO: actual.TOUCH.DOLLY_ROTATE };
+    screenSpacePanning = false;
     autoRotate = false;
     minZoom = 0;
     maxZoom = Infinity;
-    constructor(private camera: THREE.Camera) { super(); gpu.controls = this; }
+    constructor(private camera: THREE.Camera) { super(); gpu.controls = this as unknown as typeof gpu.controls; }
     update() { this.camera.lookAt(this.target); return false; }
     dispose() {}
   } };
@@ -87,7 +96,7 @@ let documentStub: EventTarget & { hidden: boolean; createElement: (tag: string) 
 let owner: DioramaRenderer | undefined;
 
 function setup() {
-  const callbacks = { onReady: vi.fn(), onArrived: vi.fn(), onManual: vi.fn(), onHotspot: vi.fn(), onSelect: vi.fn(), onError: vi.fn() };
+  const callbacks = { onReady: vi.fn(), onArrived: vi.fn(), onManual: vi.fn(), onHotspot: vi.fn(), onSelect: vi.fn(), onFood: vi.fn(), onError: vi.fn() };
   owner = createDioramaRenderer(host as unknown as HTMLDivElement, callbacks);
   return { owner, callbacks };
 }
@@ -102,6 +111,128 @@ beforeEach(() => {
     constructor(callback: () => void) { gpu.resize = callback; }
     observe() { if (gpu.observeFailure) throw new Error('observe failed'); }
     disconnect() { gpu.disconnected = true; }
+  });
+});
+
+describe('story camera and landmark identity', () => {
+  it('captures independent camera values and restores relative zoom once across viewport sizes', () => {
+    const { owner, callbacks } = setup();
+    expect(owner.getCameraSnapshot()).toBeNull();
+    owner.apply(selection, { ...options('idle', 0), reducedMotion: true });
+    owner.zoom(1.25);
+    const saved = owner.getCameraSnapshot()!;
+    const independent = owner.getCameraSnapshot()!;
+    independent.position[0] += 100;
+    expect(owner.getCameraSnapshot()).toEqual(saved);
+    host.width = 390; host.height = 700; gpu.resize?.();
+    owner.zoom(1.2);
+    callbacks.onManual.mockClear();
+    const intent = { requestId: 7, placeId: selection.placeId, camera: saved };
+    owner.apply(selection, { ...options('paused', 1), storyFocus: intent, reducedMotion: true });
+    expect(owner.getCameraSnapshot()).toEqual(saved);
+    expect(callbacks.onManual).not.toHaveBeenCalled();
+    owner.zoom(1.2);
+    const moved = owner.getCameraSnapshot();
+    owner.apply(selection, { ...options('paused', 1), storyFocus: intent, reducedMotion: true });
+    expect(owner.getCameraSnapshot()).toEqual(moved);
+    owner.dispose();
+    expect(owner.getCameraSnapshot()).toBeNull();
+  });
+
+  it('validates saved cameras and lets user input interrupt story flights without replay', () => {
+    const { owner, callbacks } = setup();
+    owner.apply(selection, { ...options('idle', 0), reducedMotion: true });
+    owner.apply(selection, { ...options('idle', 0), storyFocus: { requestId: 1, placeId: 'central-park', camera: { position: [NaN, 1, 2], target: [0, 0, 0], zoom: -1 } }, reducedMotion: true });
+    expect(owner.getCameraSnapshot()?.position).toEqual([...cityData.getCityCamera({ placeId: 'central-park', hotspotId: null }).position]);
+    callbacks.onManual.mockClear();
+    const intent = { requestId: 2, placeId: 'moran-market' };
+    owner.apply(selection, { ...options('idle', 0), storyFocus: intent });
+    gpu.renderer.loop?.(100); gpu.renderer.loop?.(200);
+    owner.zoom(1.1);
+    const stopped = owner.getCameraSnapshot();
+    for (let i = 3; i < 30; i++) gpu.renderer.loop?.(i * 100);
+    owner.apply(selection, { ...options('idle', 0), storyFocus: intent });
+    expect(owner.getCameraSnapshot()).toEqual(stopped);
+    expect(callbacks.onManual).toHaveBeenCalledTimes(1);
+  });
+
+  it('draws a dashed story order, preserves its resources on repeat and releases replacements', () => {
+    const { owner } = setup();
+    const stops = [{ placeId: 'pangyo-museum' }, { placeId: 'central-park' }, { placeId: 'moran-market' }];
+    owner.apply(selection, { ...options('idle', 0), storyStops: stops, reducedMotion: true }); gpu.renderer.loop?.(100);
+    const scene = gpu.renderer.render.mock.calls.at(-1)![0] as THREE.Scene;
+    const line = scene.getObjectByName('city-story-order') as THREE.Line;
+    expect(line).toBeDefined();
+    expect(line.material).toBeInstanceOf(THREE.LineDashedMaterial);
+    expect(line.userData.placeIds).toEqual(stops.map(stop => stop.placeId));
+    const geometry = vi.spyOn(line.geometry, 'dispose');
+    const material = vi.spyOn(line.material as THREE.Material, 'dispose');
+    owner.apply(selection, { ...options('idle', 0), storyStops: [...stops], reducedMotion: true });
+    expect(scene.getObjectByName('city-story-order')).toBe(line);
+    expect(geometry).not.toHaveBeenCalled();
+    owner.apply(selection, { ...options('idle', 0), storyStops: stops.toReversed(), reducedMotion: true });
+    expect(geometry).toHaveBeenCalledTimes(1); expect(material).toHaveBeenCalledTimes(1);
+    const current = scene.getObjectByName('city-story-order') as THREE.Line;
+    const release = vi.spyOn(current.geometry, 'dispose');
+    owner.dispose(); owner.dispose();
+    expect(release).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps photo metadata on landmark labels and uses type/name fallbacks', () => {
+    const { owner } = setup();
+    owner.apply({ placeId: 'seongnam', hotspotId: null }, { ...options('idle', 0), reducedMotion: true });
+    const layer = host.children[1];
+    const museum = layer.children.find(button => button.getAttribute('data-city-place') === 'pangyo-museum')!;
+    expect(museum.getAttribute('data-landmark-visual')).toBe('photo');
+    const image = museum.children.find(child => child.getAttribute('data-landmark-photo') === 'pangyo-museum')!;
+    expect(image.getAttribute('src')).toBe('/places/pangyo-museum.jpg');
+    expect(image.getAttribute('data-captured-at')).toBe('2014-11-13');
+    expect(layer.children.some(button => button.getAttribute('data-landmark-visual') === 'type')).toBe(true);
+  });
+
+  it('pins only sourced food coordinates and sends their food identity on selection', () => {
+    const { owner, callbacks } = setup();
+    owner.apply({ placeId: 'seongnam', hotspotId: null }, { ...options('idle', 0), reducedMotion: true });
+    const buttons = host.children[1].children.filter(button => button.getAttribute('data-city-food'));
+    const located = CITY_FOOD_PLACES.filter(place => place.lat !== null && place.lng !== null);
+    expect(buttons.map(button => button.getAttribute('data-city-food'))).toEqual(located.map(place => place.id));
+    expect(buttons.every(button => button.getAttribute('data-food-category') === 'restaurant')).toBe(true);
+    buttons[0].onclick?.();
+    expect(callbacks.onFood).toHaveBeenCalledWith(located[0].id);
+    expect(gpu.controls.target.toArray()).toEqual([...cityData.projectCityCoordinate(located[0].lng!, located[0].lat!)]);
+    owner.dispose(); buttons[0].onclick?.();
+    expect(callbacks.onFood).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([[960, 600], [390, 560]])('keeps the selected photo visible at street scale at %i×%i', (width, height) => {
+    host.width = width; host.height = height;
+    const { owner } = setup();
+    owner.apply({ placeId: 'pangyo-museum', hotspotId: null }, { ...options('idle', 0), reducedMotion: true });
+    gpu.renderer.loop?.(100);
+    const label = host.children[1].children.find(button => button.getAttribute('data-city-kind') === 'landmark' && button.getAttribute('data-city-place') === 'pangyo-museum')!;
+    expect(label.hidden).toBe(false);
+  });
+
+  it('updates story viewing direction while the ordinary tour is paused', () => {
+    const { owner } = setup();
+    owner.apply(selection, { ...options('idle', 0), reducedMotion: true });
+    owner.apply(selection, { ...options('paused', 1), storyFocus: { requestId: 1, placeId: 'central-park' } });
+    for (let i = 1; i <= 20; i++) gpu.renderer.loop?.(i * 100);
+    const camera = gpu.renderer.render.mock.calls.at(-1)![1] as THREE.Camera;
+    const direction = camera.getWorldDirection(new THREE.Vector3());
+    const expected = gpu.controls.target.clone().sub(camera.position).normalize();
+    expect(direction.distanceTo(expected)).toBeLessThan(1e-8);
+  });
+
+  it('cancels a story flight when its intent is removed', () => {
+    const { owner } = setup();
+    owner.apply(selection, { ...options('idle', 0), reducedMotion: true });
+    owner.apply(selection, { ...options('idle', 0), storyFocus: { requestId: 1, placeId: 'central-park' } });
+    gpu.renderer.loop?.(100); gpu.renderer.loop?.(200);
+    const stopped = owner.getCameraSnapshot();
+    owner.apply(selection, options('idle', 0));
+    for (let i = 3; i < 30; i++) gpu.renderer.loop?.(i * 100);
+    expect(owner.getCameraSnapshot()).toEqual(stopped);
   });
 });
 
@@ -386,8 +517,8 @@ describe('diorama renderer lifecycle and tour handoff', () => {
     const place = new THREE.Group(); place.userData.placeId = 'central-park';
     const child = new THREE.Mesh(); child.userData.hotspotId = 'park-lake'; place.add(child);
     vi.spyOn(THREE.Raycaster.prototype, 'intersectObjects').mockReturnValue([{ object: child, distance: 1, point: new THREE.Vector3() }]);
-    const event = (type: string) => Object.assign(new Event(type), { clientX: 150, clientY: 160, pointerId: 1 });
-    gpu.renderer.domElement.dispatchEvent(event('pointerdown')); gpu.renderer.domElement.dispatchEvent(event('pointerup'));
+    const event = (type: string) => Object.assign(new Event(type), { clientX: 150, clientY: 160, pointerId: 1, button: 0 });
+    host.dispatchEvent(event('pointerdown')); documentStub.dispatchEvent(event('pointerup'));
     expect(callbacks.onSelect).toHaveBeenCalledWith({ placeId: 'central-park', hotspotId: 'park-lake' });
     expect(callbacks.onHotspot).not.toHaveBeenCalled();
   });
@@ -397,8 +528,8 @@ describe('diorama renderer lifecycle and tour handoff', () => {
     owner.apply(selection, { ...options('idle', 0), reducedMotion: true });
     const child = new THREE.Mesh(); child.userData.hotspotId = 'museum-garden';
     vi.spyOn(THREE.Raycaster.prototype, 'intersectObjects').mockReturnValue([{ object: child, distance: 1, point: new THREE.Vector3() }]);
-    const event = (type: string) => Object.assign(new Event(type), { clientX: 150, clientY: 160, pointerId: 1 });
-    gpu.renderer.domElement.dispatchEvent(event('pointerdown')); gpu.renderer.domElement.dispatchEvent(event('pointerup'));
+    const event = (type: string) => Object.assign(new Event(type), { clientX: 150, clientY: 160, pointerId: 1, button: 0 });
+    host.dispatchEvent(event('pointerdown')); documentStub.dispatchEvent(event('pointerup'));
     expect(callbacks.onHotspot).toHaveBeenCalledWith('museum-garden');
     expect(callbacks.onSelect).not.toHaveBeenCalled();
   });
@@ -421,5 +552,155 @@ describe('living city controls', () => {
     owner.focusCoordinate([NaN, 37.4]);
     owner.focusCoordinate([140, 40]);
     expect(gpu.controls.target.toArray()).toEqual([...cityData.projectCityCoordinate(127.1, 37.4)]);
+  });
+});
+
+describe('direct map navigation', () => {
+  function ready() {
+    const state = setup();
+    state.owner.apply(selection, { ...options('idle', 0), reducedMotion: true });
+    gpu.renderer.loop?.(100);
+    const camera = gpu.renderer.render.mock.calls.at(-1)![1] as THREE.OrthographicCamera;
+    return { ...state, camera };
+  }
+  function pointerEvent(type: string, x = 540, y = 280, id = 1, extra: Record<string, unknown> = {}) {
+    return Object.assign(new Event(type), { clientX: x, clientY: y, pointerId: id, pointerType: 'mouse', button: 0, ...extra });
+  }
+  function click(x = 540, y = 280) {
+    host.dispatchEvent(pointerEvent('pointerdown', x, y));
+    documentStub.dispatchEvent(pointerEvent('pointerup', x, y));
+  }
+  function key(key: string, shiftKey = false) {
+    gpu.renderer.domElement.dispatchEvent(Object.assign(new Event('keydown', { cancelable: true }), { key, shiftKey }));
+  }
+
+  it('uses ground-anchored map gestures by default and switches modes without rebuilding the city', () => {
+    const { owner } = ready();
+    expect(gpu.controls.mouseButtons.LEFT).toBe(THREE.MOUSE.PAN);
+    expect(gpu.controls.mouseButtons.RIGHT).toBe(THREE.MOUSE.ROTATE);
+    expect(gpu.controls.touches).toMatchObject({ ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_PAN });
+    expect(gpu.controls.screenSpacePanning).toBe(false);
+    expect(gpu.controls.zoomToCursor).toBe(true);
+    expect(gpu.controls.enableDamping).toBe(false);
+    const canvas = gpu.renderer.domElement;
+    const city = (gpu.renderer.render.mock.calls.at(-1)![0] as THREE.Scene).children.find(child => child.name === 'seongnam-city-fixture');
+    owner.apply(selection, { ...options('manual', 1), navigationMode: 'rotate' });
+    gpu.renderer.loop?.(200);
+    expect(gpu.controls.mouseButtons.LEFT).toBe(THREE.MOUSE.ROTATE);
+    expect(gpu.controls.mouseButtons.RIGHT).toBe(THREE.MOUSE.PAN);
+    expect(gpu.controls.touches.ONE).toBe(THREE.TOUCH.ROTATE);
+    expect(gpu.renderer.domElement).toBe(canvas);
+    expect((gpu.renderer.render.mock.calls.at(-1)![0] as THREE.Scene).children).toContain(city);
+  });
+
+  it('centers the clicked ground point while retaining zoom, orientation and selected-place identity', () => {
+    const { owner, callbacks, camera } = ready();
+    const target = gpu.controls.target.clone(), offset = camera.position.clone().sub(target), zoom = camera.zoom;
+    camera.updateMatrixWorld(true);
+    const ray = new THREE.Raycaster();
+    ray.setFromCamera(new THREE.Vector2(540 / host.width * 2 - 1, 1 - 280 / host.height * 2), camera);
+    const expected = ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), -target.y), new THREE.Vector3())!;
+    click();
+    expect(gpu.controls.target.distanceTo(expected)).toBeLessThan(1e-8);
+    expect(gpu.controls.target.distanceTo(target)).toBeGreaterThan(.01);
+    expect(camera.position.clone().sub(gpu.controls.target).distanceTo(offset)).toBeLessThan(1e-8);
+    expect(camera.zoom).toBe(zoom);
+    expect(callbacks.onSelect).not.toHaveBeenCalled();
+    expect(callbacks.onManual).toHaveBeenCalled();
+    owner.apply(selection, { ...options('manual', 1), reducedMotion: true });
+    for (let i = 1; i < 20; i++) gpu.renderer.loop?.(100 + i * 100);
+    expect(gpu.controls.target.distanceTo(expected)).toBeLessThan(1e-8);
+  });
+
+  it('treats district land as navigation ground instead of a place pick', () => {
+    const model = models.buildCityModel();
+    const land = new THREE.Mesh();
+    land.userData = { districtId: 'bundang', placeId: 'seongnam', hotspotId: 'bundang' };
+    model.pickTargets.push(land);
+    vi.spyOn(models, 'buildCityModel').mockReturnValue(model);
+    vi.spyOn(THREE.Raycaster.prototype, 'intersectObjects').mockImplementation(targets => targets.includes(land) ? [{ object: land, distance: 1, point: new THREE.Vector3() }] : []);
+    const { callbacks } = ready();
+    const target = gpu.controls.target.clone();
+    click();
+    expect(callbacks.onSelect).not.toHaveBeenCalled();
+    expect(gpu.controls.target.distanceTo(target)).toBeGreaterThan(.01);
+  });
+
+  it('pans with arrows, rotates with Shift+arrows, and restores the selected view with Home', () => {
+    const { camera, callbacks } = ready();
+    const target = gpu.controls.target.clone(), offset = camera.position.clone().sub(target), zoom = camera.zoom;
+    key('ArrowRight');
+    expect(gpu.controls.target.distanceTo(target)).toBeGreaterThan(.01);
+    expect(camera.position.clone().sub(gpu.controls.target).distanceTo(offset)).toBeLessThan(1e-8);
+    const movedTarget = gpu.controls.target.clone();
+    key('ArrowLeft', true);
+    expect(gpu.controls.target.toArray()).toEqual(movedTarget.toArray());
+    expect(camera.position.clone().sub(gpu.controls.target).distanceTo(offset)).toBeGreaterThan(.1);
+    expect(camera.zoom).toBe(zoom);
+    key('Home');
+    expect(gpu.controls.target.toArray()).toEqual([...cityData.getCityCamera(selection).target]);
+    expect(callbacks.onSelect).not.toHaveBeenCalled();
+  });
+
+  it('does not turn a drag that returns to its start into a click or a place selection', () => {
+    const { callbacks } = ready();
+    const target = gpu.controls.target.clone();
+    const place = new THREE.Mesh(); place.userData.placeId = 'central-park';
+    const picks = vi.spyOn(THREE.Raycaster.prototype, 'intersectObjects').mockReturnValue([{ object: place, distance: 1, point: new THREE.Vector3() }]);
+    host.dispatchEvent(pointerEvent('pointerdown'));
+    documentStub.dispatchEvent(pointerEvent('pointermove', 610, 340));
+    documentStub.dispatchEvent(pointerEvent('pointermove'));
+    documentStub.dispatchEvent(pointerEvent('pointerup'));
+    expect(gpu.controls.target.toArray()).toEqual(target.toArray());
+    expect(callbacks.onSelect).not.toHaveBeenCalled();
+    expect(picks).not.toHaveBeenCalled();
+  });
+
+  it.each(['pointercancel', 'lostpointercapture'])('drops a %s gesture and accepts the next genuine click', cancelled => {
+    const { callbacks } = ready();
+    const target = gpu.controls.target.clone();
+    host.dispatchEvent(pointerEvent('pointerdown'));
+    (cancelled === 'pointercancel' ? documentStub : host).dispatchEvent(pointerEvent(cancelled));
+    documentStub.dispatchEvent(pointerEvent('pointerup'));
+    expect(gpu.controls.target.toArray()).toEqual(target.toArray());
+    click();
+    expect(gpu.controls.target.distanceTo(target)).toBeGreaterThan(.01);
+    expect(callbacks.onSelect).not.toHaveBeenCalled();
+  });
+
+  it('never treats either end of a two-finger gesture as a ground click', () => {
+    ready();
+    const target = gpu.controls.target.clone();
+    host.dispatchEvent(pointerEvent('pointerdown', 540, 280, 1, { pointerType: 'touch' }));
+    host.dispatchEvent(pointerEvent('pointerdown', 600, 280, 2, { pointerType: 'touch' }));
+    documentStub.dispatchEvent(pointerEvent('pointerup', 540, 280, 1, { pointerType: 'touch' }));
+    documentStub.dispatchEvent(pointerEvent('pointerup', 600, 280, 2, { pointerType: 'touch' }));
+    expect(gpu.controls.target.toArray()).toEqual(target.toArray());
+    click();
+    expect(gpu.controls.target.distanceTo(target)).toBeGreaterThan(.01);
+  });
+
+  it('ignores right clicks and releases outside the map', () => {
+    ready();
+    const target = gpu.controls.target.clone();
+    host.dispatchEvent(pointerEvent('pointerdown', 540, 280, 1, { button: 2 }));
+    documentStub.dispatchEvent(pointerEvent('pointerup', 540, 280, 1, { button: 2 }));
+    host.dispatchEvent(pointerEvent('pointerdown', 959, 280));
+    documentStub.dispatchEvent(pointerEvent('pointerup', 962, 280));
+    expect(gpu.controls.target.toArray()).toEqual(target.toArray());
+  });
+
+  it('provides a north-up top view without changing the current location or zoom', () => {
+    const { owner, callbacks, camera } = ready();
+    click();
+    const target = gpu.controls.target.clone(), distance = camera.position.distanceTo(target), zoom = camera.zoom;
+    owner.viewFromAbove();
+    const offset = camera.position.clone().sub(target);
+    expect(gpu.controls.target.toArray()).toEqual(target.toArray());
+    expect(camera.zoom).toBe(zoom);
+    expect(camera.position.distanceTo(target)).toBeCloseTo(distance);
+    expect(Math.abs(offset.x)).toBeLessThan(1e-8);
+    expect(offset.y / offset.length()).toBeGreaterThan(.99);
+    expect(callbacks.onSelect).not.toHaveBeenCalled();
   });
 });
