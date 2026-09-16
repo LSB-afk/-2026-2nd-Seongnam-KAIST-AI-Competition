@@ -29,8 +29,13 @@ function reducer(state: UiState, event: UiEvent): UiState {
   return tutorial === state.tutorial ? state : { ...state, tutorial };
 }
 type Rect = { top: number; left: number; width: number; height: number; bottom: number; right: number };
-type Geometry = { host: Element | null; target: Rect | null; found: boolean; width: number; height: number; panelWidth: number; panelHeight: number; modal: boolean; viewport: Viewport; dockWidth: number; dockHeight: number; invitationHeight: number; mapAttribution: Rect | null; protectedRects: Rect[] };
-const EMPTY_GEOMETRY: Geometry = { host: null, target: null, found: false, width: 0, height: 0, panelWidth: 344, panelHeight: 350, modal: false, viewport: { left: 0, top: 0, width: 0, height: 0 }, dockWidth: 172, dockHeight: 72, invitationHeight: 180, mapAttribution: null, protectedRects: [] };
+type Geometry = { host: Element | null; target: Rect | null; heading: Rect | null; reviewer: Rect | null; reviewLeft: number | null; found: boolean; width: number; height: number; panelWidth: number; panelHeight: number; modal: boolean; viewport: Viewport; dockWidth: number; dockHeight: number; invitationHeight: number; mapAttribution: Rect | null; protectedRects: Rect[] };
+const EMPTY_GEOMETRY: Geometry = { host: null, target: null, heading: null, reviewer: null, reviewLeft: null, found: false, width: 0, height: 0, panelWidth: 344, panelHeight: 350, modal: false, viewport: { left: 0, top: 0, width: 0, height: 0 }, dockWidth: 172, dockHeight: 72, invitationHeight: 180, mapAttribution: null, protectedRects: [] };
+
+function TargetOutline({ name, rect, animated = true }: { name: string; rect: Rect; animated?: boolean }) {
+  const padding = 4;
+  return <div className={`tami-target-outline is-located${animated ? "" : " is-static"}`} aria-hidden="true" data-tami-target={name} style={{ top: rect.top - padding, left: rect.left - padding, width: rect.width + padding * 2, height: rect.height + padding * 2 }} />;
+}
 
 function currentViewport(): Viewport {
   const viewport = window.visualViewport;
@@ -103,11 +108,14 @@ function visibleRect(element: HTMLElement, width: number, height: number): Rect 
   if (bottom - top < 4 || right - left < 4) return null;
   return { top, left, right, bottom, width: right - left, height: bottom - top };
 }
-function panelPosition(geometry: Geometry) {
+function panelPosition(geometry: Geometry, preferLeft = false) {
   const { width, height, panelWidth, panelHeight, target, protectedRects, viewport } = geometry;
   const margin = 16;
   const size = { width: panelWidth, height: panelHeight };
   let left = width - panelWidth - margin, top = height - panelHeight - 120;
+  if (preferLeft && width > 600) {
+    return { left: Math.max(viewport.left + margin, Math.min((geometry.reviewLeft ?? target?.left ?? viewport.left) - panelWidth - 12, viewport.left + viewport.width - panelWidth - margin)), top: Math.max(viewport.top + margin, Math.min(target?.top ?? top, viewport.top + viewport.height - panelHeight - margin)) };
+  }
   if (target) {
     if (width - target.right >= panelWidth + 28) { left = target.right + 12; top = target.top; }
     else if (target.left >= panelWidth + 28) { left = target.left - panelWidth - 12; top = target.top; }
@@ -133,6 +141,8 @@ export default function TamiGuide({ context, actions }: { context: GuideContext;
     hydrated: false, panelOpen: false,
   });
   const [locatedStep, setLocatedStep] = useState<number | null>(null);
+  const [placeActionLocated, setPlaceActionLocated] = useState(false);
+  const [productionActionLocated, setProductionActionLocated] = useState(false);
   const [geometry, setGeometry] = useState<Geometry>(EMPTY_GEOMETRY);
   const [assetFailed, setAssetFailed] = useState(false);
   const [dockAnchor, setDockAnchor] = useReducer((_current: Point | null, next: Point | null) => next, null);
@@ -148,19 +158,27 @@ export default function TamiGuide({ context, actions }: { context: GuideContext;
   const suppressClick = useRef(false);
   const previousFocus = useRef<HTMLElement | null>(null);
   const pendingFocus = useRef<string | null>(null);
+  const advanceAfterStudio = useRef(false);
   const initialSnapshot = useRef(snapshot);
   const titleId = useId();
   const descriptionId = useId();
   const moveDescriptionId = useId();
   const active = state.tutorial.status === "active";
-  const targetName = getStepTarget(state.tutorial, snapshot);
+  const targetName = state.tutorial.step === 3 && !placeActionLocated ? "place-heading" : state.tutorial.step === 4 && productionActionLocated ? "create-run" : getStepTarget(state.tutorial, snapshot);
   const advice = getGuideAdvice(context);
   const invitation = state.hydrated && !state.preferences.invitationDismissed && !state.panelOpen && context.view === "dashboard" && !geometry.modal;
   const mood = invitation ? "greeting" : active ? snapshot.running || snapshot.busy ? "working" : "guiding" : advice.mood;
   const send = useCallback((event: GuideEvent) => dispatch({ type: "guide", event, snapshot }), [snapshot]);
-  const locateNeeded = state.tutorial.step === 0 || state.tutorial.step === 1 || state.tutorial.step === 2;
+  useEffect(() => {
+    if (state.tutorial.step !== 3) { advanceAfterStudio.current = false; return; }
+    if (advanceAfterStudio.current && !getStepGuard(state.tutorial, snapshot)) {
+      advanceAfterStudio.current = false;
+      send({ type: "next" });
+    }
+  }, [state.tutorial, snapshot, send]);
+  const locateNeeded = true;
   const located = locatedStep === state.tutorial.step;
-  useEffect(() => { setLocatedStep(null); }, [state.tutorial.step, state.tutorial.status]);
+  useEffect(() => { setLocatedStep(null); }, [state.tutorial.step, state.tutorial.status, snapshot.approved]);
   useEffect(() => {
     if (!active || !state.panelOpen || state.tutorial.step !== 3) return;
     const detail = document.querySelector<HTMLElement>(".place-detail");
@@ -276,7 +294,9 @@ export default function TamiGuide({ context, actions }: { context: GuideContext;
         if (bottom > top && right > left) mapAttribution = { top, bottom, left, right, width: right - left, height: bottom - top };
       }
       const protectedRects = Array.from(document.querySelectorAll<HTMLElement>('[data-tami-avoid]')).filter(shown).map(element => visibleRect(element, width, height)).filter((rect): rect is Rect => rect !== null);
-      const next: Geometry = { host, target: target ? visibleRect(target, width, height) : null, found: !!target, width, height, panelWidth: panel?.width ?? Math.min(344, width - 24), panelHeight: panel?.height ?? 350, modal: !!modal, viewport, dockWidth: dock?.width ?? (width <= 600 ? 140 : 172), dockHeight: dock?.height ?? (width <= 600 ? 56 : 72), invitationHeight: invitationHeight || 180, mapAttribution, protectedRects };
+      const heading = active && state.panelOpen && state.tutorial.step === 3 ? findTarget("place-heading") : null;
+      const reviewer = active && state.panelOpen && state.tutorial.step === 7 ? findTarget("approval-reviewer") : null;
+      const next: Geometry = { host, reviewer: reviewer ? visibleRect(reviewer, width, height) : null, reviewLeft: findTarget("review-panel")?.getBoundingClientRect().left ?? null, heading: heading ? visibleRect(heading, width, height) : null, target: target ? visibleRect(target, width, height) : null, found: !!target, width, height, panelWidth: panel?.width ?? Math.min(344, width - 24), panelHeight: panel?.height ?? 350, modal: !!modal, viewport, dockWidth: dock?.width ?? (width <= 600 ? 140 : 172), dockHeight: dock?.height ?? (width <= 600 ? 56 : 72), invitationHeight: invitationHeight || 180, mapAttribution, protectedRects };
       setGeometry((current) => current.host === next.host && JSON.stringify({ ...current, host: null }) === JSON.stringify({ ...next, host: null }) ? current : next);
       const reserved = width <= 600 && state.panelOpen ? (panel?.height ?? 350) + 24 : invitation ? invitationHeight + 104 : width <= 600 ? 88 : 104;
       document.documentElement.style.setProperty("--tami-reserved-space", `${Math.ceil(reserved)}px`);
@@ -331,17 +351,56 @@ export default function TamiGuide({ context, actions }: { context: GuideContext;
   };
 
   // Every callback below is initiated by a visible user button. No button calls click() on
-  // production targets; creating, retrying, approving and downloading stay user decisions.
-  const showStep = () => {
-    const step = state.tutorial.step;
-    if (step === 1 || step === 2) actions.navigate("explore");
+  // production targets; only the explicit Next action can submit the production form.
+  const previousStep = () => {
+    setProductionActionLocated(false);
+    setPlaceActionLocated(false);
+    setLocatedStep(null);
+    const step = Math.max(0, state.tutorial.step - 1);
+    pendingFocus.current = getStepTarget({ ...state.tutorial, step }, snapshot);
+    send({ type: "previous" });
+    if (step === 0) actions.navigate("dashboard");
+    else if (step <= 3) actions.navigate("explore");
     else if (step === 4) actions.openStudio();
     else if (step === 5) actions.openEditor();
-    else if (step === 6) actions.openReview();
-    else if (step === 7 && snapshot.approved) actions.showDownload();
-    else if (step === 7) actions.showApprove();
-    focusTarget(step === 3 ? "create-from-place" : targetName);
-    if (step === 0 || step === 1 || step === 2) setLocatedStep(step);
+    else actions.openReview();
+  };
+  const nextStep = () => {
+    if (nextDisabled) return;
+    if (state.tutorial.step === 3 && !placeActionLocated) {
+      setPlaceActionLocated(true);
+      setLocatedStep(null);
+      focusTarget("create-from-place");
+      return;
+    }
+    if (state.tutorial.step === 3 && guard) { advanceAfterStudio.current = true; actions.openStudio(); return; }
+    if (state.tutorial.step === 4 && !productionActionLocated) {
+      setProductionActionLocated(true);
+      setLocatedStep(null);
+      focusTarget("create-run");
+      return;
+    }
+    if (state.tutorial.step === 4 && guard) { actions.startProduction(); return; }
+    if (state.tutorial.step === 0) actions.navigate("explore");
+    else if (state.tutorial.step === 4) actions.openEditor();
+    else if (state.tutorial.step === 5) actions.openReview();
+    else if (state.tutorial.step === 6) {
+      if (snapshot.approved) actions.showDownload();
+      else actions.showApprove();
+    }
+    send({ type: "next" });
+  };
+  const showStep = () => {
+    const step = state.tutorial.step;
+    if (step === 5) {
+      focusTarget("cards");
+      setLocatedStep(step);
+      return;
+    }
+    if (step >= 3) { setLocatedStep(step); return; }
+    if (step === 1 || step === 2) actions.navigate("explore");
+    focusTarget(targetName);
+    setLocatedStep(step);
   };
   const actOnAdvice = () => {
     switch (advice.action) {
@@ -355,6 +414,8 @@ export default function TamiGuide({ context, actions }: { context: GuideContext;
     }
   };
   const startTutorial = (restart = false) => {
+    setProductionActionLocated(false);
+    setPlaceActionLocated(false);
     setLocatedStep(null);
     openPanel(); send({ type: restart ? "restart" : "start" });
   };
@@ -420,9 +481,23 @@ export default function TamiGuide({ context, actions }: { context: GuideContext;
     },
   };
   if (!state.hydrated || !geometry.host) return null;
-  const step = GUIDE_STEPS[state.tutorial.step];
+  const step = state.tutorial.step === 3
+    ? placeActionLocated
+      ? { title: "제작 시작 버튼 확인", body: "‘이 장소로 카드뉴스 만들기’ 버튼을 확인해 주세요. 아래 파란 버튼으로 ‘다음’을 활성화한 뒤, ‘다음’을 누르면 제작 화면으로 이동해요.", action: "제작 시작 버튼 확인" }
+      : { title: "선택한 장소 확인", body: "선택한 장소를 확인해 주세요. 아래 파란 버튼으로 ‘다음’을 활성화한 뒤, ‘다음’을 누르면 제작 시작 버튼을 안내해요.", action: "선택한 장소 확인" }
+    : state.tutorial.step === 4
+      ? productionActionLocated
+        ? { title: "카드뉴스 제작하기", body: "제작하기 버튼을 확인해 주세요. 아래 파란 버튼으로 ‘다음’을 활성화한 뒤, ‘다음’을 누르면 제작을 시작하거나 기존 결과를 확인해요.", action: "제작하기 버튼 확인" }
+        : { title: "대상과 목적 정하기", body: "대상과 제작 목적을 입력해 주세요. 아래 파란 버튼으로 ‘다음’을 활성화한 뒤, ‘다음’을 누르면 제작하기 버튼 위치로 이동해요.", action: "제작 입력 확인" }
+      : GUIDE_STEPS[state.tutorial.step];
   const guard = getStepGuard(state.tutorial, snapshot);
-  const missingTarget = active && !geometry.target;
+  const nextDisabled = !located || (state.tutorial.step === 3
+    ? !snapshot.selectedPlaceId || snapshot.busy
+    : state.tutorial.step === 4
+      ? productionActionLocated && !!guard && !context.canStartProduction
+      : !!guard);
+  const displayedGuard = state.tutorial.step === 3 || (state.tutorial.step === 4 && !productionActionLocated) ? null : state.tutorial.step === 4 && context.canStartProduction && guard ? "다음을 누르면 카드뉴스 제작을 시작합니다." : guard;
+  const missingTarget = active && state.tutorial.step < 3 && !geometry.target;
   const dockSize = { width: geometry.dockWidth, height: geometry.dockHeight };
   const preferredDock = { x: geometry.viewport.left + geometry.viewport.width - dockSize.width - (geometry.width <= 600 ? 12 : 20), y: geometry.viewport.top + geometry.viewport.height - dockSize.height - (geometry.width <= 600 ? 12 : 16) };
   const obstacles = [...geometry.protectedRects, ...(geometry.mapAttribution ? [geometry.mapAttribution] : [])];
@@ -439,7 +514,7 @@ export default function TamiGuide({ context, actions }: { context: GuideContext;
     return { left: clamped.x, top: clamped.y, right: "auto", bottom: "auto" };
   };
   const pinPanel = active;
-  const position = pinPanel ? panelPosition(geometry) : dockAnchor && geometry.width > 600 ? besideDock(geometry.panelWidth, geometry.panelHeight) : undefined;
+  const position = pinPanel ? panelPosition(geometry, state.tutorial.step === 6 || state.tutorial.step === 7) : dockAnchor && geometry.width > 600 ? besideDock(geometry.panelWidth, geometry.panelHeight) : undefined;
   // The first-visit bubble keeps its CSS spot unless it would cover a protected control (or the dock after a move); then it takes the nearest clear spot, narrower on phones so it fits beside the dock.
   const invitationStyle = (() => {
     if (!invitation) return undefined;
@@ -460,8 +535,10 @@ export default function TamiGuide({ context, actions }: { context: GuideContext;
   })();
   const completed = state.tutorial.status === "completed";
 
-  return createPortal(<div ref={rootRef} className={`tami-guide${state.preferences.animationOff ? " tami-guide--no-motion" : ""}${state.panelOpen ? " tami-guide--open" : ""}${geometry.modal ? " tami-guide--in-modal" : ""}${dragging ? " tami-guide--dragging" : ""}`} data-tami-state={mood}>
-    {active && state.panelOpen && geometry.target && <div className={`tami-target-outline${located ? " is-located" : ""}`} aria-hidden="true" data-tami-target={targetName} style={{ top: geometry.target.top - (located ? 4 : 3), left: geometry.target.left - (located ? 4 : 3), width: geometry.target.width + (located ? 8 : 6), height: geometry.target.height + (located ? 8 : 6) }} />}
+  return createPortal(<div ref={rootRef} className={`tami-guide${state.preferences.animationOff ? " tami-guide--no-motion" : ""}${state.panelOpen ? " tami-guide--open" : ""}${geometry.modal ? " tami-guide--in-modal" : ""}${dragging ? " tami-guide--dragging" : ""}`} data-tami-state={mood} data-tami-step={active && state.panelOpen ? state.tutorial.step + 1 : undefined}>
+    {active && state.panelOpen && (located || state.tutorial.step === 4) && geometry.target && <TargetOutline name={targetName} rect={geometry.target} animated={located && targetName !== "approve-panel"} />}
+    {active && state.panelOpen && state.tutorial.step === 3 && geometry.heading && <TargetOutline name="place-heading" rect={geometry.heading} />}
+    {active && state.panelOpen && located && state.tutorial.step === 7 && !snapshot.approved && geometry.reviewer && <TargetOutline name="approval-reviewer" rect={geometry.reviewer} />}
 
     {invitation && <aside className="tami-invitation" aria-label="타미의 첫 안내" style={invitationStyle}>
       <strong>안녕하세요, 안내 로봇 타미예요.</strong>
@@ -477,9 +554,9 @@ export default function TamiGuide({ context, actions }: { context: GuideContext;
         <p id={descriptionId} className="tami-description">{step.body}</p>
         {missingTarget && <p className="tami-target-note" role="status">{geometry.found ? "안내할 항목이 화면 밖에 있어요. 아래 버튼으로 위치를 확인해 주세요." : "이 단계의 화면을 먼저 열어 주세요. 항목이 나타나면 타미가 위치를 표시해요."}</p>}
         <button className="tami-primary tami-wide" onClick={showStep}>{state.tutorial.step === 7 && snapshot.approved ? "다운로드 위치 보기" : step.action}</button>
-        {guard && <p className="tami-prerequisite" role="status">{guard}</p>}
-        {!guard && locateNeeded && !located && <p className="tami-prerequisite" role="status">아래 안내 버튼을 눌러 위치를 먼저 확인해 주세요. 확인한 뒤에 다음으로 갈 수 있어요.</p>}
-        <nav className="tami-step-actions" aria-label="튜토리얼 단계 이동"><button className="tami-secondary" disabled={state.tutorial.step === 0} onClick={() => send({ type: "previous" })}>이전</button><button className="tami-secondary" disabled={!!guard || (locateNeeded && !located)} onClick={() => { if (state.tutorial.step === 0) actions.navigate("explore"); send({ type: "next" }); }}>{state.tutorial.step === 7 ? "사용법 마치기" : "다음"}</button></nav>
+        {displayedGuard && <p className="tami-prerequisite" role="status">{displayedGuard}</p>}
+        {!guard && locateNeeded && !located && <p className="tami-prerequisite" role="status">위 안내 버튼을 눌러 해당 화면을 먼저 확인해 주세요. 확인한 뒤에 다음으로 갈 수 있어요.</p>}
+        <nav className="tami-step-actions" aria-label="튜토리얼 단계 이동"><button className="tami-secondary" disabled={state.tutorial.step === 0} onClick={previousStep}>이전</button><button className="tami-secondary" disabled={nextDisabled} onClick={nextStep}>{state.tutorial.step === 7 ? "사용법 마치기" : "다음"}</button></nav>
         <div className="tami-tour-footer"><button className="tami-text-button" onClick={() => { send({ type: "skip" }); closePanel(); }}>건너뛰기</button><button className="tami-text-button" onClick={closePanel}>종료하고 나중에 이어가기</button></div>
       </> : <>
         <div className="tami-advice" aria-live="polite"><h3>{completed ? "이제 직접 이야기를 이어가세요" : advice.title}</h3><p id={descriptionId}>{completed ? "사용법은 언제든 다시 시작할 수 있어요. 타미는 현재 화면에 맞춰 다음 할 일을 안내할게요." : advice.body}</p></div>

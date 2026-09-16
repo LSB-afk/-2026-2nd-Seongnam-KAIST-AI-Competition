@@ -1233,6 +1233,7 @@ export default function Studio() {
                       <input
                         required
                         maxLength={60}
+                        data-tour="approval-reviewer"
                         placeholder="이름을 입력하세요"
                         value={reviewer}
                         onChange={(event) => setReviewer(event.target.value)}
@@ -1306,7 +1307,7 @@ export default function Studio() {
         </footer>
       </main>
       </div>
-      {workspaceReady && (!workspace.runId || run?.id===workspace.runId || !!error) && <TamiGuide context={{view,selectedPlace:getPlace(view === "diorama" ? workspace.diorama.placeId : explore.selectedId || "") || null,draftPlace,run,busy:busy || !!active || historyLoading,error:error || (run && actionMessage?.runId === run.id ? actionMessage.text : ""),tab,selectedCardId:card?.id || ""}} actions={{navigate:setView,openStudio:()=>{const selected=getPlace(view === "diorama" ? workspace.diorama.placeId : explore.selectedId || "");if(selected && selected.id!==draftPlace.id)choosePlace(selected);else setView("studio");},openReview:(id)=>{if(id)setSelectedCardId(id);setTab("evidence");focusTour("review-panel");},openEditor:()=>{setTab("edit");focusTour("review-panel");},resumeRun:()=>{if(run)setView("studio");else if(history[0])loadRun(history[0].id);else setView("history");},showApprove:()=>focusTour("approve-panel"),showDownload:()=>focusTour("download")}} />}
+      {workspaceReady && (!workspace.runId || run?.id===workspace.runId || !!error) && <TamiGuide context={{canStartProduction: !active && !busy && workspaceReady && !liveUnavailable,view,selectedPlace:getPlace(view === "diorama" ? workspace.diorama.placeId : explore.selectedId || "") || null,draftPlace,run,busy:busy || !!active || historyLoading,error:error || (run && actionMessage?.runId === run.id ? actionMessage.text : ""),tab,selectedCardId:card?.id || ""}} actions={{navigate:setView,startProduction:()=>{const button=document.querySelector<HTMLButtonElement>('[data-tour="create-run"]');if(button && !button.matches(":disabled"))button.form?.requestSubmit(button);},openStudio:()=>{const selected=getPlace(view === "diorama" ? workspace.diorama.placeId : explore.selectedId || "");if(selected && selected.id!==draftPlace.id)choosePlace(selected);else setView("studio");},openReview:(id)=>{if(id)setSelectedCardId(id);setTab("evidence");focusTour("review-panel");},openEditor:()=>{setTab("edit");focusTour("cards");},resumeRun:()=>{if(run)setView("studio");else if(history[0])loadRun(history[0].id);else setView("history");},showApprove:()=>focusTour("approve-panel"),showDownload:()=>focusTour("download")}} />}
     </div>
   );
 }

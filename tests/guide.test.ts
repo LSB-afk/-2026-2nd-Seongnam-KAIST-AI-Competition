@@ -63,6 +63,13 @@ describe("state-driven tutorial", () => {
     expect(transitionGuide(tutorial(3, { sourcePlaceId: PLACES[0].id }), { type: "observe", before }, after))
       .toMatchObject({ step: 2, placeId: PLACES[1].id, sourcePlaceId: null, runId: null });
   });
+  it("keeps step four until an explicit next event even when the studio opens", () => {
+    const state = tutorial(3);
+    const before = getGuideSnapshot(context({ view: "explore", selectedPlace: PLACES[0] }));
+    const after = getGuideSnapshot(context({ view: "studio", selectedPlace: PLACES[0], draftPlace: PLACES[0] }));
+    expect(transitionGuide(state, { type: "observe", before }, after)).toEqual(state);
+    expect(transitionGuide(state, { type: "next" }, after).step).toBe(4);
+  });
   it("does not treat a different place draft or existing run as this tutorial's creation", () => {
     const wrongDraft = getGuideSnapshot(context({ view: "studio", selectedPlace: PLACES[0], draftPlace: PLACES[1] }));
     expect(getStepGuard(tutorial(3), wrongDraft)).toContain("선택한 장소");

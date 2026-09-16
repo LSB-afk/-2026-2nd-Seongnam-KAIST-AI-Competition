@@ -4,6 +4,7 @@ import type { WorkspaceView } from "./workspace-state";
 
 export type GuideView = WorkspaceView;
 export type GuideContext = {
+  canStartProduction?: boolean;
   view: GuideView;
   selectedPlace: Place | null;
   draftPlace: Place;
@@ -16,6 +17,7 @@ export type GuideContext = {
 export type GuideActions = {
   navigate: (view: GuideView) => void;
   openStudio: () => void;
+  startProduction: () => void;
   openReview: (cardId?: string) => void;
   openEditor: () => void;
   resumeRun: () => void;
@@ -108,15 +110,15 @@ export function getStepGuard(state: GuideState, snapshot: GuideSnapshot): string
 }
 
 export function getStepTarget(state: GuideState, snapshot: GuideSnapshot): string {
-  return ["nav-explore", "place-results", "official-source", "place-heading", "brief-fields", "cards", "review-panel", snapshot.approved ? "download" : "approve-panel"][state.step] ?? "nav-explore";
+  return ["nav-explore", "place-results", "official-source", "create-from-place", "brief-fields", "cards", "review-panel", snapshot.approved ? "download" : "approve-panel"][state.step] ?? "nav-explore";
 }
 
 export const GUIDE_STEPS = [
   { title: "관광 탐색 열기", body: "성남의 장소를 목록과 지도에서 찾아볼까요? 관광 탐색을 열어 주세요.", action: "관광 탐색 열기" },
   { title: "마음에 드는 장소 선택", body: "목록이나 지도에서 장소 하나를 선택해 주세요. 상세정보에 출처와 사진이 함께 표시돼요.", action: "장소 목록 보기" },
   { title: "공식 정보 확인", body: "장소 상세의 공식 정보 링크를 열어 주세요. 관람 시간 등 방문 정보는 공식 안내를 한 번 더 확인하는 것이 좋아요.", action: "공식 정보 위치 보기" },
-  { title: "이 장소로 제작 시작", body: "선택한 장소의 ‘이 장소로 제작’ 버튼을 누르면 장소 정보가 제작 화면으로 이어져요.", action: "선택한 장소로 제작 화면 열기" },
-  { title: "대상과 목적 정하기", body: "누구에게 어떤 이야기를 전할지 정한 뒤 직접 제작하기를 눌러 주세요. 타미는 제작 요청을 대신 실행하지 않아요.", action: "제작 입력 보기" },
+  { title: "이 장소로 제작 시작", body: "아래 파란 버튼을 눌러 ‘다음’을 활성화해 주세요. ‘다음’을 누르면 선택한 장소의 제작 화면으로 이동해요.", action: "선택한 장소 확인" },
+  { title: "대상과 목적 정하기", body: "누구에게 어떤 이야기를 전할지 입력한 뒤 ‘다음’을 누르면 카드뉴스 제작을 시작해요.", action: "제작 입력 보기" },
   { title: "카드 4장 살펴보기", body: "제목·사진·문구를 읽고 필요한 부분을 고쳐 주세요. 수정 없이 다음으로 넘어가도 돼요. 마지막 장은 상상 이야기예요.", action: "카드와 편집 화면 보기" },
   { title: "사실과 출처 검수", body: "문제가 있는 문구와 근거를 확인해 주세요. 수정 뒤에는 현재 버전을 다시 검수해야 승인할 수 있어요.", action: "검수 결과 보기" },
   { title: "직접 승인하고 다운로드", body: "검수 결과와 카드 내용을 확인한 뒤 직접 승인해 주세요. 승인한 현재 버전의 PNG와 ZIP을 내려받을 수 있어요.", action: "승인 위치 보기" },
@@ -157,7 +159,6 @@ export function transitionGuide(state: GuideState, event: GuideEvent, snapshot: 
   }
   if (state.step === 7 && before.reviewed && !snapshot.reviewed) return { ...state, step: 6 };
   const relevantChange =
-    (state.step === 3 && (before.view !== snapshot.view || before.draftPlaceId !== snapshot.draftPlaceId)) ||
     (state.step === 4 && (before.runId !== snapshot.runId || before.cardCount !== snapshot.cardCount || before.running !== snapshot.running || before.busy !== snapshot.busy));
   return relevantChange ? nextStep(state, snapshot) : state;
 }
