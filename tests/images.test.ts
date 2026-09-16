@@ -82,15 +82,15 @@ describe('image asset boundary', () => {
     await expect(storeImage(PNG, { ...metadata, kind: 'ai', reference: { ...reference, placeId: 'yuldong-park' } })).rejects.toThrow(/참조.*장소/);
   }, 60000);
 
-  it('gives image-less cards their registered place photo and keeps photo-less places as text', async () => {
+  it('gives original and expanded place cards their registered photos', async () => {
     const run = newRun({ mode: 'fixture' }); Object.assign(run, createFixtureStory(run), { version: 1 });
     run.revisions.push({ version: 1, createdAt: run.createdAt, cards: structuredClone(run.cards), claims: [], reason: '초안' });
     expect(await attachDefaultImages(run)).toBe(true);
     expect(run.cards.map(card => card.image?.src)).toEqual(Array(4).fill('/places/pangyo-museum.jpg'));
     expect(run.revisions[0].cards).toEqual(run.cards);
     expect(await attachDefaultImages(run)).toBe(false);
-    const textOnly = newRun({ mode: 'fixture', brief: { ...DEFAULT_BRIEF, placeId: 'korea-jobworld', place: '한국잡월드' } }); Object.assign(textOnly, createFixtureStory(textOnly));
-    expect(await attachDefaultImages(textOnly)).toBe(false);
-    expect(textOnly.cards.some(card => card.image)).toBe(false);
+    const expandedRun = newRun({ mode: 'fixture', brief: { ...DEFAULT_BRIEF, placeId: 'korea-jobworld', place: '한국잡월드' } }); Object.assign(expandedRun, createFixtureStory(expandedRun));
+    expect(await attachDefaultImages(expandedRun)).toBe(true);
+    expect(expandedRun.cards.map(card => card.image?.src)).toEqual(Array(4).fill('/places/korea-jobworld.jpg'));
   });
 });

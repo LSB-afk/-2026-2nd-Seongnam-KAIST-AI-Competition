@@ -23,7 +23,10 @@ describe('expanded source-verified tourism catalog', () => {
       expect(place.operatingHours).toBeNull();
       expect(place.closedDays).toBeNull();
       expect(place.admission).toBeNull();
-      expect(place.photo).toBeNull();
+      expect(place.photo.src).toBe(`/places/${place.id}.jpg`);
+      expect(new URL(place.photo.sourceUrl).protocol).toBe('https:');
+      expect(place.photo.width).toBeGreaterThan(0);
+      expect(place.photo.height).toBeGreaterThan(0);
       expect(place.officialQuotes.length, place.name).toBeGreaterThanOrEqual(3);
       expect(place.officialQuotes.every(quote => quote.text.trim() && new URL(quote.sourceUrl).protocol === 'https:')).toBe(true);
     }

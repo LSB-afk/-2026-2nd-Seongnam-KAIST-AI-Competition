@@ -13,7 +13,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/seongnam-botanical-garden.jpg",
+      "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+      "author": "성남시 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+      "width": 622,
+      "height": 354,
+      "caption": "성남시 식물원 입구",
+      "downloadUrl": "https://www.seongnam.go.kr/comm/getImage?srvcId=TOURCONTENTS&upperNo=656&fileTy=THUMB&fileNo=1",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "성남시 식물원",
@@ -50,7 +61,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/seongnam-culture-house.jpg",
+      "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+      "author": "성남시 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+      "width": 622,
+      "height": 354,
+      "caption": "성남문화의집 전경 이미지",
+      "downloadUrl": "https://www.seongnam.go.kr/comm/getImage?srvcId=TOURCONTENTS&upperNo=147&fileTy=THUMB&fileNo=1",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "성남문화의집",
@@ -83,7 +105,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/seohyeon-culture-house.jpg",
+      "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+      "author": "성남시 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+      "width": 622,
+      "height": 354,
+      "caption": "서현문화의집 전경 이미지",
+      "downloadUrl": "https://www.seongnam.go.kr/comm/getImage?srvcId=TOURCONTENTS&upperNo=148&fileTy=THUMB&fileNo=1",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "서현문화의집",
@@ -116,7 +149,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/seongnam-museum-experience.jpg",
+      "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+      "author": "성남시 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+      "width": 622,
+      "height": 354,
+      "caption": "성남시박물관 전경 이미지",
+      "downloadUrl": "https://www.seongnam.go.kr/comm/getImage?srvcId=TOURCONTENTS&upperNo=138&fileTy=THUMB&fileNo=1",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "성남시박물관",
@@ -149,7 +193,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/seongnam-atreum.jpg",
+      "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+      "author": "성남시 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+      "width": 622,
+      "height": 354,
+      "caption": "성남아트리움 전경 이미지",
+      "downloadUrl": "https://www.seongnam.go.kr/comm/getImage?srvcId=TOURCONTENTS&upperNo=142&fileTy=THUMB&fileNo=1",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "성남아트리움",
@@ -182,7 +237,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/korea-jobworld.jpg",
+      "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+      "author": "성남시 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://www.seongnam.go.kr/tour/tu-pm0501001",
+      "width": 622,
+      "height": 354,
+      "caption": "한국잡월드",
+      "downloadUrl": "https://www.seongnam.go.kr/comm/getImage?srvcId=TOURCONTENTS&upperNo=18&fileTy=THUMB&fileNo=1",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "한국잡월드",
@@ -215,7 +281,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/hwarang-park.jpg",
+      "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+      "author": "성남시 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+      "width": 622,
+      "height": 354,
+      "caption": "화랑공원 맨발황톳길",
+      "downloadUrl": "https://www.seongnam.go.kr/comm/getImage?srvcId=TOURCONTENTS&upperNo=4&fileTy=THUMB&fileNo=1",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "화랑공원",
@@ -248,7 +325,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/daewon-park.jpg",
+      "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+      "author": "성남시 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+      "width": 622,
+      "height": 354,
+      "caption": "대원공원 맨발황톳길",
+      "downloadUrl": "https://www.seongnam.go.kr/comm/getImage?srvcId=TOURCONTENTS&upperNo=52&fileTy=THUMB&fileNo=1",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "대원공원",
@@ -281,7 +369,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/hwangsong-park.jpg",
+      "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+      "author": "성남시 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+      "width": 622,
+      "height": 354,
+      "caption": "황송공원 맨발황톳길",
+      "downloadUrl": "https://www.seongnam.go.kr/comm/getImage?srvcId=TOURCONTENTS&upperNo=51&fileTy=THUMB&fileNo=1",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "황송공원",
@@ -314,7 +413,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/sanseong-park.jpg",
+      "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+      "author": "성남시 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+      "width": 622,
+      "height": 354,
+      "caption": "산성공원 맨발황톳길",
+      "downloadUrl": "https://www.seongnam.go.kr/comm/getImage?srvcId=TOURCONTENTS&upperNo=50&fileTy=THUMB&fileNo=1",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "산성공원",
@@ -347,7 +457,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/wirye-park.jpg",
+      "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+      "author": "성남시 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+      "width": 622,
+      "height": 354,
+      "caption": "위례공원 맨발황톳길",
+      "downloadUrl": "https://www.seongnam.go.kr/comm/getImage?srvcId=TOURCONTENTS&upperNo=49&fileTy=THUMB&fileNo=1",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "위례공원",
@@ -380,7 +501,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/sujin-park.jpg",
+      "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+      "author": "성남시 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+      "width": 622,
+      "height": 354,
+      "caption": "수진공원 맨발황톳길",
+      "downloadUrl": "https://www.seongnam.go.kr/comm/getImage?srvcId=TOURCONTENTS&upperNo=48&fileTy=THUMB&fileNo=1",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "수진공원",
@@ -417,7 +549,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/huimangdae-park.jpg",
+      "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+      "author": "성남시 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://www.seongnam.go.kr/tour/tu-pm030309",
+      "width": 622,
+      "height": 354,
+      "caption": "희망대공원 맨발황톳길",
+      "downloadUrl": "https://www.seongnam.go.kr/comm/getImage?srvcId=TOURCONTENTS&upperNo=47&fileTy=THUMB&fileNo=1",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "희망대공원",
@@ -450,7 +593,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/moran-food-street.jpg",
+      "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006",
+      "author": "성남시 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006",
+      "width": 622,
+      "height": 354,
+      "caption": "모란 음식문화거리",
+      "downloadUrl": "https://www.seongnam.go.kr/comm/getImage?srvcId=TOURCONTENTS&upperNo=28&fileTy=THUMB&fileNo=1",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "모란 음식문화거리",
@@ -483,7 +637,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/baekhyeon-cafe-street.jpg",
+      "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006",
+      "author": "성남시 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006",
+      "width": 622,
+      "height": 354,
+      "caption": "백현동카페문화특화거리 전경 이미지",
+      "downloadUrl": "https://www.seongnam.go.kr/comm/getImage?srvcId=TOURCONTENTS&upperNo=145&fileTy=THUMB&fileNo=1",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "백현동카페문화특화거리",
@@ -516,7 +681,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/jeongja-cafe-street.jpg",
+      "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006",
+      "author": "성남시 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006",
+      "width": 622,
+      "height": 354,
+      "caption": "정자동 카페거리 전경 이미지",
+      "downloadUrl": "https://www.seongnam.go.kr/comm/getImage?srvcId=TOURCONTENTS&upperNo=144&fileTy=THUMB&fileNo=1",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "정자동 카페거리",
@@ -553,7 +729,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/moran-oil-street.jpg",
+      "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006",
+      "author": "성남시 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://www.seongnam.go.kr/tour/tu-pm0501006",
+      "width": 622,
+      "height": 354,
+      "caption": "제1호 백년기름 특화거리",
+      "downloadUrl": "https://www.seongnam.go.kr/comm/getImage?srvcId=TOURCONTENTS&upperNo=32&fileTy=THUMB&fileNo=1",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "백년기름 특화거리",
@@ -586,7 +773,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/naksaengdae-park.jpg",
+      "sourceUrl": "https://koreatourinfo.com/korea-info-2759981/",
+      "author": "한국관광공사 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://koreatourinfo.com/korea-info-2759981/",
+      "width": 940,
+      "height": 626,
+      "caption": "낙생대공원",
+      "downloadUrl": "https://tong.visitkorea.or.kr/cms/resource/92/3541792_image2_1.jpg",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "분당구 백현동 낙생대공원",
@@ -619,7 +817,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/sanghui-park.jpg",
+      "sourceUrl": "https://snvision.seongnam.go.kr/11016",
+      "author": "비전성남 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://snvision.seongnam.go.kr/11016",
+      "width": 600,
+      "height": 900,
+      "caption": "상희공원 이상희 대위 기념상",
+      "downloadUrl": "https://snvision.seongnam.go.kr/imgdata/snvision/201910/2019102049535284.jpg",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "분당구 야탑동 상희공원",
@@ -652,7 +861,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/shin-hae-chul-street.jpg",
+      "sourceUrl": "https://cromst.seongnam.go.kr:10005/street/street",
+      "author": "성남시 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://cromst.seongnam.go.kr:10005/street/street",
+      "width": 1200,
+      "height": 640,
+      "caption": "진입마당(정면) 구간 낮풍경1",
+      "downloadUrl": "https://cromst.seongnam.go.kr:10005/images/content/street_view/area1_day1.jpg",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "신해철거리",
@@ -685,7 +905,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/seongnam-general-market.jpg",
+      "sourceUrl": "https://access.visitkorea.or.kr/ms/detail.do?cotId=d1066d5d-c3cd-4a64-8fd5-5a9e42ba6e3c",
+      "author": "한국관광공사 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://access.visitkorea.or.kr/ms/detail.do?cotId=d1066d5d-c3cd-4a64-8fd5-5a9e42ba6e3c",
+      "width": 940,
+      "height": 627,
+      "caption": "성남종합시장 전경",
+      "downloadUrl": "https://access.visitkorea.or.kr/bfvk_img/call?cmd=VIEW&id=30f890c4-e8b7-4903-b00b-fdbca297b020&v=20140958",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "성남종합시장은 수정구 신흥동 종합시장이다.",
@@ -718,7 +949,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/shingu-botanic-garden.jpg",
+      "sourceUrl": "https://www.sbg.or.kr/guide/guide.html",
+      "author": "신구대학교식물원 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://www.sbg.or.kr/guide/guide.html",
+      "width": 480,
+      "height": 230,
+      "caption": "식물원 전경",
+      "downloadUrl": "https://www.sbg.or.kr/images/guide/thum.jpg",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "신구대학교식물원",
@@ -751,7 +993,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/daegwangsa.jpg",
+      "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030604?curPage=1#136",
+      "author": "성남시 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://www.seongnam.go.kr/tour/tu-pm030604?curPage=1#136",
+      "width": 622,
+      "height": 354,
+      "caption": "대광사",
+      "downloadUrl": "https://www.seongnam.go.kr/comm/getImage?srvcId=TOURCONTENTS&upperNo=136&fileTy=THUMB&fileNo=1",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "대광사",
@@ -792,7 +1045,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/sangdaewon-market.jpg",
+      "sourceUrl": "https://snvision.seongnam.go.kr/3000",
+      "author": "비전성남 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://snvision.seongnam.go.kr/3000",
+      "width": 700,
+      "height": 525,
+      "caption": "상대원시장 현장 사진",
+      "downloadUrl": "https://snvision.seongnam.go.kr/imgdata/snvision/201312/201312045559702.jpg",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "상대원시장(상대원프라자)",
@@ -825,7 +1089,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/dandae-traditional-market.jpg",
+      "sourceUrl": "https://gnews.gg.go.kr/news/news_detail.do?number=202010141759018779C109&s_code=C109",
+      "author": "경기뉴스광장 김지호",
+      "license": "KOGL Type 1",
+      "licenseUrl": "https://www.kogl.or.kr/info/licenseType1.do",
+      "width": 1400,
+      "height": 910,
+      "caption": "단대전통시장 현장 사진",
+      "downloadUrl": "https://gnews.gg.go.kr/OP_UPDATA/UP_DATA/_FILEZ/202010/20201014064611229855959.jpg",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "단대전통시장",
@@ -858,7 +1133,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/namhansanseong-market.jpg",
+      "sourceUrl": "https://www.kyeonggi.com/article/201805300990178",
+      "author": "경기일보 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://www.kyeonggi.com/article/201805300990178",
+      "width": 640,
+      "height": 195,
+      "caption": "남한산성시장 소개 사진",
+      "downloadUrl": "https://ypzxxdrj8709.edge.naverncp.com/data2/content/image/2018/05/30/.cache/512/201805300649284.jpg",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "남한산성시장",
@@ -891,7 +1177,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/yeongjang-park.jpg",
+      "sourceUrl": "https://www.sujeong-gu.go.kr/sub/content.asp?cIdx=217",
+      "author": "성남시 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://www.sujeong-gu.go.kr/sub/content.asp?cIdx=217",
+      "width": 897,
+      "height": 400,
+      "caption": "상공에서 바라본 영장공원 전경사진",
+      "downloadUrl": "https://www.sujeong-gu.go.kr/images/content/tour2_area1_img1.jpg",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "영장공원",
@@ -928,7 +1225,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/yangji-park.jpg",
+      "sourceUrl": "https://www.sujeong-gu.go.kr/sub/content.asp?cIdx=218",
+      "author": "성남시 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://www.sujeong-gu.go.kr/sub/content.asp?cIdx=218",
+      "width": 897,
+      "height": 400,
+      "caption": "상공에서 바라본 양지공원 전경사진",
+      "downloadUrl": "https://www.sujeong-gu.go.kr/images/content/tour2_area2_img1.jpg",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "양지공원",
@@ -965,7 +1273,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/dandae-park.jpg",
+      "sourceUrl": "https://www.sujeong-gu.go.kr/sub/content.asp?cIdx=219",
+      "author": "성남시 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://www.sujeong-gu.go.kr/sub/content.asp?cIdx=219",
+      "width": 897,
+      "height": 400,
+      "caption": "상공에서 바라본 단대공원 전경사진",
+      "downloadUrl": "https://www.sujeong-gu.go.kr/images/content/tour2_area3_img1.jpg",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "단대공원",
@@ -1002,7 +1321,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/moka.jpg",
+      "sourceUrl": "https://www.hmoka.org/aboutus/architecture/main.do?st_cd=480",
+      "author": "현대어린이책미술관 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://www.hmoka.org/aboutus/architecture/main.do?st_cd=480",
+      "width": 575,
+      "height": 683,
+      "caption": "미술관 내부 사진",
+      "downloadUrl": "https://www.hmoka.org/images/webhome/aboutus/img_03.png",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "현대어린이책미술관",
@@ -1035,7 +1365,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/sagimakgol-park.jpg",
+      "sourceUrl": "https://snvision.seongnam.go.kr/2253",
+      "author": "비전성남 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://snvision.seongnam.go.kr/2253",
+      "width": 651,
+      "height": 306,
+      "caption": "사기막골공원 소개 사진",
+      "downloadUrl": "https://snvision.seongnam.go.kr/pds/news/20120824_4211.jpg",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "사기막골 근린공원",
@@ -1068,7 +1409,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/cheonrimsan-beacon.jpg",
+      "sourceUrl": "https://www.seongnam.go.kr/tour/tu-pm030401",
+      "author": "성남시 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://www.seongnam.go.kr/tour/tu-pm030401",
+      "width": 622,
+      "height": 354,
+      "caption": "제2로 직봉 성남 천림산 봉수 유적",
+      "downloadUrl": "https://www.seongnam.go.kr/comm/getImage?srvcId=TOURCONTENTS&upperNo=73&fileTy=THUMB&fileNo=1",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "제2로 직봉 성남 천림산 봉수 유적",
@@ -1101,7 +1453,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/sunae-historic-house.jpg",
+      "sourceUrl": "https://koreatourinfo.com/?p=51490",
+      "author": "한국관광공사 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://koreatourinfo.com/?p=51490",
+      "width": 940,
+      "height": 626,
+      "caption": "수내동가옥(이택구가옥)",
+      "downloadUrl": "https://tong.visitkorea.or.kr/cms/resource/72/3053472_image2_1.jpg",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "수내동가옥",
@@ -1138,7 +1501,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/gumi-park.jpg",
+      "sourceUrl": "https://seongnam.grandculture.net/seongnam/toc/GC00103132",
+      "author": "디지털성남문화대전 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://seongnam.grandculture.net/seongnam/toc/GC00103132",
+      "width": 640,
+      "height": 427,
+      "caption": "구미공원 전경",
+      "downloadUrl": "https://seongnam.grandculture.net/Image?localName=seongnam&id=GC001P03432&t=middle",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "구미공원 배드민턴장",
@@ -1171,7 +1545,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/hwangsaeul-park.jpg",
+      "sourceUrl": "https://koreatourinfo.com/?p=54260",
+      "author": "한국관광공사 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://koreatourinfo.com/?p=54260",
+      "width": 940,
+      "height": 736,
+      "caption": "황새울공원",
+      "downloadUrl": "https://tong.visitkorea.or.kr/cms/resource/34/2761334_image2_1.jpg",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "황새울공원",
@@ -1212,7 +1597,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/neunggol-park.jpg",
+      "sourceUrl": "https://koreatourinfo.com/korea-info-753946/",
+      "author": "한국관광공사 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://koreatourinfo.com/korea-info-753946/",
+      "width": 940,
+      "height": 626,
+      "caption": "능골공원",
+      "downloadUrl": "https://tong.visitkorea.or.kr/cms/resource/42/3053542_image2_1.jpg",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "능골공원",
@@ -1245,7 +1641,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/unjung-park.jpg",
+      "sourceUrl": "https://seongnam.grandculture.net/seongnam/search?keyword=%EC%9A%B4%EC%A4%91%EA%B3%B5%EC%9B%90",
+      "author": "디지털성남문화대전 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://seongnam.grandculture.net/seongnam/search?keyword=%EC%9A%B4%EC%A4%91%EA%B3%B5%EC%9B%90",
+      "width": 640,
+      "height": 427,
+      "caption": "운중공원",
+      "downloadUrl": "https://seongnam.grandculture.net/Image?localName=seongnam&id=GC001P03022",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "운중공원",
@@ -1278,7 +1685,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/geumgok-park.jpg",
+      "sourceUrl": "https://koreatourinfo.com/?p=72721",
+      "author": "한국관광공사 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://koreatourinfo.com/?p=72721",
+      "width": 1400,
+      "height": 934,
+      "caption": "금곡공원",
+      "downloadUrl": "https://tong.visitkorea.or.kr/cms/resource/74/2871974_image2_1.jpg",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "금곡공원",
@@ -1319,7 +1737,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/maru-park.jpg",
+      "sourceUrl": "https://gnews.gg.go.kr/news/news_detail.do?number=202504272036551368C094&s_code=C094",
+      "author": "이재형 기자",
+      "license": "KOGL Type 1",
+      "licenseUrl": "https://www.kogl.or.kr/info/licenseType1.do",
+      "width": 1200,
+      "height": 900,
+      "caption": "경기도 성남시 마루공원과 주차장",
+      "downloadUrl": "https://gnews.gg.go.kr/OP_UPDATA/UP_DATA/_FILEZ/202504/20250427083655148614149.jpg",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "마루공원 피크닉장",
@@ -1352,7 +1781,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/book-theme-park-library.jpg",
+      "sourceUrl": "https://access.visitkorea.or.kr/ms/detail.do?cotId=97d090bb-66fa-4557-9df0-137d967b9f6f",
+      "author": "한국관광공사 (제공)",
+      "license": "원문 이용 조건 확인",
+      "licenseUrl": "https://access.visitkorea.or.kr/ms/detail.do?cotId=97d090bb-66fa-4557-9df0-137d967b9f6f",
+      "width": 940,
+      "height": 627,
+      "caption": "책테마파크 전경",
+      "downloadUrl": "https://access.visitkorea.or.kr/bfvk_img/call?cmd=VIEW&id=28464a58-f742-49a5-81ca-fbdeb29b0124&v=14174614",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "책테마파크도서관",
@@ -1385,7 +1825,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/maengsan-ecology-center.jpg",
+      "sourceUrl": "https://gnews.gg.go.kr/news/news_detail.do?number=202605041305595414C094&s_code=C094",
+      "author": "이재형 기자",
+      "license": "KOGL Type 1",
+      "licenseUrl": "https://www.kogl.or.kr/info/licenseType1.do",
+      "width": 1010,
+      "height": 672,
+      "caption": "맹산환경생태학습원 체험전시실",
+      "downloadUrl": "https://gnews.gg.go.kr/OP_UPDATA/UP_DATA/_NAMO_FILE/images/000067/2-1-horz.jpg",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "맹산환경생태학습원",
@@ -1418,7 +1869,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/pangyo-ecology-center.jpg",
+      "sourceUrl": "https://gnews.gg.go.kr/news/news_detail.do?number=202607070648047512C076&s_code=C076",
+      "author": "진예진 기자",
+      "license": "KOGL Type 1",
+      "licenseUrl": "https://www.kogl.or.kr/info/licenseType1.do",
+      "width": 960,
+      "height": 639,
+      "caption": "판교환경생태학습원 로비와 온실",
+      "downloadUrl": "https://gnews.gg.go.kr/OP_UPDATA/UP_DATA/_NAMO_FILE/images/000093/1_2.jpg",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "판교환경생태학습원",
@@ -1451,7 +1913,19 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/tancheon-sports-complex.jpg",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Tanchon20100223_5.JPG",
+      "author": "Waka77",
+      "license": "Public domain",
+      "licenseUrl": "https://commons.wikimedia.org/wiki/File:Tanchon20100223_5.JPG#Licensing",
+      "width": 1400,
+      "height": 1050,
+      "caption": "탄천종합운동장 외관 (2008년)",
+      "capturedAt": "2008-04-11",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/0/00/Tanchon20100223_5.JPG",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "탄천종합운동장",
@@ -1484,7 +1958,18 @@
     "operatingHours": null,
     "closedDays": null,
     "admission": null,
-    "photo": null,
+    "photo": {
+      "src": "/places/saemaul-history-museum.jpg",
+      "sourceUrl": "https://gnews.gg.go.kr/news/news_detail.do?number=202511091548397897C094&s_code=C094",
+      "author": "이재형 기자",
+      "license": "KOGL Type 1",
+      "licenseUrl": "https://www.kogl.or.kr/info/licenseType1.do",
+      "width": 1200,
+      "height": 900,
+      "caption": "경기도 성남시 새마을역사관 ⓒ 이재형 기자",
+      "downloadUrl": "https://gnews.gg.go.kr/OP_UPDATA/UP_DATA/_NAMO_FILE/images/000015/1_1.jpg",
+      "changes": "원본 사진 URL을 브라우저에서 열어 이미지 영역을 JPEG 스크린샷으로 저장. 최대 1400×1100 내 비율 유지."
+    },
     "officialQuotes": [
       {
         "text": "새마을역사관",
