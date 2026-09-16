@@ -184,3 +184,16 @@ export async function defaultCardImage(run: Run, cardId: string): Promise<CardIm
   if (storyStopForCard(run, cardId)?.photoChoice === "none") return undefined;
   return defaultPlaceImage(cardPlace(run, cardId).id);
 }
+
+/** Gives image-less cards their place photo and keeps the current revision snapshot in step; true when any card changed. */
+export async function attachDefaultImages(run: Run, signal?: AbortSignal): Promise<boolean> {
+  let attached = false;
+  for (const card of run.cards) if (!card.image) {
+    const photo = await defaultCardImage(run, card.id);
+    signal?.throwIfAborted();
+    if (photo) { card.image = photo; attached = true; }
+  }
+  const revision = attached && run.revisions.find(item => item.version === run.version);
+  if (revision) revision.cards = structuredClone(run.cards);
+  return attached;
+}

@@ -88,7 +88,8 @@ function TimeLens({ place, onImagine }: { place: Place; onImagine: (prompt: stri
     event.preventDefault();
     const text = prompt.trim();
     if (!text) { setMessage('만약 이 장소가 어떻게 바뀐다면 좋을지 적어 주세요.'); return; }
-    onImagine(`${place.name}의 미래를 상상해 주세요. ${text}\n현재의 사실과 구분된 AI 상상으로 표현해 주세요.`);
+    // The studio goal appends its own sentence ending after this prompt.
+    onImagine(`${place.name}의 미래를 상상해 주세요. ${text}\n현재의 사실과 구분된 AI 상상으로 표현해 주세요`);
     setMessage('상상 아이디어를 제작 화면으로 전달했어요.');
   };
   return <>

@@ -40,3 +40,6 @@
 .city-shared-finished { margin:15vh auto; max-width:500px; padding:24px; display:grid; gap:20px; color:#315443; }
 .city-shared-finished h1 { font-size:24px; }
 .city-shared-finished button { min-height:44px; padding:12px; border:1px solid #b9c5a6; border-radius:8px; background:#edf2df; color:inherit; }
+.city-shared-missing { word-break:keep-all; }
+.city-shared-missing p { font-size:15px; line-height:1.8; overflow-wrap:anywhere; }
+.city-shared-missing a { display:grid; place-items:center; min-height:48px; padding:12px; border-radius:8px; background:#284f40; color:#fffef0; font-weight:600; text-decoration:none; }

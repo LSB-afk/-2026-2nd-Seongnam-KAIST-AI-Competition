@@ -21,7 +21,7 @@
 
 책테마파크도서관·맹산환경생태학습원·판교환경생태학습원은 각 공식 홈페이지의 카카오 약도 마커 데이터를 확인했다. 공개된 약도 JSON의 `placeX/placeY`를 공식 카카오 지도 JavaScript의 `new daum.maps.Coords(x, y).toLatLng()`로 변환했다. 각각 약도 key는 `2fw7x`, `mcjs`, `tahj`이며 JSON URL을 `coordinateEvidenceUrl`에 기록했다. 숫자 좌표를 추측하거나 주소 중심점으로 대체하지 않았다.
 
-새마을역사관은 [경기도의 현장 소개](https://gnews.gg.go.kr/news/news_detail.do?number=202511091548397897C094&s_code=C094)와 운영 기관의 [연수원 안내](https://sua.saemaul.or.kr/)를 대조했다. 좌표는 한국관광공사의 연수원 대표 지점이므로 역사관 출입구로 간주하면 안 된다. 공식 현장 기사에 사전 예약 안내가 있어 방문 전에 기관에 확인하도록 기록했다.
+새마을역사관은 [경기도의 현장 소개](https://gnews.gg.go.kr/news/news_detail.do?number=202511091548397897C094&s_code=C094)와 운영 기관의 [연수원 안내](https://sua.saemaul.or.kr/)를 대조했다. 좌표는 연수원 공식 오시는 길의 지도 마커(연수원 대표 지점)이므로 역사관 출입구로 간주하면 안 된다. 공식 현장 기사에 사전 예약 안내가 있어 방문 전에 기관에 확인하도록 기록했다.
 
 모든 52개 장소에 `officialQuotes` 3개를 갖췄다. 신규 항목은 공식 페이지에서 실제로 확인한 짧은 이름·주소·종류·이용 안내 등의 근거이며, 새로운 홍보 문구를 공식 인용처럼 만들지 않았다. 기존 승인 39개는 인용문 보강 외 다른 필드를 변경하지 않았다.
 
@@ -56,10 +56,10 @@
 | 백현동카페문화특화거리 | 분당구 | 특화거리 | 37.3864461, 127.1114723 | official-street-anchor | [사실](https://www.seongnam.go.kr/tour/tu-pm0501006) | [좌표](https://www.seongnam.go.kr/tour/tu-pm0501006) |
 | 정자동 카페거리 | 분당구 | 특화거리 | 37.3711971, 127.1062827 | official-street-anchor | [사실](https://www.seongnam.go.kr/tour/tu-pm0501006) | [좌표](https://www.seongnam.go.kr/tour/tu-pm0501006) |
 | 제1호 백년기름 특화거리 | 중원구 | 특화거리 | 37.4306345, 127.1274914 | official-street-anchor | [사실](https://www.seongnam.go.kr/tour/tu-pm0501006) | [좌표](https://www.seongnam.go.kr/tour/tu-pm0501006) |
-| 낙생대공원 | 분당구 | 공원 | 37.3875773, 127.1076838 | kto-representative-point | [사실](https://data.visitkorea.or.kr/page/2759981) | [좌표](https://data.visitkorea.or.kr/page/2759981) |
-| 상희공원 | 분당구 | 공원 | 37.4109419, 127.1411856 | kto-representative-point | [사실](https://data.visitkorea.or.kr/page/2914491) | [좌표](https://data.visitkorea.or.kr/page/2914491) |
-| 신해철거리 | 분당구 | 특화거리 | 37.3657774, 127.1269493 | kto-representative-point | [사실](https://data.visitkorea.or.kr/page/2650828) | [좌표](https://data.visitkorea.or.kr/page/2650828) |
-| 성남종합시장 | 수정구 | 전통시장 | 37.4405719, 127.1453538 | kto-representative-point | [사실](https://data.visitkorea.or.kr/page/2762739) | [좌표](https://data.visitkorea.or.kr/page/2762739) |
+| 낙생대공원 | 분당구 | 공원 | 37.3875773, 127.1076838 | kto-representative-point (2026-09-16 좌표 출처 재확인 실패) | [사실](https://snvision.seongnam.go.kr/11443) | [좌표](https://data.visitkorea.or.kr/page/2759981) |
+| 상희공원 | 분당구 | 공원 | 37.4107603, 127.1413480 | osm-interior-point | [사실](https://snvision.seongnam.go.kr/11016) | [좌표](https://www.openstreetmap.org/way/290212557) |
+| 신해철거리 | 분당구 | 특화거리 | 37.3657334, 127.1269265 | official-roughmap-point | [사실](https://cromst.seongnam.go.kr:10005/street/streetMap) | [좌표](https://cromst.seongnam.go.kr:10005/street/streetMap) |
+| 성남종합시장 | 수정구 | 전통시장 | 37.4405199, 127.1453377 | kto-representative-point | [사실](https://access.visitkorea.or.kr/ms/detail.do?cotId=d1066d5d-c3cd-4a64-8fd5-5a9e42ba6e3c) | [좌표](https://access.visitkorea.or.kr/ms/detail.do?cotId=d1066d5d-c3cd-4a64-8fd5-5a9e42ba6e3c) |
 | 신구대학교식물원 | 수정구 | 식물원 | 37.4339400, 127.0809000 | official-legacy-map-point | [사실](https://www.sbg.or.kr/guide/guide.html) | [좌표](https://www.sbg.or.kr/guide/location.html) |
 | 대광사 | 분당구 | 문화유산 | 37.3467452, 127.1276360 | official-representative-point | [사실](https://www.seongnam.go.kr/tour/tu-pm030604?curPage=1#136) | [좌표](https://www.seongnam.go.kr/tour/tu-pm030101/44) |
 | 상대원시장 | 중원구 | 전통시장 | 37.4359794, 127.1587721 | official-facility-anchor | [사실](https://www.seongnam.go.kr/tour/tu-pm030101/44) | [좌표](https://www.seongnam.go.kr/tour/tu-pm030101/44) |
@@ -69,7 +69,7 @@
 | 양지공원 | 수정구 | 공원 | 37.4641459, 127.1636130 | osm-interior-point | [사실](https://www.sujeong-gu.go.kr/sub/content.asp?cIdx=218) | [좌표](https://www.openstreetmap.org/way/871411648) |
 | 단대공원 | 수정구 | 공원 | 37.4543891, 127.1566184 | osm-interior-point | [사실](https://www.sujeong-gu.go.kr/sub/content.asp?cIdx=219) | [좌표](https://www.openstreetmap.org/way/240822064) |
 | 현대어린이책미술관 | 분당구 | 미술관 | 37.3927998, 127.1119913 | osm-host-building-point | [사실](https://www.hmoka.org/main/index.do) | [좌표](https://www.openstreetmap.org/node/4350141121) |
-| 사기막골공원 | 중원구 | 공원 | 37.4455839, 127.1826792 | osm-interior-point | [사실](https://www.seongnam.go.kr/park/poolList.do?menuIdx=1000814&returnURL=%2Fmain.do&searchCode=park) | [좌표](https://www.openstreetmap.org/way/1092611499) |
+| 사기막골공원 | 중원구 | 공원 | 37.4455839, 127.1826792 | osm-interior-point | [사실](https://snvision.seongnam.go.kr/2253) | [좌표](https://www.openstreetmap.org/way/1092611499) |
 | 천림산 봉수 유적 | 수정구 | 문화유산 | 37.4221952, 127.0756511 | osm-node | [사실](https://www.seongnam.go.kr/tour/tu-pm030401) | [좌표](https://www.openstreetmap.org/node/7023179789) |
 | 수내동가옥 | 분당구 | 문화유산 | 37.3753670, 127.1243048 | official-representative-point | [사실](https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=3413100780000&pageNo=1_1_2_0) | [좌표](https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=3413100780000&pageNo=1_1_2_0) |
 | 구미공원 | 분당구 | 공원 | 37.3421784, 127.1200843 | osm-interior-point | [사실](https://www.seongnam.go.kr/ct-pm080303) | [좌표](https://www.openstreetmap.org/way/480806780) |
@@ -82,7 +82,7 @@
 | 맹산환경생태학습원 | 분당구 | 생태체험 | 37.4052243, 127.1420150 | official-representative-point | [사실](https://mpark.seongnam.go.kr:10003/main.php?menugrp=010400&master=html&act=page) | [좌표](https://mpark.seongnam.go.kr:10003/main.php?menugrp=010400&master=html&act=page) |
 | 판교환경생태학습원 | 분당구 | 생태체험 | 37.3995912, 127.1038176 | official-representative-point | [사실](https://ppark.seongnam.go.kr:10013/info/location) | [좌표](https://ppark.seongnam.go.kr:10013/info/location) |
 | 탄천종합운동장 | 분당구 | 체육문화 | 37.4101669, 127.1211970 | osm-interior-point | [사실](https://spo.isdc.co.kr/tan_visitWay.do) | [좌표](https://www.openstreetmap.org/way/658766450) |
-| 새마을역사관 | 분당구 | 박물관 | 37.3890558, 127.1567487 | official-campus-representative-point | [사실](https://gnews.gg.go.kr/news/news_detail.do?number=202511091548397897C094&s_code=C094) | [좌표](https://data.visitkorea.or.kr/linkedview/131687) |
+| 새마을역사관 | 분당구 | 박물관 | 37.3927460, 127.1582810 | official-campus-representative-point | [사실](https://gnews.gg.go.kr/news/news_detail.do?number=202511091548397897C094&s_code=C094) | [좌표](https://sua.saemaul.or.kr/sub/intro/location.php) |
 
 ## 보류한 후보
 
@@ -97,3 +97,17 @@
 - 중복 ID·이름 없음. 모든 통합 좌표는 숫자이며 성남 주변 범위 검사 통과. `src/lib/diorama/seongnam-boundaries.json`의 실제 구 경계와 점-다각형 대조 결과 52/52개가 표기한 구 내부에 있다. 기존 8개 항목의 모든 원래 필드가 보존됐음을 비교 확인했다.
 - 지도 출입구 정확도, 실시간 영업 여부, 무장애 접근성, 현장 답사는 검증하지 않았다.
 - 운영정보가 상충하는 공식 문화시설 소개는 운영 사실로 옮기지 않았다. 출처 페이지의 요금·시간 필드 오기 및 일부 설명의 위치 모순은 그대로 복제하지 않았다.
+
+## 2026-09-16 보완
+
+QA에서 열리지 않는 공식 링크와 이름·주소뿐인 인용문이 확인되어 다음을 고쳤다. 모든 인용문은 해당 페이지 원문에서 그대로 옮겼고, curl과 Node `fetch`로 페이지가 열리는지와 인용문이 본문에 있는지를 다시 확인했다.
+
+| 장소 | 변경 | 근거 |
+|---|---|---|
+| 사기막골공원 | 성남시 물놀이장 목록 페이지가 404로 바뀌어 소개·인용 출처를 비전성남 기사와 공공와이파이 시설 목록으로 교체 | [기사](https://snvision.seongnam.go.kr/2253), [시설 목록](https://www.seongnam.go.kr/ct-pm080303) |
+| 낙생대공원·상희공원·신해철거리·성남종합시장 | 한국관광공사 관광 LOD가 503으로 응답해 비전성남 기사, 신해철거리 공식 누리집, 한국관광공사 열린관광 상세로 교체. 상희공원 좌표는 OSM 공원 영역 내부 지점 | 위 표의 각 행 |
+| 새마을역사관 | 좌표 출처를 503으로 응답한 관광 LOD 대신 새마을운동중앙연수원 공식 오시는 길 마커로 교체 | [오시는 길](https://sua.saemaul.or.kr/sub/intro/location.php) |
+| 영장공원·양지공원·단대공원 | 수정구청 누리집은 브라우저·curl에서 열리지만 Node `fetch`가 인증서 체인을 검증하지 못한다(`UNABLE_TO_VERIFY_LEAF_SIGNATURE`). 실제 AI 모드 수집이 실패하지 않도록 공공와이파이 시설 목록의 해당 공원 항목을 보조 인용으로 추가 | [시설 목록](https://www.seongnam.go.kr/ct-pm080303) |
+| 성남시 식물원·수진공원·정자동 카페거리·대광사·수내동가옥·황새울공원·금곡공원 | 데모 카드 본문이 장소 이름이나 주소만 되지 않도록 공식 페이지의 설명 문장을 인용에 추가 | [식물원 소개](https://epark.seongnam.go.kr:10010/intro/sub01.asp), [황톳길](https://www.seongnam.go.kr/tour/tu-pm030309), [특화거리](https://www.seongnam.go.kr/tour/tu-pm0501006), [열린관광 대광사](https://access.visitkorea.or.kr/ms/detail.do?cotId=977660c7-1c4a-460b-a474-83a0270b77b6), [비전성남 대광사](https://snvision.seongnam.go.kr/6704), [지정문화유산 2쪽](https://www.seongnam.go.kr/tour/tu-pm030401?curPage=2), [열린관광 황새울공원](https://access.visitkorea.or.kr/ms/detail.do?cotId=ee150592-b6c4-4a17-bbfc-23e0f87acd7b), [구석구석 금곡공원](https://korean.visitkorea.or.kr/detail/ms_detail.do?cotid=26a08675-b7fd-4060-b414-76b766bbb49b) |
+
+단대전통시장과 남한산성시장은 설명 문장이 있는 공식 페이지를 찾지 못해 이름·주소·종류 인용만 유지한다. 데모 제작은 문장형 인용을 우선 사용하므로 이 두 곳의 카드 본문은 종류 인용(“전통시장”)이 된다.

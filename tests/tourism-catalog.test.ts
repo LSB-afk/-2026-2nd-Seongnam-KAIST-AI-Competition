@@ -19,13 +19,22 @@ describe('expanded source-verified tourism catalog', () => {
       expect(place.address).toContain('성남');
       expect(new URL(place.sourceUrl).protocol).toBe('https:');
       expect(new URL(place.coordinateSourceUrl).protocol).toBe('https:');
-      expect(place.verifiedAt).toBe('2026-09-15');
+      expect(place.verifiedAt, place.name).toMatch(/^2026-09-1[56]$/);
       expect(place.operatingHours).toBeNull();
       expect(place.closedDays).toBeNull();
       expect(place.admission).toBeNull();
       expect(place.photo).toBeNull();
       expect(place.officialQuotes.length, place.name).toBeGreaterThanOrEqual(3);
       expect(place.officialQuotes.every(quote => quote.text.trim() && new URL(quote.sourceUrl).protocol === 'https:')).toBe(true);
+    }
+  });
+  it('cites a specific official page instead of a bare site root', () => {
+    for (const place of PLACES) {
+      for (const source of [place.sourceUrl, place.coordinateSourceUrl, place.descriptionSourceUrl, place.operationsSourceUrl, ...place.officialQuotes.map(quote => quote.sourceUrl)]) {
+        if (!source) continue;
+        const url = new URL(source);
+        expect(url.pathname.replace(/\/+$/, '') + url.search, `${place.name}: ${source}`).not.toBe('');
+      }
     }
   });
   it('exposes every verified place through the city and valid tour stops', () => {

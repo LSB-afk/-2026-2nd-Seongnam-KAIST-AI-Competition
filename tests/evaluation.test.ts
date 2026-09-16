@@ -1,9 +1,19 @@
-import { afterEach, describe, expect, it } from 'vitest';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { EvaluationBudget, buildTargetInput, claimMetrics, loadClaimDataset, runMetrics, loadFrozenCorpus, fixedCorpusSearch, evaluationBudgetReason } from '../scripts/evaluation';
 import { newRun } from '../src/lib/run';
+
+// Simulates filesystems (e.g. Windows) that reject fsync on a directory handle.
+const fsFault = vi.hoisted(() => ({ directoryFsync: undefined as string | undefined }));
+vi.mock('node:fs', async (importOriginal) => {
+  const fs = await importOriginal<typeof import('node:fs')>();
+  return { ...fs, fsyncSync: (fd: number) => {
+    if (fsFault.directoryFsync && fs.fstatSync(fd).isDirectory()) throw Object.assign(new Error(`${fsFault.directoryFsync}: fsync`), { code: fsFault.directoryFsync });
+    return fs.fsyncSync(fd);
+  } };
+});
 
 const directories: string[] = [];
 afterEach(() => directories.splice(0).forEach((directory) => rmSync(directory, { recursive: true, force: true })));
@@ -102,5 +112,19 @@ describe('persisted total evaluation budget', () => {
       expect(ledger.entry('done')?.result).toEqual({ status: 'failed', humanApproved: null });
       expect(() => ledger.checkpoint('done', {})).toThrow(/finished/i);
     } finally { ledger.close(); }
+  });
+  it('persists the ledger where directory fsync is unsupported but still surfaces real I/O errors', () => {
+    try {
+      for (const code of ['EPERM', 'EISDIR', 'EINVAL']) {
+        fsFault.directoryFsync = code;
+        const path = ledgerPath(); const ledger = new EvaluationBudget(path, 1);
+        try {
+          ledger.reserveBatch([{ key: 'a', capUsd: 0.4 }]);
+          expect(JSON.parse(readFileSync(path, 'utf8')).entries).toHaveLength(1);
+        } finally { ledger.close(); }
+      }
+      fsFault.directoryFsync = 'EIO';
+      expect(() => new EvaluationBudget(ledgerPath(), 1)).toThrow(/EIO/);
+    } finally { fsFault.directoryFsync = undefined; }
   });
 });

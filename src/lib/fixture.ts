@@ -1,7 +1,21 @@
-import type { Card, Claim, Run } from "./types";
-import { getPlace } from "./places";
+import type { Card, Claim, Evidence, Run } from "./types";
+import { getPlace, type Place } from "./places";
 import { fixtureSources } from "./sources";
 import { fixtureEasyText } from "./reading-style";
+
+const compact = (text: string) => text.replace(/[\s\p{P}\p{S}]/gu, "");
+const ADDRESS_FRAGMENT = /^(?:경기도)?(?:성남시)?(?:수정구|중원구|분당구)?(?:[가-힣0-9]+[로길]\d+(?:번길\d+)?|[가-힣]{1,3}[동리](?:\d+(?:번지)?)?)?$/;
+
+/** How well an official quote reads as card body text: 0 sentence-like, 1 other descriptive fragment, 2 only the place name or an address. */
+export function quoteBodyRank(quote: string, place: Place): number {
+  const text = compact(quote), name = compact(place.name), rest = text.replaceAll(name, "");
+  if (!rest || name.includes(text) || compact(place.address).includes(rest) || ADDRESS_FRAGMENT.test(rest)) return 2;
+  return /[다요][.!?。]?$/.test(quote.trim()) || rest.length >= 12 ? 0 : 1;
+}
+// Registered quotes include bare names and addresses. Bodies use them only after more descriptive quotes, keeping the original order within a rank.
+function preferDescriptive(evidence: Evidence[], place: Place): Evidence[] {
+  return [...evidence].sort((a, b) => quoteBodyRank(a.quote, place) - quoteBodyRank(b.quote, place));
+}
 
 /** Deliberate, labelled test doubles. These templates are never used by live mode. */
 export function createFixtureStory(run: Run): {
@@ -28,7 +42,7 @@ export function createFixtureStory(run: Run): {
       const evidence = run.evidence.filter(item => run.sources.some(source => source.id === item.sourceId && source.placeId === place.id && source.status === "ok"));
       if (!evidence.length) throw new Error(`${place.name}의 공식 근거가 없습니다.`);
       const occurrence = story.cardStopIds.slice(0, index).filter(id => id === stopId).length;
-      const item = evidence[occurrence % evidence.length];
+      const item = preferDescriptive(evidence, place)[occurrence % evidence.length];
       const cardId = `card-${index + 1}`;
       const single = { ...run, cards: [], issues: [], brief: { ...run.brief, story: undefined, placeId: place.id, place: place.name } };
       let text = index === 3 ? createFixtureStory(single).cards[3].body : item.quote;
@@ -82,7 +96,7 @@ export function createFixtureStory(run: Run): {
     },
   ];
   if (!museum) {
-    const evidence = fixtureSources(place.id).evidence.slice(0, 3);
+    const evidence = preferDescriptive(fixtureSources(place.id).evidence, place).slice(0, 3);
     if (evidence.length < 3) throw new Error("장소별 fixture에는 확인된 공식 발췌 3개가 필요합니다.");
     claims.splice(0, 3, ...evidence.map((item, index): Claim => ({
       id: `claim-${place.id}-${index + 1}`, cardId: `card-${index + 1}`,

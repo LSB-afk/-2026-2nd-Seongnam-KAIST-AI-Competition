@@ -5,7 +5,12 @@ import { join } from "node:path";
 import { RunStore } from "../src/lib/store";
 import { RunService } from "../src/lib/service";
 import { newRun } from "../src/lib/run";
-import type { Run, AgentDeps } from "../src/lib/types";
+import { handle } from "../src/lib/http";
+import { runAgent } from "../src/lib/agent";
+import { fixtureSources } from "../src/lib/sources";
+import { createFixtureStory } from "../src/lib/fixture";
+import { attachDefaultImages } from "../src/lib/images";
+import type { Run, AgentDeps, Artifact } from "../src/lib/types";
 
 const dirs: string[] = [];
 afterEach(() =>
@@ -13,6 +18,7 @@ afterEach(() =>
 );
 function setup(
   runner: (r: Run, d: AgentDeps) => Promise<Run> = async (r) => r,
+  overrides: Partial<ConstructorParameters<typeof RunService>[1]> = {},
 ) {
   const dir = mkdtempSync(join(tmpdir(), "timestory-service-"));
   dirs.push(dir);
@@ -22,8 +28,20 @@ function setup(
     search: async () => ({ sources: [], evidence: [] }),
     render: async () => [],
     checkArtifacts: async () => true,
+    ...overrides,
   });
   return { store, service };
+}
+const fixtureDeps = {
+  search: async (run: Run) => fixtureSources(run.brief.placeId),
+  render: async (run: Run): Promise<Artifact[]> =>
+    ["png", "png", "png", "png", "zip", "text", "json"].map((kind, i) => ({
+      kind: kind as Artifact["kind"], name: `${i}.${kind}`, path: `/srv/outputs/${run.id}/${i}.${kind}`, sha256: "mock-checksum", version: run.version, reviewVersion: run.version,
+    })),
+};
+async function refused(action: () => unknown) {
+  const response = await handle(action);
+  return { status: response.status, error: ((await response.json()) as { error?: string }).error };
 }
 const input = {
   mode: "fixture" as const,
@@ -146,6 +164,16 @@ describe("review and run lifecycle", () => {
     expect(approved.approval?.reviewer).toBe("문화홍보 담당자");
     store.close();
   });
+  it("words the approval event so its particle never depends on the version number", async () => {
+    const { store, service } = setup();
+    const run = readyRun();
+    run.version = 5;
+    run.reviewVersion = 5;
+    store.insert(run, "r");
+    const approved = await service.approve(run.id, { version: 5, reviewer: "김성남" });
+    expect(approved.events.at(-1)?.message).toBe("김성남 담당자가 버전 5 결과를 승인했습니다.");
+    store.close();
+  });
   it("cancellation cannot be overwritten by a late tool result", async () => {
     let resume!: () => void;
     const hold = new Promise<void>((r) => (resume = r));
@@ -156,7 +184,7 @@ describe("review and run lifecycle", () => {
       return run;
     });
     const run = service.create(input);
-    service.cancel(run.id);
+    await service.cancel(run.id);
     resume();
     await service.idle(run.id);
     expect(store.get(run.id)?.status).toBe("cancelled");
@@ -171,7 +199,7 @@ describe("review and run lifecycle", () => {
     });
     const r = service.create(input);
     expect(() => service.retry(r.id, { version: r.version })).toThrow(/실행/);
-    service.cancel(r.id);
+    await service.cancel(r.id);
     resume();
     await service.idle(r.id);
     store.close();
@@ -223,7 +251,7 @@ it("preserves reserved and reconciled usage even after cancellation", async () =
   });
   const initial = service.create(input);
   await reached;
-  service.cancel(initial.id);
+  await service.cancel(initial.id);
   finish();
   await service.idle(initial.id);
   const stored = store.get(initial.id)!;
@@ -254,7 +282,91 @@ it('keeps late model-call audit settlement after cancellation', async () => {
     run.modelCallLog[0].status='succeeded';run.modelCallLog[0].costUsd=0.01;
     deps.persist(run);return run;
   });
-  const run=service.create({...input,requestId:'late-audit'});await reached;service.cancel(run.id);finish();await service.idle(run.id);
+  const run=service.create({...input,requestId:'late-audit'});await reached;await service.cancel(run.id);finish();await service.idle(run.id);
   expect(store.get(run.id)?.modelCallLog?.[0].status).toBe('succeeded');
   expect(store.get(run.id)?.status).toBe('cancelled');store.close();
+});
+
+it("refuses an edit that would leave an approved result without budget to re-review it", async () => {
+  const { store, service } = setup(runAgent, fixtureDeps);
+  const created = service.create({ ...input, scenario: "normal", requestId: "budget-repro-1" });
+  await service.idle(created.id);
+  for (let round = 1; round <= 4; round++) {
+    const run = store.get(created.id)!;
+    const edited = service.edit(run.id, { version: run.version, cardId: "card-1", title: `담당자 제목 ${round}`, body: run.cards[0].body });
+    service.retry(run.id, { version: edited.version });
+    await service.idle(run.id);
+    expect(store.get(run.id)?.status).toBe("ready_for_approval");
+  }
+  const approved = await service.approve(created.id, { version: 5, reviewer: "담당자" });
+  expect(approved.usage.toolCalls).toBe(approved.limits.maxToolCalls);
+  expect(await refused(() => service.edit(created.id, { version: 5, cardId: "card-1", title: "한 번 더", body: approved.cards[0].body })))
+    .toMatchObject({ status: 409, error: expect.stringContaining("현재 결과를 그대로 유지") });
+  expect(store.get(created.id)).toEqual(approved);
+  expect(approved.artifacts).toHaveLength(7);
+  store.close();
+});
+
+it("keeps a full re-review in reserve before accepting edits, retries and easy rewrites", async () => {
+  const { store, service } = setup();
+  const run = newRun({ mode: "fixture" });
+  Object.assign(run, fixtureSources(), createFixtureStory(run), { version: 1, reviewVersion: 1, status: "needs_review" });
+  run.usage.toolCalls = 11;
+  store.insert(run, "budget-thresholds");
+  const edit = { version: 1, cardId: "card-1", title: "담당자 제목", body: run.cards[0].body };
+  expect(await refused(() => service.edit(run.id, edit))).toMatchObject({ status: 409, error: expect.stringContaining("1회") });
+  expect(await refused(() => service.retry(run.id, { version: 1 }))).toMatchObject({ status: 409, error: expect.stringContaining("1회") });
+  run.usage.toolCalls = 10;
+  store.save(run);
+  expect(await refused(() => service.simplify(run.id, { version: 1 }))).toMatchObject({ status: 409, error: expect.stringContaining("3회") });
+  expect(store.get(run.id)).toEqual(run);
+  expect(service.edit(run.id, edit)).toMatchObject({ version: 2, status: "needs_review" });
+  store.close();
+});
+
+it("gives a run that stops before rendering its registered place photos", async () => {
+  const { store, service } = setup(runAgent, { ...fixtureDeps, attachDefaultImages });
+  const run = service.create({ ...input, scenario: "persistent", requestId: "photos-persistent" });
+  await service.idle(run.id);
+  const stopped = store.get(run.id)!;
+  expect(stopped.status).toBe("needs_review");
+  expect(stopped.artifacts).toEqual([]);
+  expect(stopped.cards.map((card) => card.image?.placeId)).toEqual(Array(4).fill("pangyo-museum"));
+  expect(stopped.revisions.find((revision) => revision.version === stopped.version)?.cards).toEqual(stopped.cards);
+  store.close();
+});
+
+it("gives a cancelled run its place photos once the job winds down", async () => {
+  let entered!: () => void;
+  let finish!: () => void;
+  const reached = new Promise<void>((r) => (entered = r));
+  const wait = new Promise<void>((r) => (finish = r));
+  const { store, service } = setup(async (run, deps) => {
+    Object.assign(run, createFixtureStory(run), { version: 1 });
+    deps.persist(run);
+    entered();
+    await wait;
+    return run;
+  }, { attachDefaultImages });
+  const run = service.create({ ...input, requestId: "photos-cancelled" });
+  await reached;
+  expect((await service.cancel(run.id)).cards.map((card) => card.image?.kind)).toEqual(Array(4).fill("photo"));
+  finish();
+  await service.idle(run.id);
+  const cancelled = store.get(run.id)!;
+  expect(cancelled.status).toBe("cancelled");
+  expect(cancelled.cards.map((card) => card.image?.kind)).toEqual(Array(4).fill("photo"));
+  store.close();
+});
+
+it("settles a job even when a place photo cannot be read", async () => {
+  const { store, service } = setup(async (run) => Object.assign(run, createFixtureStory(run), { version: 1, status: "needs_review" as const }), {
+    attachDefaultImages: async () => { throw new Error("사진 파일을 읽지 못했습니다."); },
+  });
+  const run = service.create({ ...input, requestId: "photos-unreadable" });
+  await expect(service.idle(run.id)).resolves.toBeUndefined();
+  expect(store.get(run.id)?.status).toBe("needs_review");
+  expect(() => service.retry(run.id, { version: 1 })).not.toThrow();
+  await service.idle(run.id);
+  store.close();
 });

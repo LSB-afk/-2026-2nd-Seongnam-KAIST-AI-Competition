@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 45 45">
+  <path fill="#244cc5" transform="translate(5.5 20) skewY(-13)" d="M-5.5 15V-9.5a5.5 5.5 0 0 1 11 0V15z"/>
+  <path fill="#176a59" transform="translate(20.5 20) skewY(-13)" d="M-5.5 20V-14.5a5.5 5.5 0 0 1 11 0V20z"/>
+  <path fill="#7854af" transform="translate(35.5 20) skewY(-13)" d="M-5.5 12.5V-7a5.5 5.5 0 0 1 11 0V12.5z"/>
+</svg>

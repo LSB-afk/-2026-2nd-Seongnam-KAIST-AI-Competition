@@ -109,6 +109,16 @@ function runFixture(): Run {
     stopReason: null,
   };
 }
+async function exportedScript(edit: (run: Run) => void) {
+  const place = getPlace("korea-jobworld")!;
+  const run = newRun({ mode: "fixture", brief: { ...DEFAULT_BRIEF, placeId: place.id, place: place.name } });
+  paths.push(resolve("outputs", run.id));
+  Object.assign(run, fixtureSources(place.id), createFixtureStory(run));
+  run.version = run.reviewVersion = 1;
+  edit(run);
+  const artifacts = await renderCards(run, new AbortController().signal);
+  return readFile(artifacts.find(file => file.name === "script.md")!.path, "utf8");
+}
 afterEach(async () => {
   await Promise.all(
     paths.splice(0).map((path) => rm(path, { recursive: true, force: true })),
@@ -186,6 +196,27 @@ describe("card export boundary", () => {
     expect(html).not.toContain("<img src=x");
     expect(html).not.toContain('href="javascript:');
   });
+
+  it("keeps typed card text literal in script.md", async () => {
+    const typed = '판교 & 성남 "이야기"';
+    const script = await exportedScript(run => {
+      run.cards[0].title = typed;
+      run.cards[0].body = `${typed} 속 '기록'을 따라가요.`;
+      run.cards[0].script = typed;
+    });
+    expect(script).toContain(`## 1. ${typed}\n\n${typed} 속 '기록'을 따라가요.\n\n대본: ${typed}\n`);
+    expect(script).not.toMatch(/&amp;|&quot;|&#39;/);
+  }, 60000);
+
+  it("does not let card text become raw HTML in script.md", async () => {
+    const script = await exportedScript(run => {
+      run.cards[0].body = "<img src=x onerror=alert(1)>";
+      run.cards[1].script = "\\<script>alert(1)</script>";
+    });
+    expect(script).toContain("\\<img src=x onerror=alert(1)>");
+    // Markdown reads "<" literally only after an odd run of backslashes.
+    for (const [, slashes] of script.matchAll(/(\\*)</g)) expect(slashes.length % 2).toBe(1);
+  }, 60000);
 
   it("rejects a stale review and unresolved review issues before exporting", async () => {
     const run = runFixture();

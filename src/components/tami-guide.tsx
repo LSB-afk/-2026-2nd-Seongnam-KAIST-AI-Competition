@@ -10,7 +10,7 @@ import {
   type GuideStorage, type TamiMood,
 } from "../lib/guide";
 import "./tami-guide.css";
-import { anchorForPosition, clampDockPosition, hasDragged, resolveDockPosition, restoreTamiPosition, TAMI_POSITION_KEY, type Point, type Viewport } from "../lib/tami-position";
+import { anchorForPosition, clampDockPosition, hasDragged, resolveDockPosition, restoreTamiPosition, TAMI_POSITION_KEY, type DockSize, type Point, type Viewport } from "../lib/tami-position";
 
 export type { GuideContext, GuideActions } from "../lib/guide";
 const TAMI_SPRITE_SRC = getImageProps({ src: "/tami/tami-sprites.png", alt: "", width: 216, height: 144 }).props.src;
@@ -44,6 +44,30 @@ function shown(element: Element) {
 }
 function findTarget(name: string): HTMLElement | null {
   return Array.from(document.querySelectorAll<HTMLElement>(`[data-tour="${name}"]`)).find(shown) ?? null;
+}
+const TARGET_CONTROLS = "input,select,textarea,button,a[href]";
+/** Scrolls a target into view, clear of a bar pinned over the top of the page (the wrapped mobile navigation) and of Tami's own bottom sheet, which scroll margins cannot measure. */
+export function scrollTargetIntoView(element: HTMLElement, block: ScrollLogicalPosition) {
+  element.scrollIntoView({ block, inline: "nearest", behavior: "instant" });
+  const rect = element.getBoundingClientRect();
+  let pinnedBottom = 0;
+  for (let node = document.elementFromPoint(Math.min(Math.max(rect.left + rect.width / 2, 0), window.innerWidth - 1), 0); node && node !== document.body; node = node.parentElement) {
+    const { position } = getComputedStyle(node);
+    if (position !== "sticky" && position !== "fixed") continue;
+    // Dialogs and backdrops that contain or cover the target are not a top bar.
+    const bar = node.getBoundingClientRect();
+    if (!node.contains(element) && !node.closest(".tami-guide") && bar.height < window.innerHeight / 2) pinnedBottom = bar.bottom;
+    break;
+  }
+  if (pinnedBottom <= 0) return;
+  const top = pinnedBottom + 16;
+  const sheet = document.querySelector<HTMLElement>(".tami-panel, .tami-invitation")?.getBoundingClientRect();
+  const bottom = (sheet && sheet.bottom >= window.innerHeight - 24 && sheet.left < rect.right && sheet.right > rect.left ? sheet.top : window.innerHeight) - 16;
+  const control = element.matches(TARGET_CONTROLS) ? element : Array.from(element.querySelectorAll<HTMLElement>(TARGET_CONTROLS)).find((node) => node.getClientRects().length > 0);
+  const focus = control?.getBoundingClientRect() ?? rect;
+  // A target that fits between the bar and the sheet starts right below the bar; a taller one is centred in that gap so its middle stays reachable.
+  const delta = focus.height <= bottom - top ? focus.top - top : (focus.top + focus.bottom - top - bottom) / 2;
+  window.scrollBy({ top: delta, behavior: "instant" });
 }
 function visibleRect(element: HTMLElement, width: number, height: number): Rect | null {
   const rect = element.getBoundingClientRect();
@@ -225,7 +249,7 @@ export default function TamiGuide({ context, actions }: { context: GuideContext;
         const element = findTarget(pendingFocus.current);
         if (element) {
           pendingFocus.current = null;
-          element.scrollIntoView({ block: "start", inline: "nearest", behavior: "instant" });
+          scrollTargetIntoView(element, "start");
           const hadTabIndex = element.hasAttribute("tabindex");
           if (!hadTabIndex) {
             element.setAttribute("tabindex", "-1");
@@ -261,7 +285,7 @@ export default function TamiGuide({ context, actions }: { context: GuideContext;
     pendingFocus.current = name;
     const element = findTarget(name);
     if (element) {
-      element.scrollIntoView({ block: "start", inline: "nearest", behavior: "instant" });
+      scrollTargetIntoView(element, "start");
       if (!element.hasAttribute("tabindex")) {
         element.setAttribute("tabindex", "-1");
         element.addEventListener("blur", () => element.removeAttribute("tabindex"), { once: true });
@@ -378,12 +402,30 @@ export default function TamiGuide({ context, actions }: { context: GuideContext;
     return { left: clamped.x, top: clamped.y, right: "auto", bottom: "auto" };
   };
   const position = active ? panelPosition(geometry) : dockAnchor && geometry.width > 600 ? besideDock(geometry.panelWidth, geometry.panelHeight) : undefined;
+  // The first-visit bubble keeps its CSS spot unless it would cover a protected control (or the dock after a move); then it takes the nearest clear spot, narrower on phones so it fits beside the dock.
+  const invitationStyle = (() => {
+    if (!invitation) return undefined;
+    const width = Math.min(278, geometry.viewport.width - 32), height = geometry.invitationHeight;
+    if (dockAnchor) return besideDock(width, height);
+    const preferred = { x: dockPosition.x + dockSize.width - width, y: dockPosition.y - height - 12 };
+    const blocked = (point: Point, size: DockSize) => obstacles.some((o) => point.x < o.right && point.x + size.width > o.left && point.y < o.bottom && point.y + size.height > o.top);
+    if (!blocked(preferred, { width, height })) return undefined;
+    const viewport = geometry.viewport;
+    if (geometry.width <= 600) {
+      // Phones: sit beside the dock along the bottom edge, below the hero controls, before anything covers the page copy.
+      const narrow = Math.max(160, Math.min(width, dockPosition.x - viewport.left - 24));
+      const beside = { x: viewport.left + 12, y: viewport.top + viewport.height - 12 - height };
+      if (!blocked(beside, { width: narrow, height })) return { left: beside.x, top: beside.y, width: narrow, right: "auto", bottom: "auto" };
+    }
+    const clear = resolveDockPosition(preferred, { width, height }, viewport, [...obstacles, { left: dockPosition.x, top: dockPosition.y, right: dockPosition.x + dockSize.width, bottom: dockPosition.y + dockSize.height }]);
+    return { left: clear.x, top: clear.y, width, right: "auto", bottom: "auto" };
+  })();
   const completed = state.tutorial.status === "completed";
 
   return createPortal(<div ref={rootRef} className={`tami-guide${state.preferences.animationOff ? " tami-guide--no-motion" : ""}${state.panelOpen ? " tami-guide--open" : ""}${geometry.modal ? " tami-guide--in-modal" : ""}${dragging ? " tami-guide--dragging" : ""}`} data-tami-state={mood}>
     {active && state.panelOpen && geometry.target && <div className="tami-target-outline" aria-hidden="true" data-tami-target={targetName} style={{ top: geometry.target.top - 3, left: geometry.target.left - 3, width: geometry.target.width + 6, height: geometry.target.height + 6 }} />}
 
-    {invitation && <aside className="tami-invitation" aria-label="타미의 첫 안내" style={dockAnchor ? besideDock(Math.min(278, geometry.viewport.width - 32), geometry.invitationHeight) : undefined}>
+    {invitation && <aside className="tami-invitation" aria-label="타미의 첫 안내" style={invitationStyle}>
       <strong>안녕하세요, 안내 로봇 타미예요.</strong>
       <p>장소 찾기부터 카드 다운로드까지,<br />8단계로 함께 둘러볼까요?</p>
       <div className="tami-inline-actions"><button className="tami-primary" onClick={() => startTutorial()}>사용법 시작</button><button className="tami-text-button" onClick={() => updatePreferences({ invitationDismissed: true })}>나중에</button></div>

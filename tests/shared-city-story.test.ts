@@ -24,8 +24,11 @@ vi.mock("../src/lib/shared-city-story", async importOriginal => ({
   ...await importOriginal<typeof import("../src/lib/shared-city-story")>(),
   getSharedCityStoryStore: () => routeState.store,
 }));
+vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("NEXT_NOT_FOUND"); } }));
+vi.mock("../src/components/shared-city-story-viewer", () => ({ default: () => null }));
 import { POST } from "../src/app/api/stories/route";
 import { GET } from "../src/app/api/stories/[id]/route";
+import StoryPage from "../src/app/stories/[id]/page";
 
 const dirs: string[] = [];
 const stores = new Set<SharedCityStoryStore>();
@@ -290,6 +293,14 @@ describe("share request and route boundaries", () => {
     expect((await post(JSON.stringify({ runId: routeState.run.id, version: 2 }))).status).toBe(409);
     routeState.run = undefined;
     expect((await post(JSON.stringify({ runId: randomUUID(), version: 3 }))).status).toBe(404);
+  });
+
+  it("opens the shared page only for a stored snapshot and sends other links to the not-found page", async () => {
+    routeState.store = setup().store;
+    const story = routeState.store.publish(approvedRun(), 3);
+    const open = (id: string) => StoryPage({ params: Promise.resolve({ id }) });
+    expect((await open(story.id)).props).toEqual({ id: story.id });
+    for (const id of [randomUUID(), "does-not-exist", "11111111-1111-1111-1111-111111111111"]) await expect(open(id)).rejects.toThrow("NEXT_NOT_FOUND");
   });
 
   it("GET accepts UUIDs only and returns 404 for missing snapshots", async () => {

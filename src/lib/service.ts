@@ -5,6 +5,7 @@ import type { Run, AgentDeps, Card, CardImage, ImageAsset, ImagePrompt } from ".
 import type { RunStore } from "./store";
 import { DEFAULT_BRIEF, newRun, cardPlace } from "./run";
 import { getPlace } from "./places";
+import { editBlockReason, retryBlockReason, simplifyBlockReason } from "./budget";
 
 export class AppError extends Error {
   constructor(
@@ -70,7 +71,7 @@ const approveSchema = z
 const imageSchema = z.object({
   version: z.number().int().nonnegative(),
   cardId: z.string().min(1).max(100),
-  operation: z.enum(["crop", "replace", "generate"]),
+  operation: z.enum(["crop", "replace", "generate", "remove"]),
   crop: z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1), zoom: z.number().min(1).max(3) }).strict().optional(),
   assetId: z.string().regex(/^[a-zA-Z0-9_-]+$/).max(100).optional(),
   usePlacePhoto: z.boolean().optional(),
@@ -81,6 +82,7 @@ interface Dependencies {
   search: AgentDeps["search"];
   render: AgentDeps["render"];
   checkArtifacts: (run: Run) => Promise<boolean>;
+  attachDefaultImages?: (run: Run) => Promise<boolean>;
   liveAvailable?: () => boolean;
   image?: {
     configured: () => boolean;
@@ -120,12 +122,16 @@ export class RunService {
     )
       throw new AppError("실행이 끝난 뒤 다시 시도하세요.", 409);
   }
-  private applyImage(run: Run, cardId: string, image: CardImage, reason: string): Run {
+  private budget(reason: string | null): void {
+    if (reason) throw new AppError(reason, 409);
+  }
+  private applyImage(run: Run, cardId: string, image: CardImage | undefined, reason: string): Run {
     const card = run.cards.find(item => item.id === cardId);
     if (!card) throw new AppError("이미지를 수정할 카드를 찾을 수 없습니다.", 404);
     if (!run.revisions.some(item => item.version === run.version))
       run.revisions.push({version:run.version,createdAt:run.updatedAt,cards:structuredClone(run.cards),claims:structuredClone(run.claims),reason:"이미지 변경 전 저장"});
-    card.image = structuredClone(image);
+    if (image) card.image = structuredClone(image);
+    else delete card.image;
     if (run.readingStyleChange?.status === "requested") delete run.readingStyleChange;
     run.version += 1;
     run.reviewVersion = null;
@@ -146,6 +152,7 @@ export class RunService {
     const run = this.require(id);
     this.idleOnly(run);
     this.version(run, parsed.version);
+    this.budget(editBlockReason(run));
     const card = run.cards.find(item => item.id === parsed.cardId);
     if (!card) throw new AppError("이미지를 수정할 카드를 찾을 수 없습니다.", 404);
     if (parsed.operation === "crop") {
@@ -154,6 +161,15 @@ export class RunService {
     }
     const image = this.deps.image;
     if (!image) throw new AppError("이미지 서비스를 사용할 수 없습니다.", 503);
+    if (parsed.operation === "remove") {
+      if (!card.image) throw new AppError("이 카드에는 제거할 사진이 없습니다.", 409);
+      if (await image.defaultImage(cardPlace(run, card.id).id)) throw new AppError("등록 사진이 있는 장소는 '장소의 기본 사진 사용'으로 되돌려 주세요.", 409);
+      const latest = this.require(id);
+      this.idleOnly(latest);
+      this.version(latest, parsed.version);
+      this.budget(editBlockReason(latest));
+      return this.applyImage(latest, card.id, undefined, "담당자 사진 제거 · 글 중심 카드");
+    }
     if (parsed.operation === "replace") {
       if (!!parsed.assetId === !!parsed.usePlacePhoto) throw new AppError("교체할 사진 하나를 선택하세요.");
       const asset = parsed.usePlacePhoto
@@ -165,6 +181,7 @@ export class RunService {
       const latest = this.require(id);
       this.idleOnly(latest);
       this.version(latest, parsed.version);
+      this.budget(editBlockReason(latest));
       return this.applyImage(latest, card.id, {...asset,crop:parsed.crop ?? {x:.5,y:.5,zoom:1}}, "담당자 사진 교체");
     }
     if (!image.configured()) throw new AppError("AI 이미지 연결 설정이 필요합니다. API 키·이미지 모델·호출 비용 상한을 설정하세요.", 503);
@@ -313,6 +330,8 @@ export class RunService {
           result.status = "needs_review";
           result.stopReason = "누적 실행 시간 상한에 도달했습니다.";
         }
+        // Photos travel with the terminal status so a poll never shows a stopped run without them.
+        await this.deps.attachDefaultImages?.(result).catch(() => false);
         persist(result);
       } catch (error) {
         run.status = controller.signal.aborted
@@ -332,6 +351,7 @@ export class RunService {
           message: run.stopReason,
           version: run.version,
         });
+        await this.deps.attachDefaultImages?.(run).catch(() => false);
         persist(run);
       } finally {
         const current = this.store.get(run.id);
@@ -340,6 +360,8 @@ export class RunService {
             run.limits.maxDurationMs,
             priorElapsed + Date.now() - started,
           );
+          // Runs that stop before rendering still show place photos; an unreadable photo must not keep the job open.
+          await this.deps.attachDefaultImages?.(current).catch(() => false);
           current.updatedAt = new Date().toISOString();
           this.store.save(current);
         }
@@ -351,7 +373,7 @@ export class RunService {
   async idle(id: string): Promise<void> {
     await this.jobs.get(id)?.promise;
   }
-  cancel(id: string): Run {
+  async cancel(id: string): Promise<Run> {
     const run = this.require(id);
     if (run.status !== "queued" && run.status !== "running")
       throw new AppError("진행 중인 작업만 취소할 수 있습니다.", 409);
@@ -367,6 +389,16 @@ export class RunService {
     });
     this.store.save(run);
     this.jobs.get(id)?.controller.abort();
+    // The cancel response already carries place photos; usage written by the job's own persist is kept, not overwritten.
+    if (await this.deps.attachDefaultImages?.(run).catch(() => false)) {
+      const latest = this.store.get(id) ?? run;
+      for (const card of latest.cards) card.image ??= run.cards.find((item) => item.id === card.id)?.image;
+      const revision = latest.revisions.find((item) => item.version === latest.version);
+      if (revision) revision.cards = structuredClone(latest.cards);
+      latest.updatedAt = new Date().toISOString();
+      this.store.save(latest);
+      return latest;
+    }
     return run;
   }
   edit(id: string, input: unknown): Run {
@@ -374,6 +406,7 @@ export class RunService {
     const run = this.require(id);
     this.idleOnly(run);
     this.version(run, parsed.version);
+    this.budget(editBlockReason(run));
     const card = run.cards.find((c) => c.id === parsed.cardId);
     if (!card) throw new AppError("수정할 카드를 찾을 수 없습니다.", 404);
     if (!run.revisions.some((r) => r.version === run.version))
@@ -467,7 +500,7 @@ export class RunService {
       id: randomUUID(),
       at: latest.updatedAt,
       action: "approved",
-      message: `${parsed.reviewer} 담당자가 버전 ${latest.version}을 승인했습니다.`,
+      message: `${parsed.reviewer} 담당자가 버전 ${latest.version} 결과를 승인했습니다.`,
       version: latest.version,
     });
     this.store.save(latest);
@@ -483,14 +516,7 @@ export class RunService {
         "검토가 필요하거나 실패한 작업만 다시 검수할 수 있습니다.",
         409,
       );
-    if (
-      run.usage.toolCalls >= run.limits.maxToolCalls ||
-      run.usage.modelCalls >= run.limits.maxModelCalls
-    )
-      throw new AppError(
-        "누적 호출 상한에 도달했습니다. 새 제작을 시작하세요.",
-        409,
-      );
+    this.budget(retryBlockReason(run));
     if (this.jobs.size >= 2)
       throw new AppError("동시 제작 상한에 도달했습니다.", 429);
     run.reviewVersion = null;
@@ -513,10 +539,7 @@ export class RunService {
       throw new AppError("모든 카드가 담당자 편집으로 보호되어 있습니다. 문구를 직접 수정해 주세요.", 409);
     if (!run.evidence.length)
       throw new AppError("기존 문장의 공식 근거를 먼저 확인해 주세요.", 409);
-    if (run.usage.toolCalls >= run.limits.maxToolCalls || run.usage.modelCalls >= run.limits.maxModelCalls ||
-        run.usage.costUsd >= run.limits.maxCostUsd || (run.automaticRevisions ?? 0) >= run.limits.maxRevisions ||
-        (run.usage.elapsedMs ?? 0) >= run.limits.maxDurationMs)
-      throw new AppError("누적 실행 상한에 도달했습니다. 새 제작을 시작하세요.", 409);
+    this.budget(simplifyBlockReason(run));
     if (run.mode === "live" && !this.deps.liveAvailable?.())
       throw new AppError("실제 API 연결과 비용 상한 설정을 확인해 주세요.", 503);
     if (this.jobs.size >= 2) throw new AppError("동시 제작 상한에 도달했습니다.", 429);

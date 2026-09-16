@@ -106,7 +106,7 @@ describe("reading style", () => {
     expect(() => service.simplify(run.id, { version: run.version - 1 })).toThrow(/버전/);
     run.usage.toolCalls = run.limits.maxToolCalls;
     store.save(run);
-    expect(() => service.simplify(run.id, { version: run.version })).toThrow(/상한/);
+    expect(() => service.simplify(run.id, { version: run.version })).toThrow(/남은 도구 호출/);
     expect(store.get(run.id)).toEqual(run);
     run.usage.toolCalls = 0;
     run.status = "running";
@@ -157,7 +157,7 @@ describe("reading style", () => {
     });
     const original = await ready(service, store);
     service.simplify(original.id, { version: original.version });
-    service.cancel(original.id);
+    await service.cancel(original.id);
     finish();
     await service.idle(original.id);
     const result = store.get(original.id)!;

@@ -64,6 +64,32 @@ describe('browser workspace persistence', () => {
     const edits=upsertEditDraft([],edit);const both=upsertEditDraft(edits,{...edit,cardId:'card-2'});
     expect(matchingEditDraft(both,'a',2,'card-1')).toEqual(edit);expect(matchingEditDraft(both,'a',3,'card-1')).toBeNull();expect(matchingEditDraft(both,'b',2,'card-1')).toBeNull();expect(both).toHaveLength(2);
   });
+  it('restores the city-story preview after a reload but never enters it on ordinary 3D navigation',()=>{
+    const runId='33333333-3333-4333-8333-333333333333';
+    const preview=workspaceFromSearch(createWorkspace(draft),`?view=diorama&scene=central-park&run=${runId}&preview=story`);
+    expect(preview.storyPreview).toBe(true);
+    expect(workspaceSearch(preview)).toContain('preview=story');
+    expect(workspaceFromSearch(createWorkspace(draft),workspaceSearch(preview)).storyPreview).toBe(true);
+    expect(workspaceFromSearch(decodeWorkspace(JSON.stringify(preview),draft),'',true).storyPreview).toBe(true);
+    expect(workspaceFromSearch(preview,`?view=diorama&scene=central-park&run=${runId}`).storyPreview).toBe(false);
+    expect(workspaceFromSearch(createWorkspace(draft),'?view=diorama&scene=central-park&preview=story').storyPreview).toBe(false);
+    expect(workspaceFromSearch(createWorkspace(draft),`?view=studio&run=${runId}&preview=story`).storyPreview).toBe(false);
+    expect(workspaceSearch({...preview,view:'studio'})).not.toContain('preview');
+  });
+  it('keeps an in-flight creation request verbatim so a reload resends the same idempotent request',()=>{
+    const body={brief:{...DEFAULT_BRIEF,goal:'새로고침 직전에 보낸 제작 요청'},mode:'fixture' as const,strategy:'agent' as const,scenario:'normal' as const,requestId:'44444444-4444-4444-8444-444444444444'};
+    const state={...createWorkspace(draft),pendingCreate:{runId:null,body}};
+    const restored=decodeWorkspace(JSON.stringify(state),draft);
+    expect(restored.pendingCreate).toEqual({runId:null,body});
+    expect(JSON.stringify(restored.pendingCreate?.body)).toBe(JSON.stringify(body));
+    expect(workspaceFromSearch(restored,'?view=studio').pendingCreate).toEqual(restored.pendingCreate);
+    expect(workspaceSearch(restored)).not.toContain(body.requestId);
+    const withRun=decodeWorkspace(JSON.stringify({...state,pendingCreate:{runId:'33333333-3333-4333-8333-333333333333',body}}),draft);
+    expect(withRun.pendingCreate?.runId).toBe('33333333-3333-4333-8333-333333333333');
+    for(const pendingCreate of [{runId:null,body:{...body,requestId:'forged'}},{runId:null,body:{...body,mode:'admin'}},{runId:null,body:{...body,brief:'text'}},{runId:null},'broken'])
+      expect(decodeWorkspace(JSON.stringify({...state,pendingCreate}),draft).pendingCreate).toBeNull();
+    expect(createWorkspace(draft).pendingCreate).toBeNull();
+  });
   it('does not regress the current run when polls or mutations resolve late',()=>{
     const current=newRun({mode:'fixture'});current.version=2;current.updatedAt='2026-09-13T08:00:02Z';current.status='approved';
     expect(shouldAcceptRun(current,{...current,id:'other'})).toBe(false);

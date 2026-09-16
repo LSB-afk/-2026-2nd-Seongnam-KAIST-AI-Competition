@@ -7,6 +7,12 @@ describe("browser mutation origin boundary", () => {
     await expect(body(request(),20000)).resolves.toHaveProperty("data");
     await expect(body(request(),10000)).rejects.toThrow(/너무 큽니다/);
   });
+  it("rejects a body that is not UTF-8 instead of saving replacement characters", async () => {
+    const request = (data: BodyInit) => new Request("http://localhost:3000/api/runs", { method: "POST", headers: { "content-type": "application/json" }, body: data });
+    const cp949 = Uint8Array.from([...new TextEncoder().encode('{"title":"'), 0xc7, 0xd1, 0xb1, 0xdb, ...new TextEncoder().encode('"}')]);
+    await expect(body(request(cp949))).rejects.toMatchObject({ status: 400, message: "UTF-8로 인코딩된 JSON 요청이 필요합니다." });
+    await expect(body(request('{"title":"한글"}'))).resolves.toEqual({ title: "한글" });
+  });
   it("accepts same-origin browser request when Next normalizes internal URL to localhost", async () => {
     const req = new Request("http://localhost:3000/api/runs", {
       method: "POST",

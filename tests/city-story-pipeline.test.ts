@@ -161,13 +161,14 @@ it('keeps identical live shared-page snapshots isolated by place and deduplicate
   const { vi } = await import('vitest');
   const { mergeSearchResult } = await import('../src/lib/lifecycle');
   const input = makeRun();
-  input.brief.placeId = 'seongnam-botanical-garden'; input.brief.place = '성남시 식물원';
-  input.brief.story!.stops[0].placeId = 'seongnam-botanical-garden';
+  // Two places whose only registered page is the same 관광명소 listing.
+  input.brief.placeId = 'seohyeon-culture-house'; input.brief.place = '서현문화의집';
+  input.brief.story!.stops[0].placeId = 'seohyeon-culture-house';
   input.brief.story!.stops[1].placeId = 'seongnam-culture-house';
   input.mode = 'live';
-  vi.stubGlobal('fetch', async () => new Response('<main><p>성남시 식물원의 주소는 은행로 72입니다.</p><p>성남문화의집의 주소는 산성대로215번길 7입니다.</p></main>', { headers: { 'content-type': 'text/html' } }));
+  vi.stubGlobal('fetch', async () => new Response('<main><p>서현문화의집의 주소는 서현로 180번길 12입니다.</p><p>성남문화의집의 주소는 산성대로215번길 7입니다.</p></main>', { headers: { 'content-type': 'text/html' } }));
   try {
-    for (const placeId of ['seongnam-botanical-garden', 'seongnam-culture-house']) {
+    for (const placeId of ['seohyeon-culture-house', 'seongnam-culture-house']) {
       const chosen = { action: 'search_sources' as const, targetIds: [], evidenceIds: [], reasonSummary: '공식 자료', uncertainty: '', search: { placeId, query: '공식 소개 자료', targetClaimIds: [], missingInformation: [], reason: '공식 자료' } };
       mergeSearchResult(input, await searchSources(input, chosen, dependencies.signal), chosen, input.updatedAt);
     }

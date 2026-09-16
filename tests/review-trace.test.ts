@@ -1,9 +1,9 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { AtomicReview, EvidenceLinks } from "../src/components/review-trace";
+import { AtomicReview, EvidenceLinks, cardRevisionChanges } from "../src/components/review-trace";
 import { newRun } from "../src/lib/run";
-import type { ClaimAssessment, Run } from "../src/lib/types";
+import type { Card, CardImage, ClaimAssessment, Revision, Run } from "../src/lib/types";
 
 function reviewRun(): Run {
   const run = newRun({ mode: "fixture" });
@@ -85,6 +85,27 @@ describe("문장과 근거를 대조하는 검수 화면", () => {
     expect(html).toContain("원문 발행");
     expect(html).toContain("원문 수정");
     expect(html).toContain("기록 식별 정보");
+  });
+
+  it("수정 내역에는 선택한 카드의 제목·본문·대본·사진·구도가 실제로 바뀐 버전만 남긴다", () => {
+    const first: Card = { id: "card-1", title: "판교박물관 소개", body: "박물관은 2013년에 개관했습니다.", script: "대본", claimIds: [], imagination: false };
+    const second: Card = { ...first, id: "card-2", title: "두 번째 이야기" };
+    const photo: CardImage = { id: "upload-1", placeId: "pangyo-museum", kind: "upload", src: "/api/images/upload-1", sha256: "hash", width: 1200, height: 800, mime: "image/jpeg", sourceUrl: "", author: "사용자 제공", license: "사용자가 이용 권한을 확인한 사진", licenseUrl: "", createdAt: "2026-09-14T01:00:00Z", crop: { x: 0.5, y: 0.5, zoom: 1 } };
+    const revision = (version: number, cards: Card[], reason: string): Revision => ({ version, createdAt: "2026-09-14T01:00:00Z", cards, claims: [], reason, origin: "human" });
+    const edited = { ...first, body: "개관 연도를 다시 확인했습니다." };
+    const revisions = [
+      revision(1, [first, second], "초안"),
+      revision(2, [edited, second], "담당자 문구 수정"),
+      revision(3, [edited, { ...second, image: photo }], "담당자 사진 교체"),
+      revision(4, [edited, { ...second, image: { ...photo, crop: { ...photo.crop, zoom: 1.4 } } }], "담당자 사진 크롭·초점 수정"),
+      revision(5, [edited, { ...second, image: { ...photo, crop: { ...photo.crop, zoom: 1.4 } } }], "재검수"),
+      revision(6, [{ ...edited, script: "고친 대본" }, { ...second, image: { ...photo, crop: { ...photo.crop, zoom: 1.4 } } }], "대본 수정"),
+    ];
+    expect(cardRevisionChanges(revisions, "card-1").map((change) => change.revision.version)).toEqual([2, 6]);
+    expect(cardRevisionChanges(revisions, "card-2").map((change) => change.revision.version)).toEqual([3, 4]);
+    expect(cardRevisionChanges(revisions, "card-1")[0]).toMatchObject({ previous: first, next: edited });
+    expect(cardRevisionChanges(revisions, "card-3")).toEqual([]);
+    expect(cardRevisionChanges(revisions.slice(0, 1), "card-1")).toEqual([]);
   });
 
   it("누락된 원문 날짜나 잘못된 링크를 최신 공식 자료처럼 표시하지 않는다", () => {

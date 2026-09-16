@@ -86,6 +86,11 @@ export async function body(request: Request, maxBytes = 16384): Promise<unknown>
     await reader.cancel();
     reader.releaseLock();
   }
-  const text = Buffer.concat(chunks).toString("utf8");
+  let text: string;
+  try {
+    text = new TextDecoder("utf-8", { fatal: true }).decode(Buffer.concat(chunks));
+  } catch {
+    throw new AppError("UTF-8로 인코딩된 JSON 요청이 필요합니다.", 400);
+  }
   return text ? JSON.parse(text) : {};
 }

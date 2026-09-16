@@ -18,7 +18,7 @@ describe('curated food proximity', () => {
     const matches = nearbyCityFood(origin, 20000);
     expect(matches.map(({ food }) => food.id)).toEqual(['gammiok-main', 'pyeongyang-myeonok', 'neung-rado-main']);
     expect(matches.every(({ food }) => food.lat !== null && food.lng !== null && Boolean(food.coordinateSourceUrl))).toBe(true);
-    expect(CITY_FOOD_PLACES.filter(food => food.lat === null)).toHaveLength(5);
+    expect(CITY_FOOD_PLACES.filter(food => food.lat === null)).toHaveLength(4);
     expect(nearbyCityFood(origin).every(({ distanceMeters }) => distanceMeters <= 3000)).toBe(true);
   });
 

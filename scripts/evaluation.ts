@@ -88,7 +88,8 @@ export class EvaluationBudget {
     const file = openSync(temporary, 'wx', 0o600);
     try { writeFileSync(file, JSON.stringify(this.data, null, 2)); fsyncSync(file); } finally { closeSync(file); }
     renameSync(temporary, this.path);
-    const directory = openSync(dirname(this.path), 'r'); try { fsyncSync(directory); } finally { closeSync(directory); }
+    // Windows and some filesystems reject fsync on a directory; the ledger file itself is already synced.
+    const directory = openSync(dirname(this.path), 'r'); try { fsyncSync(directory); } catch (error) { if (!['EPERM', 'EISDIR', 'EINVAL'].includes((error as NodeJS.ErrnoException).code ?? '')) throw error; } finally { closeSync(directory); }
   }
   snapshot() { return structuredClone({ ...this.data, committedUsd: this.data.entries.reduce((sum, entry) => sum + entry.chargedUsd, 0) }); }
   entry(key: string) { return structuredClone(this.data.entries.find((entry) => entry.key === key)); }

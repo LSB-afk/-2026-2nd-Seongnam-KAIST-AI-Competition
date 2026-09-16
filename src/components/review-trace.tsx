@@ -1,6 +1,6 @@
 "use client";
 
-import type { Card, ClaimAssessment, Run, Source } from "@/lib/types";
+import type { Card, ClaimAssessment, Revision, Run, Source } from "@/lib/types";
 import styles from "./review-trace.module.css";
 
 const verdictLabels = { supported: "근거가 지지함", contradicted: "근거와 모순됨", insufficient: "판단 근거 부족" };
@@ -19,6 +19,17 @@ type SelectField = (field: ClaimAssessment["field"]) => void;
 export function safeSourceUrl(url: string): string | undefined {
   try { const parsed = new URL(url); return ["https:", "http:"].includes(parsed.protocol) ? parsed.href : undefined; }
   catch { return undefined; }
+}
+
+/** Revisions in which this card itself differs from the revision before, so unchanged cards are not listed as edited. */
+export function cardRevisionChanges(revisions: Revision[], cardId: string): { revision: Revision; previous?: Card; next?: Card }[] {
+  return revisions.slice(1).flatMap((revision, index) => {
+    const previous = revisions[index].cards.find((entry) => entry.id === cardId);
+    const next = revision.cards.find((entry) => entry.id === cardId);
+    const unchanged = previous?.title === next?.title && previous?.body === next?.body && previous?.script === next?.script &&
+      previous?.image?.src === next?.image?.src && previous?.image?.crop.x === next?.image?.crop.x && previous?.image?.crop.y === next?.image?.crop.y && previous?.image?.crop.zoom === next?.image?.crop.zoom;
+    return unchanged ? [] : [{ revision, previous, next }];
+  });
 }
 
 function collectedAt(value: string) {

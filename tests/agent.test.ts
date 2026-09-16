@@ -143,6 +143,17 @@ describe("bounded agent execution", () => {
     expect(result.issues.filter((issue) => !issue.resolved)).toEqual([]);
     expect(result.usage.costKind).toBe("fixture");
   });
+  it("names the brief audience in the fixture draft event", async () => {
+    const run = makeRun();
+    run.brief.audience = "가족 관람객";
+    const result = await runAgent(run, deps());
+    const draft = result.events.find(
+      (event) => event.action === "compose_story",
+    );
+    expect(draft?.message).toBe(
+      "확인한 근거로 가족 관람객 대상 카드뉴스 초안을 작성합니다.",
+    );
+  });
   it.each(["causal", "future", "mismatch"] as const)(
     "detects and repairs %s with a new verified revision",
     async (scenario) => {

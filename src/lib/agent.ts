@@ -79,7 +79,7 @@ function chooseFixture(run: Run): Decision {
   if (!run.cards.length)
     return decision(
       "compose_story",
-      "확인한 근거로 청소년용 카드뉴스 초안을 작성합니다.",
+      `확인한 근거로 ${run.brief.audience} 대상 카드뉴스 초안을 작성합니다.`,
       run,
     );
   if (run.reviewVersion !== run.version)

@@ -150,7 +150,7 @@ export default function PlatformHome({
           <p className="home-introduction">우리 도시를 발견하는 새로운 방법</p>
           <h1>성남을 만나고,<br />나만의 이야기로.</h1>
           <p>가까운 장소의 매력을 발견하고,<br className="home-desktop-break" /> 사실과 상상을 구분한 카드뉴스로 만들어 보세요.</p>
-          <div className="home-actions">
+          <div className="home-actions" data-tami-avoid="">
             <button className="primary-button" type="button" onClick={() => onExplore()}>성남 둘러보기</button>
             <button className="secondary-button" type="button" disabled={busy} onClick={() => onCreate(hero, "place_intro")}>카드뉴스 만들기</button>
             {onHelp && <button className="home-text-action" type="button" onClick={onHelp}>처음이라면 타미와 함께 <span aria-hidden="true">＋</span></button>}

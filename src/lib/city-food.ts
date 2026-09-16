@@ -75,14 +75,6 @@ export const CITY_FOOD_PLACES: CityFoodPlace[] = [
     badge: '한국관광공사 소개', sourceUrl: gammiokSource,
     sourceDate: null, checkedAt: '2026-09-15', coordinateSourceUrl: gammiokSource,
   },
-  {
-    id: 'perleo', name: '페르레오', category: 'bar', district: '분당구',
-    address: '경기도 성남시 분당구 성남대로171번길 17 (금곡동) 씨티밸리 111호', neighborhood: '금곡동',
-    lat: null, lng: null,
-    description: '한 명의 셰프가 오픈키친에서 여러 나라의 요리를 선보이는 다이닝바입니다.',
-    badge: '블루리본 Pick', sourceUrl: 'https://www.bluer.co.kr/restaurants/43427',
-    sourceDate: null, checkedAt: '2026-09-15',
-  },
 ];
 
 /** Straight-line WGS84 distance; no walking route or travel-time claim. */

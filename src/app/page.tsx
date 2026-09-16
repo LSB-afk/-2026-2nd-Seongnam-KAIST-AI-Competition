@@ -5,13 +5,14 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import type { Brief, Card, Mode, Run, Scenario, Strategy } from "@/lib/types";
-import { AtomicReview, EvidenceLinks, ProtectedChanges, RunTrace, safeSourceUrl } from "@/components/review-trace";
+import { AtomicReview, EvidenceLinks, ProtectedChanges, RunTrace, cardRevisionChanges, safeSourceUrl } from "@/components/review-trace";
+import { editBlockReason, retryBlockReason, simplifyBlockReason } from "@/lib/budget";
 
 import { PLACES, getPlace, type Place } from "@/lib/places";
 import PlaceExplorer, { PlacePhoto } from "@/components/place-explorer";
 import ImageEditor, { CardPhoto } from "@/components/image-editor";
 import PlatformHome, { RunHistory } from "@/components/platform-home";
-import TamiGuide from "@/components/tami-guide";
+import TamiGuide, { scrollTargetIntoView } from "@/components/tami-guide";
 import AgentCenter from "@/components/agent-center";
 import WorkspaceNavIcon from "@/components/workspace-nav-icon";
 import ReadingTransform from "@/components/reading-transform";
@@ -20,7 +21,7 @@ import type { CityStoryBrief } from "@/lib/city-story";
 import "@/components/workspace-refinements.css";
 import "@/components/diorama/diorama-shell.css";
 import { useWorkspace } from "@/hooks/use-workspace";
-import { defaultExplore, matchingEditDraft, normaliseExplore, shouldAcceptRun, toggleSavedPlace, upsertEditDraft, type DraftState, type WorkspaceView, type ExploreState, type ReviewTab } from "@/lib/workspace-state";
+import { defaultExplore, matchingEditDraft, normaliseExplore, shouldAcceptRun, toggleSavedPlace, upsertEditDraft, type DraftState, type WorkspaceView, type ExploreState, type PendingCreate, type ReviewTab } from "@/lib/workspace-state";
 import { PURPOSES, goalForPurpose, type CreationPurpose } from "@/lib/purposes";
 
 const DioramaPage = dynamic(() => import("@/components/diorama/diorama-page"), { ssr: false, loading: () => <p role="status" className="loading-note">성남 3D 여행을 준비하고 있어요.</p> });
@@ -29,6 +30,8 @@ type Config = {
   image?: { configured: boolean; reason?: string; model?: string };
   live: { configured: boolean; reason?: string; model?: string };
 };
+/** Review-panel controls whose failures are shown beside the control instead of in the distant top banner. */
+type ActionArea = "cancel" | "approve" | "edit" | "retry" | "simplify" | "download";
 const example: Brief = {
   place: "판교박물관",
   placeId: "pangyo-museum",
@@ -89,6 +92,13 @@ const sampleCards = [
   },
 ];
 
+/** The server answered with an error, so the request was settled rather than lost in transit. */
+class RequestError extends Error {
+  constructor(message: string, public status: number) {
+    super(message);
+  }
+}
+
 async function readJson<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(url, {
     ...options,
@@ -96,8 +106,9 @@ async function readJson<T>(url: string, options?: RequestInit): Promise<T> {
   });
   const data = await response.json();
   if (!response.ok)
-    throw new Error(
+    throw new RequestError(
       data.error || "요청을 처리하지 못했습니다. 다시 시도해 주세요.",
+      response.status,
     );
   return data as T;
 }
@@ -118,13 +129,12 @@ export default function Studio() {
   const { state: workspace, ready: workspaceReady, update: updateWorkspace, storageError, getSnapshot } = useWorkspace(initialDraft);
   const view = workspace.view;
   const immersive = view === "diorama";
-  const [previewStoryRunId, setPreviewStoryRunId] = useState<string | null>(null);
   const [dioramaMenuOpen, setDioramaMenuOpen] = useState(false);
   const navigationPanel = useRef<HTMLElement>(null);
   const navigationToggle = useRef<HTMLButtonElement>(null);
   const setView = (next: WorkspaceView) => {
     setDioramaMenuOpen(false);
-    updateWorkspace({ view: next, ...(next !== "diorama" ? { storyId: null } : {}) }, "push");
+    updateWorkspace({ view: next, storyPreview: false, ...(next !== "diorama" ? { storyId: null } : {}) }, "push");
   };
   useEffect(() => {
     if (!immersive || !dioramaMenuOpen) return;
@@ -168,6 +178,8 @@ export default function Studio() {
   const [history, setHistory] = useState<Run[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [actionMessage, setActionMessage] = useState<{ runId: string; area: ActionArea; text: string } | null>(null);
+  const createRecovered = useRef(false);
   const selectedCardId = workspace.selectedCardId;
   const setSelectedCardId = (selectedCardId: string) => updateWorkspace({selectedCardId});
   const [selectedClaimId, setSelectedClaimId] = useState("");
@@ -199,6 +211,10 @@ export default function Studio() {
   const claim =
     cardClaims.find((item) => item.id === selectedClaimId) || cardClaims[0];
   const unresolved = run?.issues.filter((issue) => !issue.resolved) || [];
+  const editReason = run ? editBlockReason(run) : null;
+  const retryReason = run ? retryBlockReason(run) : null;
+  const simplifyReason = run ? simplifyBlockReason(run) : null;
+  const revisionChanges = run && card ? cardRevisionChanges(run.revisions, card.id) : [];
   const zip = run?.artifacts.find(
     (artifact) =>
       artifact.kind === "zip" &&
@@ -309,23 +325,24 @@ export default function Studio() {
       setError("실제 AI 연결 설정이 필요합니다. 연결 설정 안내를 확인하거나 데모 모드를 선택해 주세요.");
       return;
     }
-    const requestedRunId=getSnapshot().runId;
+    const request:PendingCreate={runId:getSnapshot().runId,body:{brief,mode,strategy,scenario,requestId:crypto.randomUUID()}};
+    // Stored before sending: a reload mid-request resends this exact body, which the server answers with the same run.
+    updateWorkspace({pendingCreate:request});
+    await submitCreate(request);
+  }
+
+  async function submitCreate(request: PendingCreate) {
+    const requestedRunId=request.runId;
     mutationPending.current=true;
     setBusy(true);
     setError("");
     try {
       const next = await readJson<Run>("/api/runs", {
         method: "POST",
-        body: JSON.stringify({
-          brief,
-          mode,
-          strategy,
-          scenario,
-          requestId: crypto.randomUUID(),
-        }),
+        body: JSON.stringify(request.body),
       });
-      if(getSnapshot().runId!==requestedRunId){setHistory(previous=>[next,...previous.filter(item=>item.id!==next.id)]);return;}
-      updateWorkspace({runId:next.id,selectedCardId:"",tab:imageChoice === "ai" ? "image" : "evidence"},"push");
+      if(getSnapshot().runId!==requestedRunId){updateWorkspace({pendingCreate:null});setHistory(previous=>[next,...previous.filter(item=>item.id!==next.id)]);return;}
+      updateWorkspace({runId:next.id,selectedCardId:"",tab:imageChoice === "ai" ? "image" : "evidence",pendingCreate:null},"push");
       runRef.current=null;receiveRun(next);
       setSelectedClaimId("");
       setReviewer("");
@@ -335,6 +352,8 @@ export default function Studio() {
         ...previous.filter((item) => item.id !== next.id),
       ]);
     } catch (cause) {
+      // Without a response the run may exist already, so the request stays saved for the next load.
+      if(cause instanceof RequestError)updateWorkspace({pendingCreate:null});
       setError(
         cause instanceof Error ? cause.message : "제작을 시작하지 못했습니다.",
       );
@@ -343,6 +362,17 @@ export default function Studio() {
       setBusy(false);
     }
   }
+
+  useEffect(()=>{
+    if(!workspaceReady||createRecovered.current)return;
+    createRecovered.current=true;
+    const pending=getSnapshot().pendingCreate;
+    if(!pending)return;
+    void Promise.resolve().then(()=>{
+      if(getSnapshot().runId===pending.runId)void submitCreate(pending);
+      else updateWorkspace({pendingCreate:null});
+    });
+  });
 
   async function mutate(
     action: "cancel" | "approve" | "edit" | "retry" | "simplify",
@@ -353,8 +383,10 @@ export default function Studio() {
     const requestedId=run.id;
     const requestedCard=card?.id;
     const requestedVersion=run.version;
+    const requestedStatus=run.status;
     setBusy(true);
     setError("");
+    setActionMessage(null);
     try {
       const next = await readJson<Run>(`/api/runs/${run.id}/${action}`, {
         method: "POST",
@@ -363,9 +395,16 @@ export default function Studio() {
       receiveRun(next);
       if (action === "edit" && getSnapshot().runId===requestedId) updateWorkspace(previous=>({...previous,tab:"evidence",editDrafts:previous.editDrafts.filter(d=>!(d.runId===requestedId&&d.cardId===requestedCard&&d.version===requestedVersion))}));
     } catch (cause) {
-      if(getSnapshot().runId===requestedId)setError(
-        cause instanceof Error ? cause.message : "변경을 저장하지 못했습니다.",
-      );
+      let text = cause instanceof Error ? cause.message : "변경을 저장하지 못했습니다.";
+      if (cause instanceof RequestError && cause.status === 409) {
+        // A conflict means this tab is behind the saved run; show the saved result instead of a stale panel.
+        const latest = await readJson<Run>(`/api/runs/${requestedId}`).catch(() => null);
+        if (latest) {
+          receiveRun(latest);
+          if (latest.version !== requestedVersion || latest.status !== requestedStatus) text = `그사이 저장된 최신 결과(v${latest.version} · ${statuses[latest.status]})를 불러왔습니다. 내용을 확인한 뒤 필요하면 다시 시도해 주세요.`;
+        }
+      }
+      if(getSnapshot().runId===requestedId)setActionMessage({runId:requestedId,area:action,text});
     } finally {
       mutationPending.current=false;
       setBusy(false);
@@ -389,8 +428,16 @@ export default function Studio() {
     if (active || busy) { setError("진행 중인 제작이 끝나면 이야기를 만들 수 있습니다."); return; }
     const anchor = getPlace(story.stops[0].placeId);
     if (!anchor) return;
-    updateWorkspace(previous => ({...previous,view:"studio",storyId:null,runId:null,selectedCardId:"",tab:"evidence",draft:{...previous.draft,brief:{...previous.draft.brief,place:anchor.name,placeId:anchor.id,story,audience,purpose:"youth_story",goal:`${audience}에게 '${story.title}'라는 주제로 ${story.stops.map(stop=>getPlace(stop.placeId)?.name).join(' · ')}을 연결해 소개하는 카드뉴스 4장을 만들어 주세요. 장소별 공식 근거와 메모를 구분하고, 마지막 장은 미래의 문화공간을 상상해 주세요.`}}}),"push");
-    runRef.current=null;setRun(null);setSelectedClaimId("");setPreviewStoryRunId(null);
+    updateWorkspace(previous => ({...previous,view:"studio",storyId:null,storyPreview:false,runId:null,selectedCardId:"",tab:"evidence",draft:{...previous.draft,brief:{...previous.draft.brief,place:anchor.name,placeId:anchor.id,story,audience,purpose:"youth_story",goal:`${audience}에게 '${story.title}'라는 주제로 ${story.stops.map(stop=>getPlace(stop.placeId)?.name).join(' · ')}을 연결해 소개하는 카드뉴스 4장을 만들어 주세요. 장소별 공식 근거와 메모를 구분하고, 마지막 장은 미래의 문화공간을 상상해 주세요.`}}}),"push");
+    runRef.current=null;setRun(null);setSelectedClaimId("");
+  }
+  /** A run without budget for another review cannot be recovered; start the same place or story as a new production. */
+  function startNewProduction(stuck: Run) {
+    const place = getPlace(stuck.brief.placeId ?? stuck.brief.place);
+    if (!place || active || busy) return;
+    if (stuck.brief.story) createCityStory(stuck.brief.story, stuck.brief.audience);
+    else choosePlace(place, stuck.brief.purpose);
+    focusTour("brief-fields");
   }
   function imaginePlace(place: Place, prompt: string) {
     if (active || busy) { setError("진행 중인 제작이 끝나면 상상 카드를 만들 수 있습니다."); return; }
@@ -404,8 +451,7 @@ export default function Studio() {
     setView("studio");
     requestAnimationFrame(()=>{
       const element=document.querySelector<HTMLElement>(`[data-tour="${target}"]`);
-      element?.scrollIntoView({block:"center",behavior:"auto"});
-      if(element){if(!element.matches("button,a,input,select,textarea"))element.tabIndex=-1;element.focus({preventScroll:true});}
+      if(element){scrollTargetIntoView(element,"center");if(!element.matches("button,a,input,select,textarea"))element.tabIndex=-1;element.focus({preventScroll:true});}
     });
   }
   const menu = [{ id: "dashboard", label: "홈·대시보드", icon: "◫" }, { id: "explore", label: "성남 둘러보기", icon: "◎" }, { id: "diorama", label: "성남 3D 여행", icon: "" }, { id: "saved", label: "저장한 장소", icon: "♡" }, { id: "studio", label: "카드뉴스 작업실", icon: "▧" }, { id: "history", label: "제작 기록", icon: "◷" }, { id: "agent", label: "AI 에이전트", icon: "" }] as const;
@@ -413,6 +459,22 @@ export default function Studio() {
   function fileUrl(name: string) {
     return `/api/runs/${run?.id}/files/${encodeURIComponent(name)}`;
   }
+  function guardDownload(event: React.MouseEvent<HTMLAnchorElement>) {
+    const anchor = event.currentTarget;
+    if (anchor.dataset.checked) { delete anchor.dataset.checked; return; }
+    if (!run) return;
+    // A stale version is answered with 409 JSON, which the browser drops without telling anyone, so check first.
+    event.preventDefault();
+    const rendered = run;
+    void readJson<Run>(`/api/runs/${rendered.id}`).then((latest) => {
+      if (latest.version === rendered.version && latest.status === rendered.status) { anchor.dataset.checked = "true"; anchor.click(); return; }
+      receiveRun(latest);
+      setActionMessage({ runId: rendered.id, area: "download", text: `그사이 결과가 바뀌어 파일을 받지 않았습니다. 최신 결과(v${latest.version} · ${statuses[latest.status]})를 불러왔으니 확인한 뒤 다시 받아 주세요.` });
+    }, () => setActionMessage({ runId: rendered.id, area: "download", text: "다운로드 전에 최신 상태를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요." }));
+  }
+  const actionNote = (area: ActionArea) => run && actionMessage?.runId === run.id && actionMessage.area === area && (
+    <div className="error-banner action-message" role="alert"><span>{actionMessage.text}</span><button type="button" onClick={() => setActionMessage(null)} aria-label="안내 메시지 닫기">×</button></div>
+  );
 
   return (
     <div className={`platform-shell${immersive ? " platform-shell--immersive" : ""}`}>
@@ -465,7 +527,7 @@ export default function Studio() {
 
         {view === "dashboard" && <PlatformHome runs={history} loaded={recordsLoaded} failed={!recordsLoaded && Boolean(loadError)} busy={active || busy} onExplore={openExplore} savedIds={savedIds} onSaved={() => setView("saved")} onHelp={() => window.dispatchEvent(new Event("tami:open-guide"))} onCreate={choosePlace} onOpen={(id) => void loadRun(id)} />}
         <PlaceExplorer visible={view === "explore" || view === "saved"} savedOnly={view === "saved"} state={explore} onStateChange={(next,push)=>updateWorkspace({explore:next},push?"push":"replace")} savedIds={savedIds} onToggleSaved={id=>updateWorkspace(previous=>({...previous,savedIds:toggleSavedPlace(previous.savedIds,id)}))} onCreate={choosePlace} />
-        {view === "diorama" && workspaceReady && <DioramaPage selection={workspace.diorama} onSelectionChange={(diorama,push)=>updateWorkspace({diorama},push?"push":"replace")} savedIds={savedIds} onToggleSaved={id=>updateWorkspace(previous=>({...previous,savedIds:toggleSavedPlace(previous.savedIds,id)}))} onCreate={choosePlace} onCreateStory={createCityStory} onImagine={imaginePlace} playbackRun={run?.id===previewStoryRunId?run:null} storyId={workspace.storyId} onCloseStory={()=>{setPreviewStoryRunId(null);updateWorkspace({storyId:null});}} busy={active || busy} />}
+        {view === "diorama" && workspaceReady && <DioramaPage selection={workspace.diorama} onSelectionChange={(diorama,push)=>updateWorkspace({diorama},push?"push":"replace")} savedIds={savedIds} onToggleSaved={id=>updateWorkspace(previous=>({...previous,savedIds:toggleSavedPlace(previous.savedIds,id)}))} onCreate={choosePlace} onCreateStory={createCityStory} onImagine={imaginePlace} playbackRun={workspace.storyPreview&&run?.id===workspace.runId?run:null} storyId={workspace.storyId} onCloseStory={()=>updateWorkspace({storyId:null,storyPreview:false})} busy={active || busy} />}
         {view === "history" && <RunHistory runs={history} loaded={recordsLoaded} failed={!recordsLoaded && Boolean(loadError)} busy={active || busy} onOpen={(id) => void loadRun(id)} query={workspace.historyQuery} statusFilter={workspace.historyStatus} onFiltersChange={({query,status})=>updateWorkspace({historyQuery:query,historyStatus:status})} full />}
         {view === "agent" && <AgentCenter run={run} duration={duration} loading={historyLoading || !workspaceReady} failed={Boolean(error || loadError)} onStudio={() => setView("studio")} onExplore={() => openExplore()} onHelp={() => window.dispatchEvent(new Event("tami:open-guide"))} onReview={(cardId) => { updateWorkspace(previous => ({...previous, view: "studio", tab: "evidence", selectedCardId: cardId || previous.selectedCardId}), "push"); requestAnimationFrame(() => document.querySelector('[data-tour="review-panel"]')?.scrollIntoView({block:"start"})); }} onHistory={() => setView("history")} />}
         <div hidden={view !== "studio"}>
@@ -516,7 +578,7 @@ export default function Studio() {
                   />
                 </label>
                 <p id="place-note" className="field-note">{draftPlace.district} · {draftPlace.type} <button type="button" className="text-button" onClick={() => setView("explore")}>장소 변경</button></p>
-                {brief.story && <div className="city-story-studio-note"><strong>{brief.story.title}</strong><p>{brief.story.stops.length}곳의 사진·공식 자료·메모와 지도 구도를 연결했어요. 카드 1~3은 장소별 사실, 카드 4는 상상입니다.</p><button type="button" className="text-button" onClick={()=>{setPreviewStoryRunId(null);setView("diorama");}}>지도에서 이야기 다듬기 ↗</button></div>}
+                {brief.story && <div className="city-story-studio-note"><strong>{brief.story.title}</strong><p>{brief.story.stops.length}곳의 사진·공식 자료·메모와 지도 구도를 연결했어요. 카드 1~3은 장소별 사실, 카드 4는 상상입니다.</p><button type="button" className="text-button" onClick={()=>setView("diorama")}>지도에서 이야기 다듬기 ↗</button></div>}
                 <label>제작 목적<select value={brief.purpose || "youth_story"} onChange={event=>{const purpose=event.target.value as CreationPurpose;setBrief({...brief,purpose,audience:PURPOSES.find(p=>p.id===purpose)!.audience,goal:goalForPurpose(draftPlace,purpose)});}}>{PURPOSES.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}</select></label>
                 <label>
                   누구에게 전할까요?
@@ -595,7 +657,7 @@ export default function Studio() {
                           실행 비용 상한을 설정한 뒤 서버를 다시 시작해 주세요.
                           필요한 항목은 .env.example과 README에 있습니다.
                         </p>
-                        {config?.live.reason && <p className="field-note">{config.live.reason}</p>}
+                        {config?.live.reason && <p className="field-note">{config.live.reason.split("_").flatMap((part, index) => index ? ["_", <wbr key={index} />, part] : [part])}</p>}
                       </details>
                     </>
                   )}
@@ -699,6 +761,7 @@ export default function Studio() {
                     </button>
                   )}
                 </div>
+                {actionNote("cancel")}
                 <div className="run-metrics">
                   <span>
                     자료{" "}
@@ -1011,18 +1074,12 @@ export default function Studio() {
                   {tab === "changes" && (
                     <div className="revision-list">
                       {card && <ProtectedChanges run={run} cardId={card.id} disabled={active || busy} onLoad={(proposal) => { setEditContent(proposal.title,proposal.body); setTab("edit"); }} />}
-                      {run.revisions.length < 2 ? (
+                      {!revisionChanges.length ? (
                         <p className="field-note">
                           아직 수정 전후 내역이 없습니다.
                         </p>
                       ) : (
-                        run.revisions.slice(1).map((revision, index) => {
-                          const previous = run.revisions[index].cards.find(
-                            (item) => item.id === card?.id,
-                          );
-                          const next = revision.cards.find(
-                            (item) => item.id === card?.id,
-                          );
+                        revisionChanges.map(({ revision, previous, next }) => {
                           return (
                             <article
                               className="revision-item"
@@ -1064,7 +1121,12 @@ export default function Studio() {
                   {tab === "image" && card && <ImageEditor key={`${run.id}-${card.id}-${run.version}`} run={run} card={card} config={config?.image} locked={active || busy} onRun={receiveRun} onBusy={setBusy} />}
                   {tab === "edit" && (
                     <>
+                    {/* A disabled fieldset turns off the rewrite button without changing its label; the reason sits right below it. */}
+                    <fieldset className="reading-transform-guard" disabled={!!simplifyReason} aria-describedby={simplifyReason ? "simplify-block-reason" : undefined}>
                     <ReadingTransform run={run} busy={!!active || busy} liveConfigured={Boolean(config?.live.configured)} unsaved={workspace.editDrafts.some(d => d.runId === run.id && d.version === run.version)} onTransform={() => void mutate("simplify", {version: run.version})} />
+                    {simplifyReason && run.brief.readingStyle !== "easy" && <p className="stop-reason" id="simplify-block-reason">쉬운 설명으로 바꿀 수 없습니다. {simplifyReason}</p>}
+                    </fieldset>
+                    {actionNote("simplify")}
                     <form
                       className="edit-form"
                       onSubmit={(event) => {
@@ -1107,10 +1169,13 @@ export default function Studio() {
                       <button
                         className="secondary-button"
                         type="submit"
-                        disabled={active || busy}
+                        disabled={active || busy || !!editReason}
+                        aria-describedby={editReason ? "edit-block-reason" : undefined}
                       >
                         수정 저장
                       </button>
+                      {editReason && <p className="stop-reason" id="edit-block-reason">{editReason}</p>}
+                      {actionNote("edit")}
                     </form>
                     </>
                   )}
@@ -1130,7 +1195,14 @@ export default function Studio() {
                     ))}
                   </div>
                 )}
-                {(run.status === "needs_review" || run.status === "failed") && (
+                {(run.status === "needs_review" || run.status === "failed") && (retryReason ? (
+                  <>
+                    <p className="stop-reason">재검수를 시작할 수 없습니다. {retryReason}</p>
+                    <button className="secondary-button" type="button" disabled={active || busy} onClick={() => startNewProduction(run)}>
+                      {run.brief.story ? "같은 이야기로 새 제작 준비" : "같은 장소로 새 제작 준비"}
+                    </button>
+                  </>
+                ) : (
                   <button
                     className="secondary-button"
                     type="button"
@@ -1141,7 +1213,8 @@ export default function Studio() {
                   >
                     수정 내용 재검수
                   </button>
-                )}
+                ))}
+                {actionNote("retry")}
                 {run.status === "ready_for_approval" && (
                   <form
                     onSubmit={(event) => {
@@ -1175,6 +1248,7 @@ export default function Studio() {
                     <small>담당자 이름을 기록하는 로컬 검토 절차입니다.</small>
                   </form>
                 )}
+                {actionNote("approve")}
                 {run.approval && (
                   <div className="approval-confirmed">
                     <strong>✓ 담당자 승인 완료</strong>
@@ -1185,7 +1259,7 @@ export default function Studio() {
                     </p>
                   </div>
                 )}
-                {run.brief.story && run.cards.length === 4 && <CityStoryShare key={`${run.id}:${run.version}`} run={run} onPreview={()=>{setPreviewStoryRunId(run.id);updateWorkspace({view:"diorama",storyId:null,diorama:{placeId:run.brief.story!.stops[0].placeId,hotspotId:null}},"push");}} />}
+                {run.brief.story && run.cards.length === 4 && <CityStoryShare key={`${run.id}:${run.version}`} run={run} onPreview={()=>updateWorkspace({view:"diorama",storyId:null,storyPreview:true,diorama:{placeId:run.brief.story!.stops[0].placeId,hotspotId:null}},"push")} />}
                 {zip && (
                   <a
                     className={
@@ -1196,6 +1270,7 @@ export default function Studio() {
                     data-tour="download"
                     href={fileUrl(zip.name)}
                     download
+                    onClick={guardDownload}
                   >
                     {run.status === "approved"
                       ? "카드뉴스 패키지 다운로드"
@@ -1211,6 +1286,7 @@ export default function Studio() {
                         key={artifact.name}
                         href={fileUrl(artifact.name)}
                         download
+                        onClick={guardDownload}
                       >
                         {artifact.name}
                         <span>v{artifact.version}</span>
@@ -1218,6 +1294,7 @@ export default function Studio() {
                     ))}
                   </details>
                 )}
+                {actionNote("download")}
               </div>
             )}
           </aside>
@@ -1229,7 +1306,7 @@ export default function Studio() {
         </footer>
       </main>
       </div>
-      {workspaceReady && (!workspace.runId || run?.id===workspace.runId || !!error) && <TamiGuide context={{view,selectedPlace:getPlace(view === "diorama" ? workspace.diorama.placeId : explore.selectedId || "") || null,draftPlace,run,busy:busy || !!active || historyLoading,error,tab,selectedCardId:card?.id || ""}} actions={{navigate:setView,openStudio:()=>{const selected=getPlace(view === "diorama" ? workspace.diorama.placeId : explore.selectedId || "");if(selected && selected.id!==draftPlace.id)choosePlace(selected);else setView("studio");},openReview:(id)=>{if(id)setSelectedCardId(id);setTab("evidence");focusTour("review-panel");},openEditor:()=>{setTab("edit");focusTour("review-panel");},resumeRun:()=>{if(run)setView("studio");else if(history[0])loadRun(history[0].id);else setView("history");},showApprove:()=>focusTour("approve-panel"),showDownload:()=>focusTour("download")}} />}
+      {workspaceReady && (!workspace.runId || run?.id===workspace.runId || !!error) && <TamiGuide context={{view,selectedPlace:getPlace(view === "diorama" ? workspace.diorama.placeId : explore.selectedId || "") || null,draftPlace,run,busy:busy || !!active || historyLoading,error:error || (run && actionMessage?.runId === run.id ? actionMessage.text : ""),tab,selectedCardId:card?.id || ""}} actions={{navigate:setView,openStudio:()=>{const selected=getPlace(view === "diorama" ? workspace.diorama.placeId : explore.selectedId || "");if(selected && selected.id!==draftPlace.id)choosePlace(selected);else setView("studio");},openReview:(id)=>{if(id)setSelectedCardId(id);setTab("evidence");focusTour("review-panel");},openEditor:()=>{setTab("edit");focusTour("review-panel");},resumeRun:()=>{if(run)setView("studio");else if(history[0])loadRun(history[0].id);else setView("history");},showApprove:()=>focusTour("approve-panel"),showDownload:()=>focusTour("download")}} />}
     </div>
   );
 }
