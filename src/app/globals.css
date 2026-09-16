@@ -4260,10 +4260,16 @@ textarea::placeholder {
   border-bottom: 1px solid var(--line);
   background: #fff;
 }
-.place-result-wrap.selected {
+.place-result-wrap:hover {
+  background: #f7f9fd;
+}
+.place-result-wrap.selected,
+.place-result-wrap.selected:hover {
   background: #f1f5ff;
   box-shadow: inset 3px 0 0 var(--blue);
 }
+.place-result-wrap:hover .place-result,
+.place-result-wrap:hover .place-result:hover,
 .place-result-wrap.selected .place-result,
 .place-result-wrap.selected .place-result:hover,
 .place-result-wrap.selected .place-result.selected {
