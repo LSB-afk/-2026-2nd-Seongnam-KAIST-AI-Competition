@@ -90,7 +90,7 @@ function matchingRun(state: GuideState, snapshot: GuideSnapshot) {
 /** Guards describe prerequisites only. They never trigger application actions. */
 export function getStepGuard(state: GuideState, snapshot: GuideSnapshot): string | null {
   switch (state.step) {
-    case 0: return snapshot.view === "explore" ? null : "관광 탐색 화면을 먼저 열어 주세요.";
+    case 0: return null;
     case 1: return snapshot.selectedPlaceId ? null : "목록이나 지도에서 장소를 하나 선택해 주세요.";
     case 2: return state.sourcePlaceId && state.sourcePlaceId === snapshot.selectedPlaceId ? null : "선택한 장소의 공식 정보 링크를 열어 확인해 주세요.";
     case 3: return snapshot.view === "studio" && snapshot.draftPlaceId === state.placeId ? null : "선택한 장소로 제작 화면을 열어 주세요.";
@@ -108,7 +108,7 @@ export function getStepGuard(state: GuideState, snapshot: GuideSnapshot): string
 }
 
 export function getStepTarget(state: GuideState, snapshot: GuideSnapshot): string {
-  return ["nav-explore", "place-results", "official-source", "create-from-place", "brief-fields", "cards", "review-panel", snapshot.approved ? "download" : "approve-panel"][state.step] ?? "nav-explore";
+  return ["nav-explore", "place-results", "official-source", "place-heading", "brief-fields", "cards", "review-panel", snapshot.approved ? "download" : "approve-panel"][state.step] ?? "nav-explore";
 }
 
 export const GUIDE_STEPS = [
@@ -144,7 +144,7 @@ export function transitionGuide(state: GuideState, event: GuideEvent, snapshot: 
   if (event.type === "next") return nextStep(state, snapshot);
   if (event.type === "source-opened") {
     if (state.step !== 2 || !event.placeId || event.placeId !== snapshot.selectedPlaceId || event.placeId !== state.placeId) return state;
-    return { ...state, sourcePlaceId: event.placeId, step: 3 };
+    return { ...state, sourcePlaceId: event.placeId };
   }
   if (event.type === "download-opened") return state.step === 7 && !getStepGuard(state, snapshot) ? { ...state, status: "completed" } : state;
   if (event.type !== "observe") return state;
@@ -157,8 +157,6 @@ export function transitionGuide(state: GuideState, event: GuideEvent, snapshot: 
   }
   if (state.step === 7 && before.reviewed && !snapshot.reviewed) return { ...state, step: 6 };
   const relevantChange =
-    (state.step === 0 && before.view !== snapshot.view) ||
-    (state.step === 1 && before.selectedPlaceId !== snapshot.selectedPlaceId) ||
     (state.step === 3 && (before.view !== snapshot.view || before.draftPlaceId !== snapshot.draftPlaceId)) ||
     (state.step === 4 && (before.runId !== snapshot.runId || before.cardCount !== snapshot.cardCount || before.running !== snapshot.running || before.busy !== snapshot.busy));
   return relevantChange ? nextStep(state, snapshot) : state;

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { MapControls } from 'three/addons/controls/MapControls.js';
 import { buildCityModel } from './city-model';
-import { CITY_OVERVIEW, getCityCamera, getCityMarkers, projectCityCoordinate, type CityMarker } from './city-data';
+import { CITY_DISTRICTS, CITY_OVERVIEW, getCityCamera, getCityMarkers, projectCityCoordinate, type CityMarker } from './city-data';
 import { normaliseDiorama, selectionStopId, type CameraPreset, type DioramaSelection } from './data';
 import type { TourSettings, TourStatus } from './tour';
 import urbanIndex from './seongnam-urban-index.json';
@@ -25,6 +25,7 @@ export type RenderOptions = TourSettings & {
   requestId: number; phase: TourStatus; reducedMotion: boolean; navigationMode?: NavigationMode;
   storyStops?: readonly { placeId: string }[];
   storyFocus?: { requestId: number; placeId: string; camera?: StoryCameraView };
+  hoveredDistrictId?: string | null;
 };
 export type RenderCallbacks = {
   onReady: (stopId: string, requestId: number) => void;
@@ -92,7 +93,9 @@ export function createDioramaRenderer(host: HTMLDivElement, callbacks: RenderCal
     controls.autoRotateSpeed = .22;
     controls.enablePan = true;
     controls.zoomToCursor = true;
-    controls.mouseButtons.MIDDLE = THREE.MOUSE.PAN;
+    controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
+    controls.mouseButtons.MIDDLE = THREE.MOUSE.ROTATE;
+    controls.mouseButtons.RIGHT = THREE.MOUSE.ROTATE;
     controls.touches.TWO = THREE.TOUCH.DOLLY_PAN;
     controls.zoomSpeed = .7;
     controls.rotateSpeed = .55;
@@ -154,6 +157,7 @@ export function createDioramaRenderer(host: HTMLDivElement, callbacks: RenderCal
     const pointer = new THREE.Vector2();
     const activePointers = new Set<number>();
     let pointerStart: { x: number; y: number; id: number; dragged: boolean; button?: HTMLButtonElement } | null = null;
+    let hoveredDistrictId: string | null = null;
     const groundPlane = new THREE.Plane();
 
     function currentPreset() {
@@ -375,10 +379,11 @@ export function createDioramaRenderer(host: HTMLDivElement, callbacks: RenderCal
       }
       const pan = nextOptions.navigationMode !== 'rotate';
       controls.mouseButtons.LEFT = pan ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE;
-      controls.mouseButtons.RIGHT = pan ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN;
+      controls.mouseButtons.MIDDLE = THREE.MOUSE.ROTATE;
+      controls.mouseButtons.RIGHT = THREE.MOUSE.ROTATE;
       controls.touches.ONE = pan ? THREE.TOUCH.PAN : THREE.TOUCH.ROTATE;
       controls.cursorStyle = pan ? 'grab' : 'auto';
-      renderer.domElement.setAttribute('aria-label', `드래그로 ${pan ? '이동' : '회전'}하고 휠이나 두 손가락으로 확대하는 성남 입체 지도`);
+      renderer.domElement.setAttribute('aria-label', '왼쪽 끌기로 이동하고 휠 버튼 끌기로 회전하며 휠로 확대하는 성남 입체 지도');
       if (initialCity) {
         transition = null;
         model = buildCityModel();
@@ -426,6 +431,7 @@ export function createDioramaRenderer(host: HTMLDivElement, callbacks: RenderCal
         }
       }
       if (transition && (!options.motion || options.reducedMotion)) focus(transition.destination, false, transition.story);
+      emphasizeDistricts();
       dirty = true;
     }
 
@@ -458,22 +464,67 @@ export function createDioramaRenderer(host: HTMLDivElement, callbacks: RenderCal
       controls.target.copy(target);
       controls.update(); dirty = true;
     }
+    const setOrbitCursor = (on: boolean) => {
+      host.classList?.toggle('is-orbiting', on);
+      if (host.style) host.style.cursor = on ? 'move' : '';
+    };
     const down = (event: PointerEvent) => {
       activePointers.add(event.pointerId);
+      if (event.button === 1) queueMicrotask(() => setOrbitCursor(true));
       if (activePointers.size > 1 || event.button !== 0) { pointerStart = null; return; }
       const button = [...labels, ...urbanLabels, ...foodLabels].find(entry => entry.button.contains(event.target as Node | null))?.button;
       pointerStart = { x: event.clientX, y: event.clientY, id: event.pointerId, dragged: false, button };
       if (!button) renderer.domElement.focus({ preventScroll: true });
     };
+    function emphasizedDistrictId() {
+      const selected = selection?.placeId === 'seongnam' ? selection.hotspotId : null;
+      return hoveredDistrictId || options?.hoveredDistrictId || selected || null;
+    }
+    function emphasizeDistricts() {
+      if (!model) return;
+      const active = emphasizedDistrictId();
+      for (const district of CITY_DISTRICTS) {
+        const idle = model.group.getObjectByName(`city-district-edge-${district.id}`);
+        const emphasis = model.group.getObjectByName(`city-district-edge-active-${district.id}`);
+        const on = district.id === active;
+        if (idle) { idle.visible = !on; idle.renderOrder = 4; }
+        if (emphasis) { emphasis.visible = on; emphasis.renderOrder = on ? 12 : 4; }
+      }
+      dirty = true;
+    }
+    function districtAt(x: number, y: number) {
+      if (!model) return null;
+      const top = typeof document.elementFromPoint === 'function' ? document.elementFromPoint(x, y) : null;
+      const overLabel = labels.find(entry => entry.marker.kind === 'district' && entry.button.getClientRects().length > 0 && top === entry.button);
+      if (overLabel) return overLabel.marker.id;
+      groundPoint(x, y);
+      const hit = raycaster.intersectObjects(model.pickTargets.filter(target => target.userData.districtId), true)[0];
+      let object: THREE.Object3D | undefined = hit?.object;
+      while (object) {
+        if (typeof object.userData.districtId === 'string') return object.userData.districtId;
+        object = object.parent ?? undefined;
+      }
+      return null;
+    }
     const move = (event: PointerEvent) => {
       if (pointerStart?.id === event.pointerId && Math.hypot(event.clientX - pointerStart.x, event.clientY - pointerStart.y) > 6) pointerStart.dragged = true;
+      if (pointerStart) return;
+      const next = districtAt(event.clientX, event.clientY);
+      if (next !== hoveredDistrictId) { hoveredDistrictId = next; emphasizeDistricts(); }
+    };
+    const leaveHost = () => {
+      if (hoveredDistrictId === null) return;
+      hoveredDistrictId = null;
+      emphasizeDistricts();
     };
     const cancelPointer = (event: PointerEvent) => {
       activePointers.delete(event.pointerId);
       pointerStart = null;
+      if (event.button === 1 || activePointers.size === 0) setOrbitCursor(false);
     };
     const up = (event: PointerEvent) => {
       activePointers.delete(event.pointerId);
+      if (event.button === 1 || activePointers.size === 0) setOrbitCursor(false);
       if (!pointerStart || pointerStart.id !== event.pointerId) return;
       const start = pointerStart; pointerStart = null;
       if (!model || start.dragged || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 6) return;
@@ -528,6 +579,7 @@ export function createDioramaRenderer(host: HTMLDivElement, callbacks: RenderCal
       }
     };
     host.addEventListener('pointerdown', down, true);
+    host.addEventListener('pointerleave', leaveHost);
     host.addEventListener('lostpointercapture', cancelPointer);
     host.addEventListener('click', click, true);
     document.addEventListener('pointermove', move, true);
@@ -535,6 +587,7 @@ export function createDioramaRenderer(host: HTMLDivElement, callbacks: RenderCal
     document.addEventListener('pointercancel', cancelPointer, true);
     cleanups.push(() => {
       host.removeEventListener('pointerdown', down, true);
+      host.removeEventListener('pointerleave', leaveHost);
       host.removeEventListener('lostpointercapture', cancelPointer);
       host.removeEventListener('click', click, true);
       document.removeEventListener('pointermove', move, true);

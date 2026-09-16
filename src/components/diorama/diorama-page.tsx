@@ -271,7 +271,8 @@ export default function DioramaPage(props: Props) {
       if (state.stopId) send({ type: 'error', stopId: state.stopId, requestId: state.requestId });
     },
   }), [select, send, showUrban]);
-  const options = useMemo<RenderOptions>(() => ({ ...tour.settings, navigationMode, requestId: tour.requestId, phase: tour.status, reducedMotion: reducedMotion || !settingsReady, storyStops: playback?.stops ?? storyDraft.stops, storyFocus }), [tour.settings, navigationMode, tour.requestId, tour.status, reducedMotion, settingsReady, playback, storyDraft.stops, storyFocus]);
+  const [hoveredDistrictId, setHoveredDistrictId] = useState<string | null>(null);
+  const options = useMemo<RenderOptions>(() => ({ ...tour.settings, navigationMode, requestId: tour.requestId, phase: tour.status, reducedMotion: reducedMotion || !settingsReady, storyStops: playback?.stops ?? storyDraft.stops, storyFocus, hoveredDistrictId }), [tour.settings, navigationMode, tour.requestId, tour.status, reducedMotion, settingsReady, playback, storyDraft.stops, storyFocus, hoveredDistrictId]);
   function seedOverview() {
     const current = selectionFromStop(currentTour.current.stopId);
     if (current.placeId !== 'seongnam' && current.hotspotId) return false;
@@ -317,7 +318,7 @@ export default function DioramaPage(props: Props) {
   }
   const navigationHelp = compact
     ? navigationMode === 'pan' ? '한 손가락으로 이동 · 두 손가락으로 확대' : '한 손가락으로 회전 · 두 손가락으로 확대'
-    : navigationMode === 'pan' ? '끌어서 이동 · 빈 곳 클릭해 중심 이동' : '끌어서 회전 · 오른쪽 드래그로 이동';
+    : navigationMode === 'pan' ? '좌클릭 이동 · 휠 클릭 회전 · 빈 곳 클릭해 중심 이동' : '좌클릭 회전 · 휠 클릭도 회전';
   function changeNavigationMode(mode: NavigationMode) {
     setStoryPlaying(false);
     send({ type: 'manual' });
@@ -345,7 +346,7 @@ export default function DioramaPage(props: Props) {
     <header className="diorama-heading" data-tami-avoid=""><span className="diorama-eyebrow">SEONGNAM · CITY EXPLORER</span><h1 id="diorama-title">성남 3D 여행<span aria-hidden="true">.</span></h1><span className="diorama-heading-note">하나로 이어진 도시, {CITY_LANDMARKS.length}개의 여행 명소</span></header>
     <div className="diorama-districts" aria-label="지역 둘러보기" data-tami-avoid="">
       <button type="button" aria-label="성남 전체 보기" aria-pressed={selection.placeId === 'seongnam' && !selection.hotspotId} onClick={() => select({ placeId: 'seongnam', hotspotId: null })}><span aria-hidden="true">◎</span> 성남 전체</button>
-      {CITY_DISTRICTS.map(item => <button type="button" key={item.id} aria-label={`${item.name} 지역 보기`} aria-pressed={selection.placeId === 'seongnam' && selection.hotspotId === item.id} onClick={() => select({ placeId: 'seongnam', hotspotId: item.id })}><span className="diorama-district-dot" style={{ background: item.color }} aria-hidden="true" />{item.name}</button>)}
+      {CITY_DISTRICTS.map(item => <button type="button" key={item.id} aria-label={`${item.name} 지역 보기`} aria-pressed={selection.placeId === 'seongnam' && selection.hotspotId === item.id} onPointerEnter={() => setHoveredDistrictId(item.id)} onPointerLeave={() => setHoveredDistrictId(current => current === item.id ? null : current)} onClick={() => select({ placeId: 'seongnam', hotspotId: item.id })}><span className="diorama-district-dot" style={{ background: item.color }} aria-hidden="true" />{item.name}</button>)}
     </div>
     <div className="diorama-experience">
       <div className="diorama-scene-column">
@@ -366,7 +367,7 @@ export default function DioramaPage(props: Props) {
             </div>
             <p className="diorama-navigation-help" id="diorama-navigation-help" aria-live="polite">{navigationHelp}</p>
           </div>
-          <div className="diorama-stage-footer"><span>휠로 확대 · 방향키로 {navigationMode === 'pan' ? '이동' : '회전'}</span><span>공개 지도 기반 · 높이 일부 추정</span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer" data-tami-avoid="">© OpenStreetMap</a></div>
+          <div className="diorama-stage-footer"><span>좌클릭 이동 · 휠 클릭 회전 · 휠로 확대</span><span>공개 지도 기반 · 높이 일부 추정</span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer" data-tami-avoid="">© OpenStreetMap</a></div>
         </div>
         <div className="diorama-player" data-tami-avoid="" aria-label="자동 감상 제어">
           <button type="button" className="diorama-play" disabled={renderStatus !== 'ready' || !eligibleStops.length} onClick={playOrPause} aria-label={running ? '감상 일시정지' : tour.status === 'paused' ? '자동 감상 계속' : '자동 감상 시작'}><span aria-hidden="true">{running ? 'Ⅱ' : '▶'}</span>{running ? '일시정지' : tour.status === 'paused' ? '이어서 감상' : '자동 감상'}</button>

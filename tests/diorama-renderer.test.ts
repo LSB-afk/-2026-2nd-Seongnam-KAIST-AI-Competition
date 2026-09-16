@@ -28,6 +28,7 @@ class ElementStub extends EventTarget {
   setAttribute(name: string, value: string) { this.attributes.set(name, value); }
   getAttribute(name: string) { return this.attributes.get(name) ?? null; }
   getBoundingClientRect() { return { x: 0, y: 0, left: 0, top: 0, width: this.width, height: this.height }; }
+  getClientRects() { return this.hidden ? [] : [{ width: this.width, height: this.height }]; }
 }
 
 const gpu = vi.hoisted(() => ({
@@ -104,7 +105,7 @@ function setup() {
 beforeEach(() => {
   host = new ElementStub();
   gpu.observeFailure = false; gpu.disconnected = false;
-  documentStub = Object.assign(new EventTarget(), { hidden: false, createElement: (tag: string) => tag === 'button' ? new ElementStub(110, 34) : new ElementStub() });
+  documentStub = Object.assign(new EventTarget(), { hidden: false, createElement: (tag: string) => tag === 'button' ? new ElementStub(110, 34) : new ElementStub(), elementFromPoint: () => null });
   vi.stubGlobal('document', documentStub);
   vi.stubGlobal('window', { devicePixelRatio: 1 });
   vi.stubGlobal('ResizeObserver', class {
@@ -577,6 +578,7 @@ describe('direct map navigation', () => {
   it('uses ground-anchored map gestures by default and switches modes without rebuilding the city', () => {
     const { owner } = ready();
     expect(gpu.controls.mouseButtons.LEFT).toBe(THREE.MOUSE.PAN);
+    expect(gpu.controls.mouseButtons.MIDDLE).toBe(THREE.MOUSE.ROTATE);
     expect(gpu.controls.mouseButtons.RIGHT).toBe(THREE.MOUSE.ROTATE);
     expect(gpu.controls.touches).toMatchObject({ ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_PAN });
     expect(gpu.controls.screenSpacePanning).toBe(false);
@@ -587,7 +589,8 @@ describe('direct map navigation', () => {
     owner.apply(selection, { ...options('manual', 1), navigationMode: 'rotate' });
     gpu.renderer.loop?.(200);
     expect(gpu.controls.mouseButtons.LEFT).toBe(THREE.MOUSE.ROTATE);
-    expect(gpu.controls.mouseButtons.RIGHT).toBe(THREE.MOUSE.PAN);
+    expect(gpu.controls.mouseButtons.MIDDLE).toBe(THREE.MOUSE.ROTATE);
+    expect(gpu.controls.mouseButtons.RIGHT).toBe(THREE.MOUSE.ROTATE);
     expect(gpu.controls.touches.ONE).toBe(THREE.TOUCH.ROTATE);
     expect(gpu.renderer.domElement).toBe(canvas);
     expect((gpu.renderer.render.mock.calls.at(-1)![0] as THREE.Scene).children).toContain(city);
@@ -610,6 +613,26 @@ describe('direct map navigation', () => {
     owner.apply(selection, { ...options('manual', 1), reducedMotion: true });
     for (let i = 1; i < 20; i++) gpu.renderer.loop?.(100 + i * 100);
     expect(gpu.controls.target.distanceTo(expected)).toBeLessThan(1e-8);
+  });
+
+  it('thickens the selected or hovered district outline without treating the land as a place pick', () => {
+    const model = models.buildCityModel();
+    for (const id of ['sujeong', 'jungwon', 'bundang']) {
+      const idle = new THREE.Mesh(); idle.name = `city-district-edge-${id}`; idle.visible = true;
+      const active = new THREE.Mesh(); active.name = `city-district-edge-active-${id}`; active.visible = false;
+      model.group.add(idle, active);
+    }
+    vi.spyOn(models, 'buildCityModel').mockReturnValue(model);
+    const { owner } = ready();
+    owner.apply({ placeId: 'seongnam', hotspotId: null }, options('idle', 1));
+    expect(model.group.getObjectByName('city-district-edge-sujeong')!.visible).toBe(true);
+    expect(model.group.getObjectByName('city-district-edge-active-sujeong')!.visible).toBe(false);
+    owner.apply({ placeId: 'seongnam', hotspotId: 'sujeong' }, options('idle', 2));
+    expect(model.group.getObjectByName('city-district-edge-sujeong')!.visible).toBe(false);
+    expect(model.group.getObjectByName('city-district-edge-active-sujeong')!.visible).toBe(true);
+    owner.apply({ placeId: 'seongnam', hotspotId: null }, { ...options('idle', 3), hoveredDistrictId: 'bundang' });
+    expect(model.group.getObjectByName('city-district-edge-active-bundang')!.visible).toBe(true);
+    expect(model.group.getObjectByName('city-district-edge-bundang')!.visible).toBe(false);
   });
 
   it('treats district land as navigation ground instead of a place pick', () => {

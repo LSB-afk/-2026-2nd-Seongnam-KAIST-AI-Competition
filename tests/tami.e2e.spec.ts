@@ -58,9 +58,16 @@ test("mobile Tami guides all eight steps without automatic creation or approval"
     await expect(page.getByRole("button", { name, exact: true })).toBeAttached();
   await page.getByRole("button", { name: "사용법 시작", exact: true }).click();
   await step(page, 1);
+  await expect(page.getByRole("button", { name: "다음", exact: true })).toBeDisabled();
   await page.getByRole("button", { name: "관광 탐색 열기", exact: true }).click();
+  await expect(page.locator(".tami-target-outline.is-located")).toBeVisible();
+  await step(page, 1);
+  await page.getByRole("button", { name: "다음", exact: true }).click();
   await step(page, 2);
+  await expect(page.getByRole("button", { name: "다음", exact: true })).toBeDisabled();
+  await page.getByRole("button", { name: "장소 목록 보기", exact: true }).click();
   await page.locator('[data-tour="place-results"]').getByRole("button").first().click();
+  await page.getByRole("button", { name: "다음", exact: true }).click();
   await step(page, 3);
   await expect(page.locator('.place-detail[role="dialog"][aria-modal="true"] .tami-guide')).toHaveCount(1);
 
@@ -76,6 +83,7 @@ test("mobile Tami guides all eight steps without automatic creation or approval"
   await page.getByRole("button", { name: "이전", exact: true }).click();
   await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
   await step(page, 2); // The selection already exists; it must not bounce forward.
+  await page.getByRole("button", { name: "장소 목록 보기", exact: true }).click();
   await page.getByRole("button", { name: "다음", exact: true }).click();
   await step(page, 3);
   await expect(page.getByRole("button", { name: "다음", exact: true })).toBeDisabled();
@@ -87,8 +95,10 @@ test("mobile Tami guides all eight steps without automatic creation or approval"
   const popup = page.waitForEvent("popup");
   await page.locator('[data-tour="official-source"]').click();
   await (await popup).close();
+  await page.getByRole("button", { name: "다음", exact: true }).click();
   await step(page, 4);
   await page.getByRole("button", { name: "선택한 장소로 제작 화면 열기", exact: true }).click();
+  await page.locator('[data-tour="create-from-place"]').click();
   await step(page, 5);
   const goal = page.getByRole("textbox", { name: "어떤 이야기를 만들까요?", exact: true });
   const audience = page.getByRole("combobox", { name: /누구에게 전할까요/ });

@@ -24,7 +24,7 @@ export function buildCityModel(): DioramaModel {
   }));
   const contains = (x: number, z: number) => districts.some(({ rings }) => inRing(x, z, rings[0]) && !rings.slice(1).some(hole => inRing(x, z, hole)));
   for (const { definition, rings } of districts) {
-    const land = assets.solid(group, `city-district-${definition.id}`, rings, 0, .7, definition.color);
+    const land = assets.solid(group, `city-district-${definition.id}`, rings, 0, .7, '#c5d0b8');
     land.userData = { placeId: 'seongnam', hotspotId: definition.id, districtId: definition.id, labelAnchor: [...definition.center], source: 'OpenStreetMap district polygon' };
     land.castShadow = false;
     pickTargets.push(land);
@@ -37,6 +37,15 @@ export function buildCityModel(): DioramaModel {
 
   const urban = buildUrbanModel();
   group.add(urban.group);
+  for (const { definition, rings } of districts) {
+    const idle = assets.band(group, `city-district-edge-${definition.id}`, rings[0], .18, .024, definition.color, .92);
+    const active = assets.band(group, `city-district-edge-active-${definition.id}`, rings[0], .38, .024, definition.color, 1);
+    idle.renderOrder = 4;
+    active.renderOrder = 10;
+    idle.userData = { districtId: definition.id, source: 'OpenStreetMap district polygon edge' };
+    active.userData = { districtId: definition.id, source: 'OpenStreetMap district polygon edge' };
+    active.visible = false;
+  }
   const life = buildCityLife(urban.routes, CITY_LANDMARKS.map(landmark => landmark.position));
   group.add(life.people, life.traffic);
 

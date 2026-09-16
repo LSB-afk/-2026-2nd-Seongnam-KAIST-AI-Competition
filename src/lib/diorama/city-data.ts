@@ -8,9 +8,9 @@ export function projectCityCoordinate(longitude: number, latitude: number): Poin
 
 export type CityDistrictId = 'sujeong' | 'jungwon' | 'bundang';
 export const CITY_DISTRICTS = [
-  { id: 'sujeong', name: '수정구', color: '#acc59c', center: projectCityCoordinate(127.095, 37.452), zoom: 1.7, description: '북쪽의 동네와 산자락에서 오래된 문화유산을 만나요.' },
-  { id: 'jungwon', name: '중원구', color: '#d3c9a3', center: projectCityCoordinate(127.158, 37.434), zoom: 2.4, description: '시장과 시민 공간이 모인 동네의 일상을 살펴요.' },
-  { id: 'bundang', name: '분당구', color: '#bad1b5', center: projectCityCoordinate(127.111, 37.382), zoom: 1.55, description: '탄천을 따라 박물관, 공원, 문화예술 공간을 둘러봐요.' },
+  { id: 'sujeong', name: '수정구', color: '#4caf54', center: projectCityCoordinate(127.095, 37.452), zoom: 1.7, description: '북쪽의 동네와 산자락에서 오래된 문화유산을 만나요.' },
+  { id: 'jungwon', name: '중원구', color: '#e09b24', center: projectCityCoordinate(127.158, 37.434), zoom: 2.4, description: '시장과 시민 공간이 모인 동네의 일상을 살펴요.' },
+  { id: 'bundang', name: '분당구', color: '#3b8ee0', center: projectCityCoordinate(127.111, 37.382), zoom: 1.55, description: '탄천을 따라 박물관, 공원, 문화예술 공간을 둘러봐요.' },
 ] as const;
 
 export const CITY_LANDMARKS = CITY_LANDMARK_SCENES.map(scene => {

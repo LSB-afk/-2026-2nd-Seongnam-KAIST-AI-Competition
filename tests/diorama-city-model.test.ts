@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import * as THREE from "three";
 import { buildCityModel } from "@/lib/diorama/city-model";
 import { CITY_DISTRICTS, CITY_LANDMARKS, projectCityCoordinate } from "@/lib/diorama/city-data";
+import { loopRibbon } from "@/lib/diorama/city-model-assets";
 import boundaries from "@/lib/diorama/seongnam-boundaries.json";
 
 function resources(group: THREE.Group) {
@@ -58,6 +59,44 @@ describe("continuous Seongnam city model", () => {
         }
         expect(insideHits).toBeGreaterThan(5);
       }
+    } finally { model.dispose(); }
+  });
+
+  it("joins outline corners so adjacent segments share vertices", () => {
+    const verts = loopRibbon([[0, 0], [10, 0], [10, 10], [0, 10]], 1, 0);
+    expect(verts.length).toBe(4 * 6 * 3);
+    const vertex = (segment: number, index: number) => verts.slice((segment * 6 + index) * 3, (segment * 6 + index) * 3 + 3);
+    for (let i = 0; i < 4; i++) {
+      const next = (i + 1) % 4;
+      expect(vertex(i, 1)).toEqual(vertex(next, 0));
+      expect(vertex(i, 5)).toEqual(vertex(next, 2));
+    }
+  });
+
+  it("outlines each district and keeps the emphasis stroke hidden until hover or selection", () => {
+    const model = buildCityModel();
+    try {
+      const colors = CITY_DISTRICTS.map((district) => {
+        const idle = model.group.getObjectByName(`city-district-edge-${district.id}`);
+        const active = model.group.getObjectByName(`city-district-edge-active-${district.id}`);
+        expect(idle).toBeInstanceOf(THREE.Mesh);
+        expect(active).toBeInstanceOf(THREE.Mesh);
+        expect(idle!.visible).toBe(true);
+        expect(active!.visible).toBe(false);
+        expect(model.pickTargets).not.toContain(idle);
+        expect(model.pickTargets).not.toContain(active);
+        const idleMaterial = (idle as THREE.Mesh).material as THREE.MeshBasicMaterial;
+        const activeMaterial = (active as THREE.Mesh).material as THREE.MeshBasicMaterial;
+        expect(idleMaterial.transparent).toBe(true);
+        expect(`#${idleMaterial.color.getHexString()}`).toBe(district.color);
+        expect(`#${activeMaterial.color.getHexString()}`).toBe(district.color);
+        expect(idleMaterial.toneMapped).toBe(false);
+        expect(active!.renderOrder).toBeGreaterThan(idle!.renderOrder);
+        const land = model.group.getObjectByName(`city-district-${district.id}`) as THREE.Mesh;
+        expect(`#${(land.material as THREE.MeshStandardMaterial).color.getHexString()}`).toBe('#c5d0b8');
+        return idleMaterial.color.getHex();
+      });
+      expect(new Set(colors).size).toBe(3);
     } finally { model.dispose(); }
   });
 

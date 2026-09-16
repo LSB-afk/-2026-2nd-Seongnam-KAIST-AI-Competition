@@ -76,12 +76,12 @@ export default function PlaceExplorer({visible,onCreate,state,onStateChange,save
       <div className="map-frame">{visible&&(screenMode==='desktop'||screenMode==='mobile'&&state.mobileView==='map')&&<TourismMap places={filtered} selectedId={selected?.id||null} focusId={selected?.id||null} onSelect={choose} viewport={state.mapView} onViewportChange={view=>change({mapView:view})} visible={visible}/>}</div>
       {selected&&<>
         {compact&&<button type="button" className="detail-backdrop" aria-label="장소 상세 닫기" tabIndex={-1} onClick={close}/>}
-        <aside ref={panel} className="place-detail" data-tour="place-detail" role={compact?'dialog':'region'} aria-modal={compact||undefined} aria-label={`${selected.name} 상세 정보`} onKeyDown={event=>{
+        <aside ref={panel} className="place-detail" data-tour="place-detail" data-tami-avoid={compact?undefined:''} role={compact?'dialog':'region'} aria-modal={compact||undefined} aria-label={`${selected.name} 상세 정보`} onKeyDown={event=>{
           if(event.key==='Escape'){event.preventDefault();close();}
         }}>
           <button ref={closeButton} type="button" className="detail-close" aria-label="장소 상세 닫기" onClick={close}>×</button>
           <PlacePhoto place={selected} key={selected.id} retryable/>
-          <div className="detail-content"><span className="place-category">{selected.district} · {selected.type}</span><h2>{selected.name}</h2><button className="text-button detail-save" type="button" aria-pressed={savedIds.includes(selected.id)} onClick={()=>toggle(selected.id)}>{savedIds.includes(selected.id)?'♥ 저장한 장소에서 해제':'♡ 이 장소 저장'}</button><p className="detail-description">{selected.description}</p>
+          <div className="detail-content"><span className="place-category">{selected.district} · {selected.type}</span><h2 data-tour="place-heading">{selected.name}</h2><button className="text-button detail-save" type="button" aria-pressed={savedIds.includes(selected.id)} onClick={()=>toggle(selected.id)}>{savedIds.includes(selected.id)?'♥ 저장한 장소에서 해제':'♡ 이 장소 저장'}</button><p className="detail-description">{selected.description}</p>
             <dl><dt>주소</dt><dd>{selected.address}</dd><dt>운영시간</dt><dd>{selected.operatingHours||'공식 안내 확인 필요'}</dd><dt>휴무</dt><dd>{selected.closedDays||'공식 안내 확인 필요'}</dd><dt>입장료</dt><dd>{selected.admission||'공식 안내 확인 필요'}</dd></dl>
             {selected.verificationNote&&<p className="field-note">{selected.verificationNote}</p>}
             <a className="official-link" data-tour="official-source" href={selected.sourceUrl} target="_blank" rel="noreferrer">공식 장소 안내 ↗</a>

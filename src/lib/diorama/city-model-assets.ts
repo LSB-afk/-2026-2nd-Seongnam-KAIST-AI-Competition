@@ -8,7 +8,7 @@ type Batch = { parent: THREE.Group; name: string; geometry: THREE.BufferGeometry
 /** City-only resources. Reused landmark models retain their own disposal boundary. */
 export class CityAssets {
   private readonly geometries = new Map<string, THREE.BufferGeometry>();
-  private readonly materials = new Map<string, THREE.MeshStandardMaterial>();
+  private readonly materials = new Map<string, THREE.Material>();
   private readonly batches = new Map<string, Batch>();
   private readonly instances: THREE.InstancedMesh[] = [];
 
@@ -34,7 +34,7 @@ export class CityAssets {
       material = new THREE.MeshStandardMaterial({ color, roughness: 0.9, flatShading: true });
       this.materials.set(color, material);
     }
-    return material;
+    return material as THREE.MeshStandardMaterial;
   }
 
   instance(parent: THREE.Group, name: string, geometry: THREE.BufferGeometry, color: string, position: XYZ, scale: XYZ, rotation = 0) {
@@ -64,6 +64,30 @@ export class CityAssets {
     mesh.name = name;
     mesh.castShadow = true;
     mesh.receiveShadow = true;
+    parent.add(mesh);
+    return mesh;
+  }
+
+  band(parent: THREE.Group, name: string, ring: readonly XZ[], width: number, y: number, color: string, opacity: number) {
+    const geometry = this.geometry(`${parent.id}/${name}`, () => {
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute("position", new THREE.Float32BufferAttribute(loopRibbon(ring, width, y), 3));
+      geometry.computeVertexNormals();
+      return geometry;
+    });
+    const key = `${color}/band/${opacity}`;
+    let material = this.materials.get(key);
+    if (!material) {
+      material = new THREE.MeshBasicMaterial({
+        color, transparent: true, opacity, depthTest: false, depthWrite: false, side: THREE.DoubleSide, toneMapped: false,
+      });
+      this.materials.set(key, material);
+    }
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.name = name;
+    mesh.castShadow = false;
+    mesh.receiveShadow = false;
+    mesh.renderOrder = 4;
     parent.add(mesh);
     return mesh;
   }
@@ -153,6 +177,45 @@ export function distanceToPath(x: number, z: number, path: readonly XZ[]) {
 }
 
 /** Independent triangles allow actual boundary clipping without an external polygon library. */
+export function loopRibbon(ring: readonly XZ[], width: number, y: number) {
+  const vertices: number[] = [];
+  const points: XZ[] = [];
+  for (const point of ring) {
+    const previous = points.at(-1);
+    if (!previous || Math.hypot(point[0] - previous[0], point[1] - previous[1]) > 1e-8) points.push(point);
+  }
+  if (points.length > 1 && Math.hypot(points[0][0] - points.at(-1)![0], points[0][1] - points.at(-1)![1]) < 1e-8) points.pop();
+  if (points.length < 3) return vertices;
+  const half = width / 2;
+  const count = points.length;
+  const offsets: XZ[] = [];
+  for (let i = 0; i < count; i++) {
+    const previous = points[(i + count - 1) % count], current = points[i], next = points[(i + 1) % count];
+    const inDx = current[0] - previous[0], inDz = current[1] - previous[1];
+    const outDx = next[0] - current[0], outDz = next[1] - current[1];
+    const inLength = Math.hypot(inDx, inDz), outLength = Math.hypot(outDx, outDz);
+    if (inLength < 1e-8 || outLength < 1e-8) { offsets.push([0, 0]); continue; }
+    const nx1 = -inDz / inLength, nz1 = inDx / inLength;
+    const nx2 = -outDz / outLength, nz2 = outDx / outLength;
+    let mx = nx1 + nx2, mz = nz1 + nz2;
+    const miterLength = Math.hypot(mx, mz);
+    if (miterLength < 1e-5) { offsets.push([nx1 * half, nz1 * half]); continue; }
+    mx /= miterLength; mz /= miterLength;
+    const join = mx * nx1 + mz * nz1;
+    const scale = half / Math.max(0.4, Math.abs(join));
+    offsets.push([mx * scale, mz * scale]);
+  }
+  for (let i = 0; i < count; i++) {
+    const next = (i + 1) % count;
+    const [ax, az] = points[i], [bx, bz] = points[next];
+    const [anx, anz] = offsets[i], [bnx, bnz] = offsets[next];
+    const a: XYZ = [ax + anx, y, az + anz], b: XYZ = [ax - anx, y, az - anz];
+    const c: XYZ = [bx + bnx, y, bz + bnz], d: XYZ = [bx - bnx, y, bz - bnz];
+    vertices.push(...a, ...c, ...b, ...b, ...c, ...d);
+  }
+  return vertices;
+}
+
 export function ribbon(path: readonly XZ[], width: number, y: number, contains: (x: number, z: number) => boolean, step = 0.7) {
   const vertices: number[] = [];
   for (let i = 1; i < path.length; i++) {

@@ -28,13 +28,15 @@ describe("state-driven tutorial", () => {
     expect(started).toMatchObject({ step: 0, status: "active" });
     expect(transitionGuide(started, { type: "observe", before: snapshot }, snapshot)).toEqual(started);
   });
-  it("advances one step on an actual navigation or selection change", () => {
+  it("does not skip the locate buttons when exploration is already open or a place is already selected", () => {
     const before = getGuideSnapshot(context());
     const exploring = getGuideSnapshot(context({ view: "explore" }));
-    const step1 = transitionGuide(tutorial(0), { type: "observe", before }, exploring);
-    expect(step1.step).toBe(1);
+    const opened = transitionGuide(tutorial(0), { type: "observe", before }, exploring);
+    expect(opened.step).toBe(0);
+    expect(transitionGuide(opened, { type: "next" }, exploring).step).toBe(1);
     const selected = getGuideSnapshot(context({ view: "explore", selectedPlace: PLACES[0] }));
-    expect(transitionGuide(step1, { type: "observe", before: exploring }, selected)).toMatchObject({ step: 2, placeId: PLACES[0].id });
+    expect(transitionGuide(tutorial(1), { type: "observe", before: exploring }, selected).step).toBe(1);
+    expect(transitionGuide(tutorial(1), { type: "next" }, selected)).toMatchObject({ step: 2, placeId: PLACES[0].id });
   });
   it("does not bounce forward after previous, resume, or a stable state observation", () => {
     const snapshot = getGuideSnapshot(reviewedContext());
@@ -51,7 +53,9 @@ describe("state-driven tutorial", () => {
     expect(getStepGuard(state, snapshot)).toContain("공식");
     expect(transitionGuide(state, { type: "source-opened", placeId: PLACES[1].id }, snapshot)).toEqual(state);
     expect(transitionGuide(state, { type: "next" }, snapshot)).toEqual(state);
-    expect(transitionGuide(state, { type: "source-opened", placeId: PLACES[0].id }, snapshot)).toMatchObject({ step: 3, sourcePlaceId: PLACES[0].id });
+    const opened = transitionGuide(state, { type: "source-opened", placeId: PLACES[0].id }, snapshot);
+    expect(opened).toMatchObject({ step: 2, sourcePlaceId: PLACES[0].id });
+    expect(transitionGuide(opened, { type: "next" }, snapshot)).toMatchObject({ step: 3, sourcePlaceId: PLACES[0].id });
   });
   it("clears an old source visit when a different place is selected", () => {
     const before = getGuideSnapshot(context({ view: "explore", selectedPlace: PLACES[0] }));
