@@ -22,6 +22,24 @@ async function drag(page: Page, x: number, y: number, dx: number, dy: number, bu
 
 const distance = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y);
 
+test('returning through the menu restores the whole city and stays at the initial scale', async ({ page }) => {
+  await openMap(page);
+  const initial = await anchor(page), initialOther = await anchor(page, 'sujeong');
+  await page.locator('[data-city-marker=bundang]').click();
+  await expect(page).toHaveURL(/spot=bundang/);
+  await page.getByRole('button', { name: '주 메뉴 열기', exact: true }).click();
+  await page.getByRole('button', { name: '홈·대시보드', exact: true }).click();
+  await page.getByRole('button', { name: '성남 3D 여행', exact: true }).click();
+  await expect(page).toHaveURL(/scene=seongnam/);
+  await expect(page).not.toHaveURL(/spot=/);
+  await expect(page.getByTestId('diorama-stage')).toHaveAttribute('data-status', 'ready');
+  await expect.poll(async () => distance(initial, await anchor(page))).toBeLessThan(.5);
+  await expect.poll(async () => distance(initialOther, await anchor(page, 'sujeong'))).toBeLessThan(.5);
+  await page.waitForTimeout(1500);
+  expect(distance(initial, await anchor(page))).toBeLessThan(.5);
+  expect(distance(initialOther, await anchor(page, 'sujeong'))).toBeLessThan(.5);
+});
+
 test('dragging labels grabs the map precisely, stops on release and preserves click selection', async ({ page }) => {
   await openMap(page);
   const canvas = await page.locator('.diorama-webgl canvas').elementHandle();

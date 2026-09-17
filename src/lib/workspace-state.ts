@@ -85,7 +85,7 @@ export function workspaceSearch(state:WorkspaceState):string {
 }
 export function workspaceFromSearch(state:WorkspaceState,search:string,restoreWhenEmpty=false):WorkspaceState {
   const p=new URLSearchParams(search);
-  if(!ROUTE_KEYS.some(k=>p.has(k))&&restoreWhenEmpty)return state;
+  if(!ROUTE_KEYS.some(k=>p.has(k))&&restoreWhenEmpty)return state.view==='diorama'?{...state,diorama:normaliseDiorama(null),storyId:null,storyPreview:false}:state;
   const mapView=p.has('lat')&&p.has('lng')&&p.has('zoom')?{lat:Number(p.get('lat')),lng:Number(p.get('lng')),zoom:Number(p.get('zoom'))}:undefined;
   return {...state,storyId:p.get('view')==='diorama'&&UUID.test(p.get('story')||'')?p.get('story'):null,storyPreview:p.get('view')==='diorama'&&p.get('preview')==='story'&&UUID.test(p.get('run')||''),view:oneOf(p.get('view'),VIEWS,'dashboard'),diorama:p.get('view')==='diorama'?normaliseDiorama({placeId:p.get('scene'),hotspotId:p.get('spot')}):state.diorama,explore:normaliseExplore({query:p.get('q')||'',district:p.get('district'),category:p.get('category'),theme:p.get('theme'),selectedId:p.get('place'),mobileView:p.get('display'),mapView}),runId:UUID.test(p.get('run')||'')?p.get('run'):null,selectedCardId:/^card-[1-4]$/.test(p.get('card')||'')?p.get('card')!:'',tab:oneOf(p.get('tab'),TABS,'evidence')};
 }

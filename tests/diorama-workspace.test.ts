@@ -5,6 +5,22 @@ import { createWorkspace, decodeWorkspace, workspaceFromSearch, workspaceSearch,
 const draft: DraftState = { brief: DEFAULT_BRIEF, mode: 'fixture', strategy: 'agent', scenario: 'normal', imageChoice: 'photo' };
 
 describe('independent 3D tourism navigation', () => {
+  it('starts a restored 3D visit at the city overview without resuming a story', () => {
+    const state = createWorkspace(draft);
+    state.view = 'diorama';
+    state.diorama = { placeId: 'central-park', hotspotId: 'park-pavilion' };
+    state.storyPreview = true;
+    state.storyId = '12345678-1234-1234-1234-123456789abc';
+    state.draft.brief.goal = '작성 중인 성남 이야기';
+    const restored = workspaceFromSearch(state, '', true);
+    expect(restored.diorama).toEqual({ placeId: 'seongnam', hotspotId: null });
+    expect(restored.storyPreview).toBe(false);
+    expect(restored.storyId).toBeNull();
+    expect(restored.draft).toEqual(state.draft);
+    expect(workspaceFromSearch(state, '?view=diorama', true).diorama).toEqual(restored.diorama);
+    expect(workspaceFromSearch(state, '?view=diorama&scene=central-park&spot=park-pavilion', true).diorama).toEqual(state.diorama);
+  });
+
   it('opens a direct 3D URL without losing the unfinished creation draft', () => {
     const state = createWorkspace(draft);
     state.draft.brief.goal = '작성 중인 성남 이야기';

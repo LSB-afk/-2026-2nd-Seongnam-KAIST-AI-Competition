@@ -134,7 +134,7 @@ export default function Studio() {
   const navigationToggle = useRef<HTMLButtonElement>(null);
   const setView = (next: WorkspaceView) => {
     setDioramaMenuOpen(false);
-    updateWorkspace({ view: next, storyPreview: false, ...(next !== "diorama" ? { storyId: null } : {}) }, "push");
+    updateWorkspace({ view: next, storyPreview: false, storyId: null, ...(next === "diorama" ? { diorama: { placeId: "seongnam", hotspotId: null } } : {}) }, "push");
   };
   useEffect(() => {
     if (!immersive || !dioramaMenuOpen) return;
